@@ -114,25 +114,64 @@ XYZ uses common data types found in most programming languages.
 
 Signed Integers are represented by the `int_x` keyword, where `x` is the number of bits used to represent the integer. XYZ supports 8, 16, 32 and 64 bit integers.
 
+```c
+int_8 a;
+int_8 b = 10;
+int_16 c = 20;
+int_32 d = 30;
+int_64 e = 40;
+```
+
 Unsigned Integers are represented by the `uint_x` keyword, where `x` is the number of bits used to represent the integer. XYZ supports 8, 16, 32 and 64 bit integers.
+
+```c
+unit_8 a;
+uint_8 b = 10;
+uint_16 c = 20;
+uint_32 d = 30;
+uint_64 e = 40;
+```
 
 #### Character:
 
 Characters are represented by the `char` keyword. XYZ supports 8 bit characters.
 
+```c
+char a;
+char b = 'a';
+```
+
 #### Float:
 
 Floats are represented by the `float_x` keyword, where `x` is the number of bits used to represent the float. XYZ supports 32 and 64 bit floats.
 
+```c
+float_32 a;
+float_32 b = 10.5;
+float_64 c = 20.5;
+```
+
 #### Boolean:
 
 Booleans are represented by the `bool` keyword, which is similar to the `bool` keyword in C, C++, Java and Python.
+
+```c
+bool a;
+bool b = true;
+bool c = false;
+```
 
 ### Composite Data Types
 
 #### Strings:
 
 Strings are represented by the `string` keyword. Strings are immutable, and can be indexed using the `[]` operator.
+
+```c
+string temp;
+string a = "Hello World";
+char b = a[0];
+```
 
 #### Finite-Sets:
 
@@ -141,13 +180,40 @@ Sets are collections of elements of the same data type. XYZ supports two types o
 - Ordered Sets are represented by the `o_set` keyword.
 - Unordered Sets are represented by the `u_set` keyword.
 
+```c
+o_set<int_8> a;
+o_set<int_8> b = {1, 2, 3};
+```
+
 #### Structs:
 
 Structs are represented by the `struct` keyword. Structs can contain any data type supported by XYZ.
 
+```c
+struct Point {
+    int_8 x;
+    int_8 y;
+    float_32 z;
+    string name;
+}
+```
+
 #### Regular Expressions:
 
 Regular Expressions are represented by the `regex` keyword. Regular Expression can contain definitions of other Regular Expressions, and can be used to define Finite State Machines.
+
+```c
+regex alphabet = r'[a_z]';
+regex Letter = r'{alphabet}';
+regex Digit = r'[0_9]';
+regex a = r'[ab]{2}';
+regex b = r'{a}*';
+regex c = r'{a}+';
+regex d = r'{a}?';
+regex e = r'^[ab]';
+regex f = r'[ab]$';
+regex g = r'{a}|{b}';
+```
 
 <!-- #### Context Free Grammars:
 Context Free Grammars are represented by the `cfg` keyword. Context Free Grammars are defined by a 4-tuple: $$ (N, \Sigma, P, S) $$
@@ -192,6 +258,20 @@ state1 , \<set> -> state2
 
 $\delta$ is either a set of such transitions or it can be represented as a matrix of size $|Q| \times |\Sigma|$, where each element of the matrix is a state.
 
+```c
+dfa a;
+a.Q = {q0, q1, q2};
+a.Sigma = {0,1,2};
+a.delta = {
+    q0, 0 -> q1,
+    a.Q[0] , 1 -> a.Q[1],
+    q1 , r'[12]' -> q2,
+    q2, {0,2} -> q1
+};
+a.q0 = q0;
+a.F = {q1,q2};
+```
+
 #### NFAs:
 
 NFAs are represented by the `nfa` keyword.
@@ -215,6 +295,21 @@ A transition can be represented as:
 - state1, \<set> -> {state2, state3, ...}
 
 Here input_symbols can include $\epsilon$ which is represented by '\\e'.
+
+```c
+nfa a;
+a.Q = {q0, q1, q2};
+a.Sigma = {0,1,2};
+a.delta = {
+    q0, 0 -> {q1, q2},
+    a.Q[0] , 1 -> a.Q[1],
+    q1 , r'[12]' -> q2,
+    q2, {0,2} -> q1,
+    q2, \e -> q0
+};
+a.q0 = q0;
+a.F = {q1,q2};
+```
 
 <!-- #### PDAs:
 PDAs are represented by the `pda` keyword.
@@ -302,6 +397,16 @@ Operators supports by XYZ are similar to the operators supported by C.
 |   `*`    | Intersection | Left to Right |
 |   '^2'   |  Power Set   | Left to Right |
 
+```c
+o_set<int_8> a = {1, 2, 3};
+o_set<int_8> b = {2, 3, 4};
+o_set<int_8> c = a + b; <!-- c = {1, 2, 3, 4} --!>
+o_set<int_8> d = a - b; <!-- d = {1} --!>
+o_set<int_8> e = a * b; <!-- e = {2, 3} --!>
+o_set<o_set<int_8>> f = a^2; <!-- f = {{}, {1}, {2}, {3}, {1, 2},
+{1, 3}, {2, 3}, {1, 2, 3}} --!>
+```
+
 ### Automaton Operators
 
 | Operator |  Description  | Associativity |
@@ -311,6 +416,16 @@ Operators supports by XYZ are similar to the operators supported by C.
 |   `+`    |     Union     | Left to Right |
 |   `!`    |   Negation    | Right to Left |
 
+```c
+dfa a;
+dfa b;
+
+dfa c = a*; <!-- Kleene Star --!>
+dfa d = a@b; <!-- Concatenation --!>
+dfa e = a+b; <!-- Union --!>
+dfa f = !a; <!-- Negation --!>
+```
+
 ### Misc Operators
 
 | Operator |     Description      | Associativity |
@@ -318,6 +433,25 @@ Operators supports by XYZ are similar to the operators supported by C.
 |   `.`    | Access Struct Member | Left to Right |
 |   `[]`   |  Access Set Element  | Left to Right |
 |   `()`   |    Function Call     | Left to Right |
+
+```c
+struct Point {
+    int_8 x;
+    int_8 y;
+}
+
+Point p;
+p.x = 10;
+
+o_set<int_8> a = {1, 2, 3};
+int_8 b = a[0];
+
+int_8 func(int_8 a, int_8 b) {
+    return a + b;
+}
+
+int_8 a = func(10, 20);
+```
 
 ### Operator Precedence
 
@@ -345,9 +479,11 @@ Below is the syntax for the if-else statement:
 ```python
 if (condition) {
     statement;
-} elif {
+}
+elif (condition) {
     statement;
-} else {
+}
+else {
     statement;
 }
 ```

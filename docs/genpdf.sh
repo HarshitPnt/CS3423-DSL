@@ -1,1 +1,1 @@
-pandoc ./specification.md -o temp.pdf
+pandoc --to latex ./specification.md --highlight-style zenburn -o temp.pdf
