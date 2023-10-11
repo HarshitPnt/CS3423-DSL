@@ -5,8 +5,8 @@ geometry: margin=2cm
 documentclass: extarticle
 fontsize: 12pt
 header-includes:
-    - \usepackage{setspace}
-    - \onehalfspacing
+  - \usepackage{setspace}
+  - \onehalfspacing
 ---
 
 $$ \large{\text{Authors}} $$
@@ -16,7 +16,9 @@ $$ \text{Mahin Bansal (CS21BTECH11034)} $$
 $$ \text{Harshit Pant (CS21BTECH11021)} $$
 
 \pagebreak
+
 # Table of Contents
+
 - [Table of Contents](#table-of-contents)
 - [Introduction](#introduction)
   - [What is XYZ?](#what-is-xyz)
@@ -29,14 +31,20 @@ $$ \text{Harshit Pant (CS21BTECH11021)} $$
       - [Float:](#float)
       - [Boolean:](#boolean)
     - [Composite Data Types](#composite-data-types)
-      - [Sets:](#sets)
+      - [Strings:](#strings)
+      - [Finite-Sets:](#finite-sets)
       - [Structs:](#structs)
+      - [Regular Expressions:](#regular-expressions)
+      - [DFAs:](#dfas)
+      - [NFAs:](#nfas)
     - [Comments](#comments)
   - [Operators](#operators)
     - [Arithmetic Operators](#arithmetic-operators)
     - [Logical Operators](#logical-operators)
     - [Comparison Operators](#comparison-operators)
     - [Assignment Operators](#assignment-operators)
+    - [Set Operators](#set-operators)
+    - [Automaton Operators](#automaton-operators)
     - [Misc Operators](#misc-operators)
     - [Operator Precedence](#operator-precedence)
   - [Control Flow](#control-flow)
@@ -46,16 +54,45 @@ $$ \text{Harshit Pant (CS21BTECH11021)} $$
   - [Keywords](#keywords)
   - [Identifiers](#identifiers)
   - [Statements](#statements)
+    - [Declaration Statement](#declaration-statement)
+    - [Assignment Statement](#assignment-statement)
+    - [Function Declaration Statement](#function-declaration-statement)
+    - [Function Call Statement](#function-call-statement)
+    - [IO Statements](#io-statements)
 - [References](#references)
 
 \pagebreak
+
 # Introduction
 
 ## What is XYZ?
 
+XYZ is a domain specific language that simplifies working with Finite State Machines(FSMs).
+Finite State Machines include Deterministic Finite Automata(DFAs), Non-Deterministic Finite Automata(NFAs), Pushdown Automata(PDAs).
+
+It supports the following features:
+
+- Defining Finite State Machines
+- Regular Expressions
+- Context Free Grammars
+
 ## Why XYZ?
 
+Finite State Machines are used in many applications, such as:
+
+- Regular Expressions
+- Lexical Analysis
+- Compilers
+- Network Protocols
+- Digital Logic
+- Artificial Intelligence
+- Natural Language Processing
+- etc.
+
+Finite State Machines are used in many applications, but the syntax for defining a Finite State Machine is not very intuitive. XYZ aims to simplify the syntax for defining a Finite State Machine, making it easier for programmers to work with Finite State Machines.
+
 \pagebreak
+
 # Language Specifications
 
 XYZ follows, making it easier for programmers to pick up XYZ easily and keep their focus on the logic rather than XYZ.
@@ -73,30 +110,131 @@ XYZ uses common data types found in most programming languages.
 
 ### Primitive Data Types
 
-#### Integer: 
+#### Integer:
+
 Signed Integers are represented by the `int_x` keyword, where `x` is the number of bits used to represent the integer. XYZ supports 8, 16, 32 and 64 bit integers.
 
 Unsigned Integers are represented by the `uint_x` keyword, where `x` is the number of bits used to represent the integer. XYZ supports 8, 16, 32 and 64 bit integers.
 
 #### Character:
+
 Characters are represented by the `char` keyword. XYZ supports 8 bit characters.
 
-#### Float: 
+#### Float:
+
 Floats are represented by the `float_x` keyword, where `x` is the number of bits used to represent the float. XYZ supports 32 and 64 bit floats.
 
 #### Boolean:
+
 Booleans are represented by the `bool` keyword, which is similar to the `bool` keyword in C, C++, Java and Python.
 
 ### Composite Data Types
 
-#### Sets:
+#### Strings:
+
+Strings are represented by the `string` keyword. Strings are immutable, and can be indexed using the `[]` operator.
+
+#### Finite-Sets:
+
 Sets are collections of elements of the same data type. XYZ supports two types of sets: Ordered Sets and Unordered Sets.
 
-- Ordered Sets are represented by the `o_set` keyword. 
-- Unordered Sets are represented by the `u_set` keyword. 
+- Ordered Sets are represented by the `o_set` keyword.
+- Unordered Sets are represented by the `u_set` keyword.
 
 #### Structs:
+
 Structs are represented by the `struct` keyword. Structs can contain any data type supported by XYZ.
+
+#### Regular Expressions:
+
+Regular Expressions are represented by the `regex` keyword. Regular Expression can contain definitions of other Regular Expressions, and can be used to define Finite State Machines.
+
+<!-- #### Context Free Grammars:
+Context Free Grammars are represented by the `cfg` keyword. Context Free Grammars are defined by a 4-tuple: $$ (N, \Sigma, P, S) $$
+where:
+
+- $N$ is a set of non-terminal symbols
+- $\Sigma$ is a set of terminal symbols
+- $P$ is a set of production rules
+- $S$ is the start symbol
+
+A production rule is represented as:
+
+- A -> $\alpha$ where $\alpha$ is a string of terminal and non-terminal symbols
+- A -> { $\alpha_1$, $\alpha_2$, ... } where $\alpha_1$, $\alpha_2$, ... are strings of terminal and non-terminal symbols. -->
+
+#### DFAs:
+
+DFAs are represented by the `dfa` keyword.
+
+A DFA is defined by a 5-tuple: $$ (Q, \Sigma, \delta, q_0, F) $$
+where:
+
+- $Q$ is a `o_set` of states
+- $\Sigma$ is a **set** of input symbols
+- $\delta$ is the transition function, which maps $Q \times \Sigma$ to $Q$
+- $q_0$ is the initial state
+- $F$ is a set of final states
+
+A transition can be represented as:
+
+state1, input_symbol -> state2
+
+In case of multiple transitions from the same state on different input symbols to the same state, the transitions can be represented as:
+
+state1, {input_symbol1, input_symbol2, ...} -> state2
+
+This can also be done as:
+
+state1, \<regex> -> state2
+
+state1 , \<set> -> state2
+
+$\delta$ is either a set of such transitions or it can be represented as a matrix of size $|Q| \times |\Sigma|$, where each element of the matrix is a state.
+
+#### NFAs:
+
+NFAs are represented by the `nfa` keyword.
+
+A NFA is defined by a 5-tuple: $$ (Q, \Sigma, \delta, q_0, F) $$
+where:
+
+- $Q$ is a `o_set` of states
+- $\Sigma$ is a **set** of input symbols
+- $\delta$ is the transition function, which maps $Q \times \Sigma$ to $2^Q$
+- $q_0$ is the initial state
+- $F$ is a set of final states
+
+Here $2^Q$ represent the power set of $Q$.
+
+A transition can be represented as:
+
+- state1, input_symbol -> {state2, state3, ...}
+- state1, {input_symbol1, input_symbol2, ...} -> {state2, state3, ...}
+- state1, \<regex> -> {state2, state3, ...}
+- state1, \<set> -> {state2, state3, ...}
+
+Here input_symbols can include $\epsilon$ which is represented by '\\e'.
+
+<!-- #### PDAs:
+PDAs are represented by the `pda` keyword.
+
+A PDA is defined by a 6-tuple: $$ (Q, \Sigma, \Gamma, \delta, q_0, F) $$
+where:
+
+- $Q$ is a `o_set` of states
+- $\Sigma$ is a **set** of input symbols
+- $\Gamma$ is a **set** of stack symbols
+- $\delta$ is the transition function, which maps $Q \times \Sigma \times \Gamma$ to $2^{Q \times \Gamma^*}$
+- $q_0$ is the initial state
+- $F$ is a set of final states
+
+Here $2^{Q \times \Gamma^*}$ represent the power set of $Q \times \Gamma^*$.
+
+A transition can be represented as:
+
+- state1, input_symbol, stack_symbol -> state2, stack_string1
+- state1, {(input_symbol1, stack_symbol1), (input_symbol2, stack_symbol2), ...} -> state2, stack_string1 -->
 
 ### Comments
 
@@ -110,6 +248,7 @@ multi line comment --!>
 ```
 
 ## Operators
+
 Operators supports by XYZ are similar to the operators supported by C.
 
 ### Arithmetic Operators
@@ -154,13 +293,31 @@ Operators supports by XYZ are similar to the operators supported by C.
 |   `&=`   |  Logical AND Assignment   | Right to Left |
 |  `\|=`   |   Logical OR Assignment   | Right to Left |
 
+### Set Operators
+
+| Operator | Description  | Associativity |
+| :------: | :----------: | :-----------: |
+|   `+`    |    Union     | Left to Right |
+|   `-`    |  Difference  | Left to Right |
+|   `*`    | Intersection | Left to Right |
+|   '^2'   |  Power Set   | Left to Right |
+
+### Automaton Operators
+
+| Operator |  Description  | Associativity |
+| :------: | :-----------: | :-----------: |
+|   `*`    |    Kleene     | Left to Right |
+|   `@`    | Concatenation | Left to Right |
+|   `+`    |     Union     | Left to Right |
+|   `!`    |   Negation    | Right to Left |
+
 ### Misc Operators
 
 | Operator |     Description      | Associativity |
 | :------: | :------------------: | :-----------: |
 |   `.`    | Access Struct Member | Left to Right |
 |   `[]`   |  Access Set Element  | Left to Right |
-
+|   `()`   |    Function Call     | Left to Right |
 
 ### Operator Precedence
 
@@ -211,28 +368,34 @@ Constants are represented by the `const` keyword. Constants can be of any data t
 
 ## Keywords
 
-|  Keyword   |   Description    |
-| :--------: | :--------------: |
-|  `int_x`   |     Integer      |
-|  `uint_x`  | Unsigned Integer |
-|   `char`   |    Character     |
-| `float_x`  |      Float       |
-|   `bool`   |     Boolean      |
-|  `const`   |     Constant     |
-|  `struct`  |      Struct      |
-|  `o_set`   |   Ordered Set    |
-|  `u_set`   |  Unordered Set   |
-|    `if`    |        If        |
-|   `elif`   |     Else If      |
-|   `else`   |       Else       |
-|  `while`   |      While       |
-|  `break`   |      Break       |
-| `continue` |     Continue     |
-|  `return`  |      Return      |
-|   `true`   |       True       |
-|  `false`   |      False       |
-|   `<!--`   | Start of comment |
-|   `--!>`   |  End of comment  |
+|  Keyword   |    Description     |
+| :--------: | :----------------: |
+|  `int_x`   |      Integer       |
+|  `uint_x`  |  Unsigned Integer  |
+|   `char`   |     Character      |
+| `float_x`  |       Float        |
+|   `bool`   |      Boolean       |
+|  `const`   |      Constant      |
+|  `struct`  |       Struct       |
+|  `o_set`   |    Ordered Set     |
+|  `u_set`   |   Unordered Set    |
+|  `string`  |       String       |
+|  `regex`   | Regular Expression |
+|   `dfa`    |        DFA         |
+|   `nfa`    |        NFA         |
+|   `pda`    |        PDA         |
+|   `cfg`    |        CFG         |
+|    `if`    |         If         |
+|   `elif`   |      Else If       |
+|   `else`   |        Else        |
+|  `while`   |       While        |
+|  `break`   |       Break        |
+| `continue` |      Continue      |
+|  `return`  |       Return       |
+|   `true`   |        True        |
+|  `false`   |       False        |
+|   `<!--`   |  Start of comment  |
+|   `--!>`   |   End of comment   |
 
 ## Identifiers
 
@@ -252,6 +415,83 @@ Regular Expressions for Identifiers:
 
 ## Statements
 
+XYZ supports the following statements:
+
+### Declaration Statement
+
+Declaration statements are used to declare variables. Below is the syntax for declaration statements:
+
+```c
+data_type identifier;
+```
+
+Multiple variables of the same data type can be declared in a single statement:
+
+```c
+data_type identifier1, identifier2, ...;
+```
+
+### Assignment Statement
+
+Assignment statements are used to assign values to variables. Below is the syntax for assignment statements:
+
+```c
+identifier = expression;
+```
+
+### Function Declaration Statement
+
+Function declaration statements are used to declare functions. Below is the syntax for function declaration statements:
+
+```c
+data_type function_name(data_type1 arg1, data_type2 arg2, ...) {
+    statements;
+}
+```
+
+### Function Call Statement
+
+Function call statements are used to call functions. Below is the syntax for function call statements:
+
+```c
+function_name(arg1, arg2, ...);
+```
+
+In case the function returns a value, the function call statement can be used as an expression:
+
+```c
+data_type variable = function_name(arg1, arg2, ...);
+```
+
+### IO Statements
+
+Print statements are used to print values to the console. Below is the syntax for print statements:
+
+```c
+out(expression);
+```
+
+Input statements are used to take input from the console. Below is the syntax for input statements:
+
+```c
+inp(identifier);
+```
+
+In case multiple variables need to be inputted, the input statement can be used as:
+
+```c
+inp(identifier1, identifier2, ...);
+```
+
 \pagebreak
+
 # References
 
+- [Wikipedia: FSMs](https://en.wikipedia.org/wiki/Finite-state_machine)
+- [Wikipedia: DFAs](https://en.wikipedia.org/wiki/Deterministic_finite_automaton)
+- [Wikipedia: NFAs](https://en.wikipedia.org/wiki/Nondeterministic_finite_automaton)
+- [Wikipedia: PDAs](https://en.wikipedia.org/wiki/Pushdown_automaton)
+- [Wikipedia: CFGs](https://en.wikipedia.org/wiki/Context-free_grammar)
+- [Wikipedia: Regular Expressions](https://en.wikipedia.org/wiki/Regular_expression)
+- [Michael Sipser: Introduction to the Theory of Computation](https://math.mit.edu/~sipser/book.html)
+- [C_Programming Language by Kernighan and Ritchie](https://en.wikipedia.org/wiki/The_C_Programming_Language)
