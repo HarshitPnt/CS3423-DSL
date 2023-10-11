@@ -1,3 +1,21 @@
+---
+title: Compilers Project
+author: 
+- Vishal Vijay Devadiga (CS21BTECH11061)
+- Satpute Aniket Tukaram (CS21BTECH11056)
+- Mahin Bansal (CS21BTECH11034)     
+- Harshit Pant (CS21BTECH11021)
+geometry: margin=2cm
+documentclass: extarticle
+fontsize: 12pt
+header-includes:
+    - \usepackage{setspace}
+    - \onehalfspacing
+---
+
+\pagebreak
+# Table of Contents
+- [Table of Contents](#table-of-contents)
 - [Introduction](#introduction)
   - [What is XYZ?](#what-is-xyz)
   - [Why XYZ?](#why-xyz)
@@ -23,12 +41,14 @@
   - [Identifiers](#identifiers)
 - [References](#references)
 
+\pagebreak
 # Introduction
 
 ## What is XYZ?
 
 ## Why XYZ?
 
+\pagebreak
 # Language Specifications
 
 XYZ follows, making it easier for programmers to pick up the language easily and keep their focus on the logic rather than the language.
@@ -46,7 +66,10 @@ The language uses common data types found in most programming languages.
 ### Primitive Data Types
 
 #### Integer: 
-Integers are represented by the `int_x` keyword, where `x` is the number of bits used to represent the integer. The language supports 8, 16, 32 and 64 bit integers.
+Signed Integers are represented by the `int_x` keyword, where `x` is the number of bits used to represent the integer. The language supports 8, 16, 32 and 64 bit integers.
+
+Unsigned Integers are represented by the `uint_x` keyword, where `x` is the number of bits used to represent the integer. The language supports 8, 16, 32 and 64 bit integers.
+
 
 #### Character:
 Characters are represented by the `char` keyword. The language supports 8 bit characters.
@@ -61,13 +84,12 @@ Booleans are represented by the `bool` keyword, which is similar to the `bool` k
 
 XYZ has only one type of comment, that can act as both single line and multi line comments. The comment starts with `<!--` and ends with `--!>`. Below is an example of a comment:
 
-```
+```markdown
 <!-- This is a comment --!>
 
 <!-- This is a
 multi line comment --!>
 ```
-
 
 ## Operators
 Operators supports by the language are similar to the operators supported by C.
@@ -137,7 +159,7 @@ XYZ enforce the use of curly braces for all control flow statements. The languag
 
 Below is the syntax for the if-else statement:
 
-```
+```python
 if (condition) {
     statement;
 } elif {
@@ -151,7 +173,7 @@ if (condition) {
 
 XYZ only supports the `while` loop. Below is the syntax for the `while` loop:
 
-```
+```c
 while (condition) {
     statements;
 }
@@ -159,9 +181,48 @@ while (condition) {
 
 ## Constants
 
+Constants are represented by the `const` keyword. Constants can be of any data type supported by the language.
+
 ## Keywords
+
+| Keyword | Description |
+| :---: | :---: |
+| `int_x` | Integer |
+| `uint_x` | Unsigned Integer |
+| `char` | Character |
+| `float_x` | Float |
+| `bool` | Boolean |
+| `const` | Constant |
+| `if` | If |
+| `elif` | Else If |
+| `else` | Else |
+| `while` | While |
+| `break` | Break |
+| `continue` | Continue |
+| `return` | Return |
+| `true` | True |
+| `false` | False |
+| `<!--` | Start of comment |
+| `--!>` | End of comment |
+| 
 
 ## Identifiers
 
+The language uses the following rules for identifiers:
+
+- Identifiers can only contain alphanumeric characters and underscores.
+- Identifiers cannot start with a number.
+- Identifiers cannot be a keyword.
+- Identifiers cannot contain spaces.
+- Identifiers are case sensitive.
+- Identifiers cannot contain special characters.
+
+Regular Expressions for Identifiers:
+
+```re
+[a-zA-Z_][a-zA-Z0-9_]*
+```
+
+\pagebreak
 # References
 
