@@ -1,13 +1,17 @@
 ---
-title: XYZ Language Specification
+title: YAFSM Language Specification
 author: Compilers Project
 geometry: margin=2cm
 documentclass: extarticle
 fontsize: 12pt
 header-includes:
-  - \usepackage{setspace}
-  - \onehalfspacing
+    - \usepackage{setspace}
+    - \usepackage{graphicx}
+    - \usepackage{float}
+    - \onehalfspacing
 ---
+
+$$\Large{\text{Group 6}} $$
 
 $$ \large{\text{Authors}} $$
 $$ \text{Vishal Vijay Devadiga (CS21BTECH11061)} $$
@@ -15,14 +19,19 @@ $$ \text{Satpute Aniket Tukaram (CS21BTECH11056)} $$
 $$ \text{Mahin Bansal (CS21BTECH11034)} $$
 $$ \text{Harshit Pant (CS21BTECH11021)} $$
 
+```{=latex}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{../Temp/Logo.png}
+\end{figure}
+```
+
 \pagebreak
-
 # Table of Contents
-
 - [Table of Contents](#table-of-contents)
 - [Introduction](#introduction)
-  - [What is XYZ?](#what-is-xyz)
-  - [Why XYZ?](#why-xyz)
+  - [What is YAFSM?](#what-is-yafsm)
+  - [Why YAFSM?](#why-yafsm)
 - [Language Specifications](#language-specifications)
   - [Data Types](#data-types)
     - [Primitive Data Types](#primitive-data-types)
@@ -35,9 +44,10 @@ $$ \text{Harshit Pant (CS21BTECH11021)} $$
       - [Finite-Sets:](#finite-sets)
       - [Structs:](#structs)
       - [Regular Expressions:](#regular-expressions)
+      - [Context Free Grammars:](#context-free-grammars)
       - [DFAs:](#dfas)
       - [NFAs:](#nfas)
-    - [Comments](#comments)
+      - [PDAs:](#pdas)
   - [Operators](#operators)
     - [Arithmetic Operators](#arithmetic-operators)
     - [Logical Operators](#logical-operators)
@@ -47,6 +57,8 @@ $$ \text{Harshit Pant (CS21BTECH11021)} $$
     - [Automaton Operators](#automaton-operators)
     - [Misc Operators](#misc-operators)
     - [Operator Precedence](#operator-precedence)
+      - [Set Operators Precedence](#set-operators-precedence)
+      - [Automaton Operators Precedence:](#automaton-operators-precedence)
   - [Control Flow](#control-flow)
     - [If-Else](#if-else)
     - [Loops](#loops)
@@ -62,13 +74,11 @@ $$ \text{Harshit Pant (CS21BTECH11021)} $$
 - [References](#references)
 
 \pagebreak
-
 # Introduction
 
-## What is XYZ?
-
-XYZ is a domain specific language that simplifies working with Finite State Machines(FSMs).
-Finite State Machines include Deterministic Finite Automata(DFAs), Non-Deterministic Finite Automata(NFAs), Pushdown Automata(PDAs).
+## What is YAFSM?
+YAFSM is a domain specific language that simplifies working with Finite State Machines(FSMs). 
+Finite State Machines include Deterministic Finite Automata(DFAs), Non-Deterministic Finite Automata(NFAs), Pushdown Automata(PDAs). 
 
 It supports the following features:
 
@@ -76,7 +86,7 @@ It supports the following features:
 - Regular Expressions
 - Context Free Grammars
 
-## Why XYZ?
+## Why YAFSM?
 
 Finite State Machines are used in many applications, such as:
 
@@ -84,35 +94,34 @@ Finite State Machines are used in many applications, such as:
 - Lexical Analysis
 - Compilers
 - Network Protocols
-- Digital Logic
+- Digital Logic                                                              
 - Artificial Intelligence
 - Natural Language Processing
 - etc.
 
-Finite State Machines are used in many applications, but the syntax for defining a Finite State Machine is not very intuitive. XYZ aims to simplify the syntax for defining a Finite State Machine, making it easier for programmers to work with Finite State Machines.
+Finite State Machines are used in many applications, but the syntax for defining a Finite State Machine is not very intuitive. YAFSM aims to simplify the syntax for defining a Finite State Machine, making it easier for programmers to work with Finite State Machines.
+
 
 \pagebreak
-
 # Language Specifications
 
-XYZ follows, making it easier for programmers to pick up XYZ easily and keep their focus on the logic rather than XYZ.
+YAFSM follows, making it easier for programmers to pick up YAFSM easily and keep their focus on the logic rather than YAFSM.
 
-- XYZ is a **statically typed** language
-- XYZ is a **strongly typed** language
-- XYZ is a **procedural** language
-- XYZ is case sensitive.
+- YAFSM is a **statically typed** language
+- YAFSM is a **strongly typed** language
+- YAFSM is a **procedural** language
+- YAFSM is case sensitive.
 
-XYZ does not support Object Oriented Programming(**OOPs**).
+YAFSM does not support Object Oriented Programming(**OOPs**).
 
 ## Data Types
 
-XYZ uses common data types found in most programming languages.
+YAFSM uses common data types found in most programming languages.
 
 ### Primitive Data Types
 
-#### Integer:
-
-Signed Integers are represented by the `int_x` keyword, where `x` is the number of bits used to represent the integer. XYZ supports 8, 16, 32 and 64 bit integers.
+#### Integer: 
+Signed Integers are represented by the `int_x` keyword, where `x` is the number of bits used to represent the integer. YAFSM supports 8, 16, 32 and 64 bit integers.
 
 ```c
 int_8 a;
@@ -122,7 +131,7 @@ int_32 d = 30;
 int_64 e = 40;
 ```
 
-Unsigned Integers are represented by the `uint_x` keyword, where `x` is the number of bits used to represent the integer. XYZ supports 8, 16, 32 and 64 bit integers.
+Unsigned Integers are represented by the `uint_x` keyword, where `x` is the number of bits used to represent the integer. YAFSM supports 8, 16, 32 and 64 bit integers.
 
 ```c
 unit_8 a;
@@ -133,17 +142,15 @@ uint_64 e = 40;
 ```
 
 #### Character:
-
-Characters are represented by the `char` keyword. XYZ supports 8 bit characters.
+Characters are represented by the `char` keyword. YAFSM supports 8 bit characters.
 
 ```c
 char a;
 char b = 'a';
 ```
 
-#### Float:
-
-Floats are represented by the `float_x` keyword, where `x` is the number of bits used to represent the float. XYZ supports 32 and 64 bit floats.
+#### Float: 
+Floats are represented by the `float_x` keyword, where `x` is the number of bits used to represent the float. YAFSM supports 32 and 64 bit floats.
 
 ```c
 float_32 a;
@@ -152,7 +159,6 @@ float_64 c = 20.5;
 ```
 
 #### Boolean:
-
 Booleans are represented by the `bool` keyword, which is similar to the `bool` keyword in C, C++, Java and Python.
 
 ```c
@@ -164,7 +170,6 @@ bool c = false;
 ### Composite Data Types
 
 #### Strings:
-
 Strings are represented by the `string` keyword. Strings are immutable, and can be indexed using the `[]` operator.
 
 ```c
@@ -174,11 +179,10 @@ char b = a[0];
 ```
 
 #### Finite-Sets:
+Sets are collections of elements of the same data type. YAFSM supports two types of sets: Ordered Sets and Unordered Sets.
 
-Sets are collections of elements of the same data type. XYZ supports two types of sets: Ordered Sets and Unordered Sets.
-
-- Ordered Sets are represented by the `o_set` keyword.
-- Unordered Sets are represented by the `u_set` keyword.
+- Ordered Sets are represented by the `o_set` keyword. 
+- Unordered Sets are represented by the `u_set` keyword. 
 
 ```c
 o_set<int_8> a;
@@ -186,8 +190,7 @@ o_set<int_8> b = {1, 2, 3};
 ```
 
 #### Structs:
-
-Structs are represented by the `struct` keyword. Structs can contain any data type supported by XYZ.
+Structs are represented by the `struct` keyword. Structs can contain any data type supported by YAFSM.
 
 ```c
 struct Point {
@@ -199,7 +202,6 @@ struct Point {
 ```
 
 #### Regular Expressions:
-
 Regular Expressions are represented by the `regex` keyword. Regular Expression can contain definitions of other Regular Expressions, and can be used to define Finite State Machines.
 
 ```c
@@ -215,7 +217,7 @@ regex f = r'[ab]$';
 regex g = r'{a}|{b}';
 ```
 
-<!-- #### Context Free Grammars:
+#### Context Free Grammars:
 Context Free Grammars are represented by the `cfg` keyword. Context Free Grammars are defined by a 4-tuple: $$ (N, \Sigma, P, S) $$
 where:
 
@@ -227,10 +229,21 @@ where:
 A production rule is represented as:
 
 - A -> $\alpha$ where $\alpha$ is a string of terminal and non-terminal symbols
-- A -> { $\alpha_1$, $\alpha_2$, ... } where $\alpha_1$, $\alpha_2$, ... are strings of terminal and non-terminal symbols. -->
+- A -> { $\alpha_1$, $\alpha_2$, ... } where $\alpha_1$, $\alpha_2$, ... are strings of terminal and non-terminal symbols.
+
+```c
+cfg a;
+a.T = {a, b};
+a.N = {A, B};
+a.S = A;
+a.P = {
+    A -> aB,
+    B -> bA,
+    A -> {aA, \e}
+};
+```
 
 #### DFAs:
-
 DFAs are represented by the `dfa` keyword.
 
 A DFA is defined by a 5-tuple: $$ (Q, \Sigma, \delta, q_0, F) $$
@@ -273,7 +286,6 @@ a.F = {q1,q2};
 ```
 
 #### NFAs:
-
 NFAs are represented by the `nfa` keyword.
 
 A NFA is defined by a 5-tuple: $$ (Q, \Sigma, \delta, q_0, F) $$
@@ -311,7 +323,7 @@ a.q0 = q0;
 a.F = {q1,q2};
 ```
 
-<!-- #### PDAs:
+#### PDAs:
 PDAs are represented by the `pda` keyword.
 
 A PDA is defined by a 6-tuple: $$ (Q, \Sigma, \Gamma, \delta, q_0, F) $$
@@ -320,20 +332,40 @@ where:
 - $Q$ is a `o_set` of states
 - $\Sigma$ is a **set** of input symbols
 - $\Gamma$ is a **set** of stack symbols
-- $\delta$ is the transition function, which maps $Q \times \Sigma \times \Gamma$ to $2^{Q \times \Gamma^*}$
+- $\delta$ is the transition function, which maps $Q \times \Sigma_{\epsilon} \times \Gamma_{\epsilon}$ to $2^{Q \times \Gamma_{\epsilon}}$
 - $q_0$ is the initial state
 - $F$ is a set of final states
 
-Here $2^{Q \times \Gamma^*}$ represent the power set of $Q \times \Gamma^*$.
+Here $2^{Q \times \Gamma_{\epsilon}}$ represent the power set of $Q \times \Gamma_{\epsilon}$.
 
 A transition can be represented as:
 
-- state1, input_symbol, stack_symbol -> state2, stack_string1
-- state1, {(input_symbol1, stack_symbol1), (input_symbol2, stack_symbol2), ...} -> state2, stack_string1 -->
+- state1, input_symbol, stack_symbol -> state2, stack_symbol
+- state1, {(input_symbol1, stack_symbol1), (input_symbol2, stack_symbol2), ...} -> state2, stack_symbol
+- state1, input_symbol, stack_symbol -> {(state2, stack_symbol2), (state3,stack_symbol3), ...}
+
+```c
+pda a;
+a.Q = {A, B, C};
+a.S = {a, b, c};
+a.G = {a, b, d};
+a.delta = {
+    A, a, a -> A, a,
+    A, {(b, a),(b, c)} -> {(B, a), (A, d)},
+    B, {(b, a), (b, c)} -> B, a,
+    B, c, a -> C, \e,
+    C, c, a -> {(C, \e), (C, a)}
+};
+a.q0 = A;
+a.F = {C};
+```
+
+```
+
 
 ### Comments
 
-XYZ has only one type of comment, that can act as both single line and multi line comments. The comment starts with `<!--` and ends with `--!>`. Below is an example of a comment:
+YAFSM has only one type of comment, that can act as both single line and multi line comments. The comment starts with `<!--` and ends with `--!>`. Below is an example of a comment:
 
 ```markdown
 <!-- This is a comment --!>
@@ -343,8 +375,7 @@ multi line comment --!>
 ```
 
 ## Operators
-
-Operators supports by XYZ are similar to the operators supported by C.
+Operators supports by YAFSM are similar to the operators supported by C.
 
 ### Arithmetic Operators
 
@@ -468,9 +499,26 @@ int_8 a = func(10, 20);
 |                    `=`                    |            Assignment            |
 | `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `\|=` |            Assignment            |
 
+#### Set Operators Precedence
+
+| Operator |     Description    |
+| :------: | :----------------: |
+|   `()`   | Parentheses        |
+|   `^2`   | Power Set          |
+|  `*`,`+`,`-` | Intersection, Union, Set Difference |
+
+#### Automaton Operators Precedence:
+
+| Operator | Description |
+| :------: | :---------: |
+|  `()`    | Parentheses |
+|   `*`,`!`| Kleene Star, Negation |
+|   `@`,`+`| Concatenation, Union |
+
+
 ## Control Flow
 
-XYZ enforce the use of curly braces for all control flow statements. XYZ does not support the use of indentation for control flow statements. XYZ supports the following control flow statements:
+YAFSM enforce the use of curly braces for all control flow statements. YAFSM does not support the use of indentation for control flow statements. YAFSM supports the following control flow statements:
 
 ### If-Else
 
@@ -479,10 +527,10 @@ Below is the syntax for the if-else statement:
 ```python
 if (condition) {
     statement;
-}
+} 
 elif (condition) {
     statement;
-}
+} 
 else {
     statement;
 }
@@ -490,7 +538,7 @@ else {
 
 ### Loops
 
-XYZ only supports the `while` loop. Below is the syntax for the `while` loop:
+YAFSM only supports the `while` loop. Below is the syntax for the `while` loop:
 
 ```c
 while (condition) {
@@ -500,7 +548,7 @@ while (condition) {
 
 ## Constants
 
-Constants are represented by the `const` keyword. Constants can be of any data type supported by XYZ.
+Constants are represented by the `const` keyword. Constants can be of any data type supported by YAFSM.
 
 ## Keywords
 
@@ -535,7 +583,7 @@ Constants are represented by the `const` keyword. Constants can be of any data t
 
 ## Identifiers
 
-XYZ uses the following rules for identifiers:
+YAFSM uses the following rules for identifiers:
 
 - Identifiers can only contain alphanumeric characters and underscores.
 - Identifiers cannot start with a number.
@@ -551,7 +599,7 @@ Regular Expressions for Identifiers:
 
 ## Statements
 
-XYZ supports the following statements:
+YAFSM supports the following statements:
 
 ### Declaration Statement
 
@@ -575,6 +623,7 @@ Assignment statements are used to assign values to variables. Below is the synta
 identifier = expression;
 ```
 
+
 ### Function Declaration Statement
 
 Function declaration statements are used to declare functions. Below is the syntax for function declaration statements:
@@ -594,7 +643,6 @@ function_name(arg1, arg2, ...);
 ```
 
 In case the function returns a value, the function call statement can be used as an expression:
-
 ```c
 data_type variable = function_name(arg1, arg2, ...);
 ```
@@ -620,7 +668,6 @@ inp(identifier1, identifier2, ...);
 ```
 
 \pagebreak
-
 # References
 
 - [Wikipedia: FSMs](https://en.wikipedia.org/wiki/Finite-state_machine)
