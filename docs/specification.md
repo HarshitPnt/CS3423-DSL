@@ -5,10 +5,10 @@ geometry: margin=2cm
 documentclass: extarticle
 fontsize: 12pt
 header-includes:
-    - \usepackage{setspace}
-    - \usepackage{graphicx}
-    - \usepackage{float}
-    - \onehalfspacing
+  - \usepackage{setspace}
+  - \usepackage{graphicx}
+  - \usepackage{float}
+  - \onehalfspacing
 ---
 
 $$\Large{\text{Group 6}} $$
@@ -27,7 +27,9 @@ $$ \text{Harshit Pant (CS21BTECH11021)} $$
 ```
 
 \pagebreak
+
 # Table of Contents
+
 - [Table of Contents](#table-of-contents)
 - [Introduction](#introduction)
   - [What is YAFSM?](#what-is-yafsm)
@@ -48,6 +50,7 @@ $$ \text{Harshit Pant (CS21BTECH11021)} $$
       - [DFAs:](#dfas)
       - [NFAs:](#nfas)
       - [PDAs:](#pdas)
+    - [Comments](#comments)
   - [Operators](#operators)
     - [Arithmetic Operators](#arithmetic-operators)
     - [Logical Operators](#logical-operators)
@@ -74,11 +77,13 @@ $$ \text{Harshit Pant (CS21BTECH11021)} $$
 - [References](#references)
 
 \pagebreak
+
 # Introduction
 
 ## What is YAFSM?
-YAFSM is a domain specific language that simplifies working with Finite State Machines(FSMs). 
-Finite State Machines include Deterministic Finite Automata(DFAs), Non-Deterministic Finite Automata(NFAs), Pushdown Automata(PDAs). 
+
+YAFSM is a domain specific language that simplifies working with Finite State Machines(FSMs).
+Finite State Machines include Deterministic Finite Automata(DFAs), Non-Deterministic Finite Automata(NFAs), Pushdown Automata(PDAs).
 
 It supports the following features:
 
@@ -94,15 +99,15 @@ Finite State Machines are used in many applications, such as:
 - Lexical Analysis
 - Compilers
 - Network Protocols
-- Digital Logic                                                              
+- Digital Logic
 - Artificial Intelligence
 - Natural Language Processing
 - etc.
 
 Finite State Machines are used in many applications, but the syntax for defining a Finite State Machine is not very intuitive. YAFSM aims to simplify the syntax for defining a Finite State Machine, making it easier for programmers to work with Finite State Machines.
 
-
 \pagebreak
+
 # Language Specifications
 
 YAFSM follows, making it easier for programmers to pick up YAFSM easily and keep their focus on the logic rather than YAFSM.
@@ -120,7 +125,8 @@ YAFSM uses common data types found in most programming languages.
 
 ### Primitive Data Types
 
-#### Integer: 
+#### Integer:
+
 Signed Integers are represented by the `int_x` keyword, where `x` is the number of bits used to represent the integer. YAFSM supports 8, 16, 32 and 64 bit integers.
 
 ```c
@@ -142,6 +148,7 @@ uint_64 e = 40;
 ```
 
 #### Character:
+
 Characters are represented by the `char` keyword. YAFSM supports 8 bit characters.
 
 ```c
@@ -149,7 +156,8 @@ char a;
 char b = 'a';
 ```
 
-#### Float: 
+#### Float:
+
 Floats are represented by the `float_x` keyword, where `x` is the number of bits used to represent the float. YAFSM supports 32 and 64 bit floats.
 
 ```c
@@ -159,6 +167,7 @@ float_64 c = 20.5;
 ```
 
 #### Boolean:
+
 Booleans are represented by the `bool` keyword, which is similar to the `bool` keyword in C, C++, Java and Python.
 
 ```c
@@ -170,6 +179,7 @@ bool c = false;
 ### Composite Data Types
 
 #### Strings:
+
 Strings are represented by the `string` keyword. Strings are immutable, and can be indexed using the `[]` operator.
 
 ```c
@@ -179,10 +189,11 @@ char b = a[0];
 ```
 
 #### Finite-Sets:
+
 Sets are collections of elements of the same data type. YAFSM supports two types of sets: Ordered Sets and Unordered Sets.
 
-- Ordered Sets are represented by the `o_set` keyword. 
-- Unordered Sets are represented by the `u_set` keyword. 
+- Ordered Sets are represented by the `o_set` keyword.
+- Unordered Sets are represented by the `u_set` keyword.
 
 ```c
 o_set<int_8> a;
@@ -190,6 +201,7 @@ o_set<int_8> b = {1, 2, 3};
 ```
 
 #### Structs:
+
 Structs are represented by the `struct` keyword. Structs can contain any data type supported by YAFSM.
 
 ```c
@@ -202,6 +214,7 @@ struct Point {
 ```
 
 #### Regular Expressions:
+
 Regular Expressions are represented by the `regex` keyword. Regular Expression can contain definitions of other Regular Expressions, and can be used to define Finite State Machines.
 
 ```c
@@ -218,6 +231,7 @@ regex g = r'{a}|{b}';
 ```
 
 #### Context Free Grammars:
+
 Context Free Grammars are represented by the `cfg` keyword. Context Free Grammars are defined by a 4-tuple: $$ (N, \Sigma, P, S) $$
 where:
 
@@ -244,6 +258,7 @@ a.P = {
 ```
 
 #### DFAs:
+
 DFAs are represented by the `dfa` keyword.
 
 A DFA is defined by a 5-tuple: $$ (Q, \Sigma, \delta, q_0, F) $$
@@ -286,6 +301,7 @@ a.F = {q1,q2};
 ```
 
 #### NFAs:
+
 NFAs are represented by the `nfa` keyword.
 
 A NFA is defined by a 5-tuple: $$ (Q, \Sigma, \delta, q_0, F) $$
@@ -324,6 +340,7 @@ a.F = {q1,q2};
 ```
 
 #### PDAs:
+
 PDAs are represented by the `pda` keyword.
 
 A PDA is defined by a 6-tuple: $$ (Q, \Sigma, \Gamma, \delta, q_0, F) $$
@@ -360,9 +377,6 @@ a.q0 = A;
 a.F = {C};
 ```
 
-```
-
-
 ### Comments
 
 YAFSM has only one type of comment, that can act as both single line and multi line comments. The comment starts with `<!--` and ends with `--!>`. Below is an example of a comment:
@@ -375,6 +389,7 @@ multi line comment --!>
 ```
 
 ## Operators
+
 Operators supports by YAFSM are similar to the operators supported by C.
 
 ### Arithmetic Operators
@@ -501,20 +516,19 @@ int_8 a = func(10, 20);
 
 #### Set Operators Precedence
 
-| Operator |     Description    |
-| :------: | :----------------: |
-|   `()`   | Parentheses        |
-|   `^2`   | Power Set          |
-|  `*`,`+`,`-` | Intersection, Union, Set Difference |
+|  Operator   |             Description             |
+| :---------: | :---------------------------------: |
+|    `()`     |             Parentheses             |
+|    `^2`     |              Power Set              |
+| `*`,`+`,`-` | Intersection, Union, Set Difference |
 
 #### Automaton Operators Precedence:
 
-| Operator | Description |
-| :------: | :---------: |
-|  `()`    | Parentheses |
-|   `*`,`!`| Kleene Star, Negation |
-|   `@`,`+`| Concatenation, Union |
-
+| Operator |      Description      |
+| :------: | :-------------------: |
+|   `()`   |      Parentheses      |
+| `*`,`!`  | Kleene Star, Negation |
+| `@`,`+`  | Concatenation, Union  |
 
 ## Control Flow
 
@@ -527,10 +541,10 @@ Below is the syntax for the if-else statement:
 ```python
 if (condition) {
     statement;
-} 
+}
 elif (condition) {
     statement;
-} 
+}
 else {
     statement;
 }
@@ -623,7 +637,6 @@ Assignment statements are used to assign values to variables. Below is the synta
 identifier = expression;
 ```
 
-
 ### Function Declaration Statement
 
 Function declaration statements are used to declare functions. Below is the syntax for function declaration statements:
@@ -643,6 +656,7 @@ function_name(arg1, arg2, ...);
 ```
 
 In case the function returns a value, the function call statement can be used as an expression:
+
 ```c
 data_type variable = function_name(arg1, arg2, ...);
 ```
@@ -668,6 +682,7 @@ inp(identifier1, identifier2, ...);
 ```
 
 \pagebreak
+
 # References
 
 - [Wikipedia: FSMs](https://en.wikipedia.org/wiki/Finite-state_machine)
