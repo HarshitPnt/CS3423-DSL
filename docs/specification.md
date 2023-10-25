@@ -22,7 +22,7 @@ $$ \text{Harshit Pant (CS21BTECH11021)} $$
 ```{=latex}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{../Temp/Logo.png}
+    \includegraphics[width=0.5\textwidth]{../assets/images/IITHLogo.png}
 \end{figure}
 ```
 
