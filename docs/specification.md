@@ -74,6 +74,13 @@ $$ \text{Harshit Pant (CS21BTECH11021)} $$
     - [Function Declaration Statement](#function-declaration-statement)
     - [Function Call Statement](#function-call-statement)
     - [IO Statements](#io-statements)
+  - [In-built Functions](#in-built-functions)
+    - [Set Functions](#set-functions)
+    - [CFG Functions](#cfg-functions)
+    - [DFA Functions](#dfa-functions)
+    - [NFA Functions](#nfa-functions)
+    - [PDA Functions](#pda-functions)
+    - [Regular Expression Functions](#regular-expression-functions)
 - [References](#references)
 
 \pagebreak
@@ -213,14 +220,24 @@ struct Point {
 }
 ```
 
+Additionally structs can contain other data types which have already been defined as structs
+
+```c
+Point a,b;
+
+struct set_of_coords {
+  o_set<Point> = {a,b};
+}
+```
+
 #### Regular Expressions:
 
 Regular Expressions are represented by the `regex` keyword. Regular Expression can contain definitions of other Regular Expressions, and can be used to define Finite State Machines.
 
 ```c
-regex alphabet = r'[a_z]';
+regex alphabet = r'[a-z]';
 regex Letter = r'{alphabet}';
-regex Digit = r'[0_9]';
+regex Digit = r'[0-9]';
 regex a = r'[ab]{2}';
 regex b = r'{a}*';
 regex c = r'{a}+';
@@ -407,7 +424,7 @@ Operators supports by YAFSM are similar to the operators supported by C.
 | Operator | Description | Associativity |
 | :------: | :---------: | :-----------: |
 |   `&&`   | Logical AND | Left to Right |
-|  `\|\|`  | Logical OR  | Left to Right |
+|    \|    | Logical OR  | Left to Right |
 |   `!`    | Logical NOT | Right to Left |
 
 ### Comparison Operators
@@ -432,7 +449,7 @@ Operators supports by YAFSM are similar to the operators supported by C.
 |   `/=`   |    Division Assignment    | Right to Left |
 |   `%=`   |     Modulo Assignment     | Right to Left |
 |   `&=`   |  Logical AND Assignment   | Right to Left |
-|  `\|=`   |   Logical OR Assignment   | Right to Left |
+|   \|=    |   Logical OR Assignment   | Right to Left |
 
 ### Set Operators
 
@@ -441,7 +458,7 @@ Operators supports by YAFSM are similar to the operators supported by C.
 |   `+`    |    Union     | Left to Right |
 |   `-`    |  Difference  | Left to Right |
 |   `*`    | Intersection | Left to Right |
-|   '^2'   |  Power Set   | Left to Right |
+|   `^2`   |  Power Set   | Left to Right |
 
 ```c
 o_set<int_8> a = {1, 2, 3};
@@ -680,6 +697,40 @@ In case multiple variables need to be inputted, the input statement can be used 
 ```c
 inp(identifier1, identifier2, ...);
 ```
+
+## In-built Functions
+
+YAFSM supports multiple in-built functions to help with working with Finite State Machines.
+
+### Set Functions
+
+|            Function            |                                Description                                 | Return Type |
+| :----------------------------: | :------------------------------------------------------------------------: | :---------: |
+|       `size(o_set<T> S)`       |                      returns the size of the `o_set`                       |   `int_8`   |
+|       `size(u_set<T> S)`       |                      returns the size of the `u_set`                       |   `int_8`   |
+|      `empty(o_set<T> S)`       |         returns **true** if S is empty otherwise returns **false**         |   `bool`    |
+|      `empty(u_set<T> S)`       |         returns **true** if S is empty otherwise returns **false**         |   `bool`    |
+|    `find(o_set<T> S, T x)`     | finds x in S and returns **true** if $x\in S$, otherwise returns **false** |   `bool`    |
+|    `find(u_set<T> S, T x)`     | finds x in S and returns **true** if $x\in S$, otherwise returns **false** |   `bool`    |
+| `insert(o_set<T> S, T x, ...)` |                      inserts x into S (no duplicates)                      | `o_set<T>`  |
+| `insert(u_set<T> S, T x, ...)` |                      inserts x into S (no duplicates)                      | `u_set<T>`  |
+| `remove(o_set<T> S, T x, ...)` |                        remove x from S if $x\in S$                         | `o_set<T>`  |
+| `remove(o_set<T> S, T x, ...)` |                        remove x from S if $x\in S$                         | `u_set<T>`  |
+|      `delete(o_set<T> S)`      |                   deletes all elements from the `o_set`                    | `o_set<T>`  |
+|      `delete(u_set<T> S)`      |                   deletes all elements from the `u_set`                    | `u_set<T>`  |
+
+### CFG Functions
+
+| Function | Description | Return Type |
+| :------: | :---------: | :---------: |
+
+### DFA Functions
+
+### NFA Functions
+
+### PDA Functions
+
+### Regular Expression Functions
 
 \pagebreak
 
