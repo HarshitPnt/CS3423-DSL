@@ -5,4 +5,4 @@
 **/parser.tab.c
 **/parser.tab.h
 **/parser.tab.o
-*.out
+**.out
