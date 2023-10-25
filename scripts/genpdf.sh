@@ -1,1 +1,1 @@
-pandoc --to latex ./docs/specification.md --highlight-style zenburn -o ./docs/group-6-specification.pdf
+pandoc --to latex ../docs/specification.md --highlight-style zenburn -o ../docs/group-6-specification.pdf
