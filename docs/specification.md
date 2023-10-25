@@ -721,12 +721,39 @@ YAFSM supports multiple in-built functions to help with working with Finite Stat
 |       `out(o_set<T> S)`        |                     prints all elements of the `o_set`                     |      -      |
 |       `out(u_set<T> S)`        |                     prints all elements of the `u_set`                     |      -      |
 
+```c
+o_set<int_8> a = {1, 2, 3};
+u_set<int_8> b = {};
+
+int_8 size_a = size(a); <!-- size_a = 3 --!>
+int_8 size_b = size(b); <!-- size_b = 0 --!>
+
+bool empty_a = empty(a); <!-- empty_a = false --!>
+bool empty_b = empty(b); <!-- empty_b = true --!>
+
+bool find_a = find(a, 1); <!-- find_a = true --!>
+bool find_b = find(b, 1); <!-- find_b = false --!>
+
+insert(a, 4); <!-- a = {1, 2, 3, 4} --!>
+insert(b, 4); <!-- b = {4} --!>
+insert(a,4); <!-- a = {1, 2, 3, 4} --!>
+
+remove(a, 4); <!-- a = {1, 2, 3} --!>
+remove(a, 4); <!-- a = {1, 2, 3} --!>
+
+out(a); <!-- prints {1, 2, 3} --!>
+out(b); <!-- prints {} --!>
+
+delete(a); <!-- a = {} --!>
+delete(b); <!-- b = {} --!>
+```
+
 ### CFG Functions
 
 |         Function          |                                   Description                                    | Return Type |
 | :-----------------------: | :------------------------------------------------------------------------------: | :---------: |
-|      add_T(cfg a, X)      |                           adds a terminal X to the CFG                           |      -      |
-|  add_NT(cfg a, X:"val")   |                 adds a non-terminal "val" with name X to the CFG                 |      -      |
+|   add_T(cfg a, X:"val")   |                  adds a terminal X with value "val" to the CFG                   |      -      |
+|     add_NT(cfg a, X)      |                         adds a non-terminal X to the CFG                         |      -      |
 |      add_P(cfg a, X)      | adds a production to the CFG where the production is in one of the allowed forms |      -      |
 |    remove_T(cfg a, X)     |         removes a terminal from CFG along with all the rules that use X          |      -      |
 |    remove_NT(cfg a, X)    | removes a non-terminal with name X from CFG along with all the rules that use X  |      -      |
@@ -737,22 +764,113 @@ YAFSM supports multiple in-built functions to help with working with Finite Stat
 |       delete(cfg a)       |                                deletes the CFG a                                 |      -      |
 |        out(cfg a)         |                                 prints the CFG a                                 |      -      |
 
+```c
+cfg a;
+a.T = {a:"a", demo:"b"};
+a.N = {A, B};
+a.S = A;
+a.P = {
+    A -> <a>B,
+    B -> <demo>A,
+    A -> {<a>A, \e}
+};
+
+add_T(a, c:"c", d:"d"); <!-- a.T = {a:"a", demo:"b", c:"c", d:"d"}--!>
+add_NT(a, E); <!-- a.N = {A, B, E} --!>
+add_T(a, e); <!-- error: e has no value --!>
+
+add_P(a, E -> <c>B); <!-- a.P = {A -> <a>B, B -> <demo>A, A -> <a>A,
+A-> \e, E -> <c>B} --!>
+
+add_P(a, erroneous-production) <!-- error: production is not in
+the correct form --!>
+
+remove_T(a, c); <!-- a.T = {a:"a", demo:"b", d:"d"}, a.P = {A -> <a>B,
+B -> <demo>A, A -> <a>A, A-> \e} --!>
+remove_NT(a, B); <!-- a.N = {A, B}, a.P = {A -> <a>A, A-> \e} --!>
+
+<!-- if the deleted non-terminal is a start variable then
+entire CFG is deleted --!>
+
+remove_P(a, A -> <a>A); <!-- a.P = {A-> \e} --!>
+<!-- if production is not present then no change --!>
+remove_P(a, A -> <a>A); <!-- a.P = {A-> \e} --!>
+
+change_start(a, E); <!-- a.S = E --!>
+change_start(a, c); <!-- error: c is not a non-terminal --!>
+
+change_start(a,A) <!-- a.S = A --!>
+bool flag = test_membership(a, ""); <!-- flag = true --!>
+
+pda p = cfg_to_pda(a); <!-- p is the PDA equivalent of the CFG a --!>
+
+out(a); <!-- prints the CFG a --!>
+
+delete(a); <!-- deletes the CFG a --!>
+```
+
 ### DFA Functions
 
 |           Function            |                                               Description                                               | Return Type |
 | :---------------------------: | :-----------------------------------------------------------------------------------------------------: | :---------: |
-|   add_states(dfa a, X, ...)   |                   adds states X, ... to the DFA along with transitions from/to X, ...                   |      -      |
+| insert_states(dfa a, X, ...)  |                   adds states X, ... to the DFA along with transitions from/to X, ...                   |      -      |
 |    remove_states(dfa a, X)    |                 removes states X, ... from the DFA along wit transitions from/to X, ...                 |      -      |
-|  add_letters(dfa a, X, ...)   |                              adds letters X, ... to $\Sigma$ of the DFA a                               |      -      |
+| nsert_letters(dfa a, X, ...)  |                              adds letters X, ... to $\Sigma$ of the DFA a                               |      -      |
 |   remove_letters(dfa a, X)    |                                removes letters X, ... from $\Sigma$ of a                                |      -      |
 |    change_start(dfa a, X)     |                             changes the start state of the DFA to X where X                             |      -      |
-|   add_final(dfa a, X, ...)    |                              adds states X, ... to the set of final states                              |      -      |
+|  insert_final(dfa a, X, ...)  |                              adds states X, ... to the set of final states                              |      -      |
 |  remove_final(dfa a, X, ...)  |                         removes states X, ... from the set of accepting states                          |      -      |
 | add_transition(dfa a, X, ...) | adds a transition X, ... where X is in one of the forms of the transitions mentioned in the DFA section |      -      |
 |  remove_transition(dfa a, X)  |                                  removes the transition X from the DFA                                  |      -      |
 |      simulate(dfa a, X)       |                       returns true if X is accepted by the DFA a, otherwise false                       |   `bool`    |
 |         delete(dfa a)         |                                            deletes the DFA a                                            |      -      |
 |          out(dfa a)           |                                            prints the DFA a                                             |      -      |
+
+```text
+dfa a;
+
+a.Q = {q0, q1, q2};
+a.q0 = q0;
+a.Sigma = {0,1,2};
+
+a.F = {q1, q2};
+a.delta = {
+  q0, 0 -> q1,
+  a.Q[0] , 1 -> a.Q[1],
+  q1 , r'[12]' -> q2,
+  q2, {0,2} -> q1
+};
+
+insert_states(a, q3, q4); <!-- a.Q = {q0, q1, q2, q3, q4} --!>
+
+insert_letters(a, 3, 4); <!-- a.Sigma = {0,1,2,3,4} --!>
+
+change_start(a, q3); <!-- a.q0 = q3 --!>
+
+add_transition(a, q3, 3 -> q4); <!-- a.delta = {q0, 0 -> q1, q0, 1 -> q1,
+q1 , 1 -> q2, q1, 2 -> q2, q2, 0 -> q1, q2, 2 -> q1, q3, 3 -> q4} --!>
+
+insert_final(a, q3); <!-- a.F = {q1, q2, q3} --!>
+
+remove_states(a, q4); <!-- a.Q = {q0, q1, q2}, a.delta = {q0, 0 -> q1,
+q0, 1 -> q1, q1 , 1 -> q2, q1, 2 -> q2, q2, 0 -> q1, q2, 2 -> q1} --!>
+
+remove_letters(a, 2); <!-- a.Sigma = {0,1,3,4}, a.delta = {q0, 0 -> q1,
+q0, 1 -> q1, q1 , 1 -> q2, q2, 0 -> q1} --!>
+
+remove_transition(a, q2, 0 -> q1); <!-- a.delta = {q0, 0 -> q1,
+ q0, 1 -> q1,  q1 , 1 -> q2} --!>
+
+remove_transition(a, q2, 0 -> q1); <!-- a.delta = {q0, 0 -> q1,
+ q0, 1 -> q1,  q1 , 1 -> q2} --!>
+
+simulate(a, 101); <!-- error: DFA a is not in stable state(does not have
+transitions for all letters from every state) --!>
+
+out(a) <!-- prints the DFA a --!>
+
+delete(a); <!-- deletes the DFA a --!>
+```
 
 ### NFA Functions
 
@@ -802,3 +920,7 @@ Functions that work with DFAs also work with NFAs. Some additional functions are
 - [Wikipedia: Regular Expressions](https://en.wikipedia.org/wiki/Regular_expression)
 - [Michael Sipser: Introduction to the Theory of Computation](https://math.mit.edu/~sipser/book.html)
 - [C_Programming Language by Kernighan and Ritchie](https://en.wikipedia.org/wiki/The_C_Programming_Language)
+
+```
+
+```
