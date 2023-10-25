@@ -8,4 +8,4 @@ lexer:
 
 clean:
 	$(MAKE) --no-print-directory -C $(DIR_LEXER) clean
-	rm -f **/*.o **/*.out **/*.exe **/.*.cpp
+	# rm -f **/*.o **/*.out **/*.exe **/.*.cpp **/*.c
