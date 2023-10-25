@@ -1,0 +1,12 @@
+identifier: int
+identifier: a
+punctuation: ;
+identifier: int
+identifier: b
+punctuation: ;
+identifier: int
+identifier: c
+punctuation: ;
+datatype: dfa
+identifier: a
+punctuation: ;

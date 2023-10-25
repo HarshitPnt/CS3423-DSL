@@ -1,274 +1,247 @@
 %{
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <stdbool.h>
-    #include "y.tab.h"
-    // maintaining line number for error statement
-    int line_no = 0;
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <stdbool.h>
+  #include <string.h>
+
+  // Defining files
+  FILE *yyin, *seq_token;
+
+  // maintaining line number for error statement
+  int line_no = 0;
 %} 
 
 letter              [a-zA-Z]
 digit               [0-9]
 special_char        ("@"|"#"|"*"|"-"|"+"|"/"|"_"|"\\")
-
-id                  (({letter}|"_")({letter}|{digit}|"_")*)
-
 int_const           (({digit}+))
 float_const         (({digit}+)"."({digit}+))
 string_const        ("\""({special_char}|{digit}|{letter}|" "|"'"|"\\\"")*"\"")
 char_const          ("\'"({letter}|{digit}|{special_char})"\'")
+reserved_keyword    ("if"|"elif"|"else"|"while")
+IO_stmts            ("out"|"inp")
 bool_const          ("true"|"false")
-
-s_integer           ("int_8","int_16","int_32","int_64")
-u_integer           ("uint_8","uint_16","uint_32","uint_64")
-float_type          ("float_32","float_64")
+s_integer           ("int_8"|"int_16"|"int_32"|"int_64")
+u_integer           ("uint_8"|"uint_16"|"uint_32"|"uint_64")
+float_type          ("float_32"|"float_64")
 bool_type           ("bool")
 string_type         ("string")
 char_type           ("char")
-set_type            ("o_set","u_set")
+set_type            ("o_set"|"u_set")
 regex_type          ("regex")
 cfg_type            ("cfg")
 dfa_type            ("dfa")
 nfa_type            ("nfa")
 pda_type            ("pda")
-
-ar_ops              ("+","-","*","/","%","@")
-bi_lo_ops           ("&&","||")
+id                  (({letter}|"_")({letter}|{digit}|"_")*)
+ar_ops              ("+"|"-"|"*"|"/"|"%"|"@")
+bi_lo_ops           ("&&"|"||")
 uni_lo_ops          ("!")
-comp_ops            ("==","!=","<",">","<=",">=")
-asn_ops             ("=","+=","-=","*=","/=","%=","&=","|=")
-
-reserved_keyword    ("if","elif","else","while")
-IO_stmts            ("out","inp")
+comp_ops            ("=="|"!="|"<"|">"|"<="|">=")
+asn_ops             ("="|"+="|"-="|"*="|"/="|"%="|"&="|"|=")
 
 %%
 
 {reserved_keyword}  {
-    // Handling reserved keywords
     fprintf(seq_token,"reserved keyword: %s\n",yytext);
     if(strcmp(yytext,"if")==0) {
-        return IF_KW;
+        // return IF_KW;
     }
     else if(strcmp(yytext,"elif")==0) {
-        return ELIF_KW;
+        // return ELIF_KW;
     }
     else if(strcmp(yytext,"else")==0) {
-        return ELSE_KW;
+        // return ELSE_KW;
     }
     else if(strcmp(yytext,"while")==0) {
-        return WHILE_KW;
+        // return WHILE_KW;
     }
 }
 
 {IO_stmts}          {
-    // Handling IO statements
     fprintf(seq_token,"reserved keyword: %s\n",yytext);
     if(strcmp(yytext,"out")==0) {
-        return OUT_KW;
+        // return OUT_KW;
     }
     else if(strcmp(yytext,"inp")==0) {
-        return INP_KW;
+        // return INP_KW;
     }
 }
 
-s_integer           {
-    // Handling signed integers
+{s_integer}         {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return DATATYPE;
+    // return S_INT_TYPE;
 }
 
-u_integer           {
-    // Handling unsigned integers
+{u_integer}         {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return DATATYPE;
+    // return U_INT_TYPE;
 }
 
-float_type          {
-    // Handling float type
+{float_type}        {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return DATATYPE;
+    // return FLOAT_TYPE;
 }
 
-bool_type           {
-    // Handling bool type
+{bool_type}         {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return DATATYPE;
+    // return BOOL_TYPE;
 }
 
-string_type         {
-    // Handling string type
+{string_type}       {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return DATATYPE;
+    // return STRING_TYPE;
 }
 
-char_type           {
-    // Handling char type
+{char_type}         {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return DATATYPE;
+    // return CHAR_TYPE;
 }
 
-set_type            {
-    // Handling set type
+{set_type}          {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return SET_TYPE;
+    // return SET_TYPE;
 }
 
-regex_type          {
-    // Handling regex type
+{regex_type}        {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return REGEX_TYPE;
+    // return REGEX_TYPE;
 }
 
-cfg_type            {
-    // Handling cfg type
+{cfg_type}          {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return CFG_TYPE;
+    // return CFG_TYPE;
 }
 
-dfa_type            {
-    // Handling dfa type
+{dfa_type}          {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return DFA_TYPE;
+    // return DFA_TYPE;
 }
 
-nfa_type            {
-    // Handling nfa type
+{nfa_type}          {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return NFA_TYPE;
+    // return NFA_TYPE;
 }
 
-pda_type            {
-    // Handling pda type
+{pda_type}          {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    return PDA_TYPE;
+    // return PDA_TYPE;
 }
 
-ar_ops              {
-    // Handling arithmetic operators
+{ar_ops}            {
     fprintf(seq_token,"operator: %s\n",yytext);
-    return AR_OPS;
+    // return AR_OPS;
 }
 
-bi_lo_ops           {
-    // Handling binary logical operators
+{bi_lo_ops}         {
     fprintf(seq_token,"operator: %s\n",yytext);
-    return bin_lo_ops;
+    // return bin_lo_ops;
 }
 
-uni_lo_ops          {
-    // Handling unary logical operators
+{uni_lo_ops}        {
     fprintf(seq_token,"operator: %s\n",yytext);
-    return unary_lo_ops;
+    // return UNI_LO_OPS;
 }
 
-comp_ops            {
-    // Handling comparison operators
+{comp_ops}          {
     fprintf(seq_token,"operator: %s\n",yytext);
-    return compa_ops;
+    // return COMP_OPS;
 }
 
-asn_ops             {
-    // Handling assignment operators
+{asn_ops}           {
     fprintf(seq_token,"operator: %s\n",yytext);
-    return assign_ops;
+    // return ASN_OPS;
 }
 
-bool_const          {
-    //  Handling boolean constants
+{bool_const}        {
     fprintf(seq_token,"boolean constant: %s\n",yytext);
-    return bool_const;
+    // return BOOL_CONST;
 }
 
-char_const          {
-    // Handling character constants
+{char_const}        {
     fprintf(seq_token,"character constant: %s\n",yytext);
-    return char_const;
+    // return CHAR_CONST;
 }
 
-string_const        {
-    // Handling string constants
+{string_const}      {
     fprintf(seq_token,"string constant: %s\n",yytext);
-    return string_const;
+    // return STRING_CONST;
 }   
 
-int_const             {
-    // Handling integers
+{int_const}         {
     fprintf(seq_token,"integer: %s\n",yytext);
-    return int_const;
+    // return INT_CONST;
 }
 
-float_const         {
-    // Handling floats
+{float_const}       {
     fprintf(seq_token,"float: %s\n",yytext);
-    return float_const;
+    // return FLOAT_CONST;
 }
 
-id                  {
-    // Handling identifiers
+{id}                {
     fprintf(seq_token,"identifier: %s\n",yytext);
-    return ID;
+    // return ID;
+}
+
+","                 {
+    fprintf(seq_token,"punctuation: %s\n",yytext);
+    // return COMMA;  
 }
 
 "."                 {
-    // Handling dot operator
     fprintf(seq_token,"operator: %s\n",yytext);
-    return DOT;
+    // return DOT;
 }
 
 "->"                {
-    // Handling arrow operator
     fprintf(seq_token,"operator: %s\n",yytext);
-    return ARROW;
+    // return ARROW;
 }
 
 "("                 {
-    // Handling left parenthesis
     fprintf(seq_token,"left parenthesis: %s\n",yytext);
-    return LBP;
+    // return LBP;
 }
 
 ")"                 {
-    // Handling right parenthesis
     fprintf(seq_token,"right parenthesis: %s\n",yytext);
-    return RBP;
+    // return RBP;
 }
 
 "["                 {
-    // Handling left square parenthesis
     fprintf(seq_token,"left square parenthesis: %s\n",yytext);
-    return LSP;
+    // return LSP;
 }
 
 "]"                 {
-    // Handling right square parenthesis
     fprintf(seq_token,"right square parenthesis: %s\n",yytext);
-    return RSP;
+    // return RSP;
 }
 
 "{"                 {
-    // Handling left curly parenthesis
     fprintf(seq_token,"left curly parenthesis: %s\n",yytext);
-    return LCP;
+    // return LCP;
 }
 
 "}"                 {
-    // Handling right curly parenthesis
     fprintf(seq_token,"right curly parenthesis: %s\n",yytext);
-    return RCP;
+    // return RCP;
 }
 
+";"                 {
+    fprintf(seq_token,"punctuation: %s\n",yytext);
+    // return SEMICOLON;
+}
 
 [ ]                 {
-    // Handlling empty spaces
+    // Handling empty spaces
 }
 
 \n                  {
-    // Handling new lines
     line_no++;
 }
 
 .                   {
-    // Handling Error in lex part
     fprintf(seq_token,"Aborted\n");
     fprintf(seq_token,"Lexical Error at line number : %d : %s\n",yylineno,yytext);
     return 0;
@@ -278,17 +251,16 @@ id                  {
 
 int yywrap() {}
 int main(int argc,char *argv[]) { 
-    extern FILE *yyin, *seq_token;
-    if(argc > 1)
-        yyin = fopen(argv[1], "r");
-    else
-        yyin = stdin; 
-    seq_token = fopen("../Tests/seq_token.txt", "w");
+  if(argc > 1)
+      yyin = fopen(argv[1], "r");
+  else
+      yyin = stdin; 
+  seq_token = fopen("../test/seq_token.txt", "w");
 
-    yylex();
+  yylex();
 
-    if(argc > 1)
-        fclose(yyin);
-    fclose(seq_token);
-    return 0;
+  if(argc > 1)
+    fclose(yyin);
+  fclose(seq_token);
+  return 0;
 }
