@@ -1,7 +1,8 @@
-Temp
-build
-lex.yy.c
-lex.yy.o
-parser.tab.c
-parser.tab.h
-parser.tab.o
+/Temp/
+/build/
+**/lex.yy.c
+**/lex.yy.o
+**/parser.tab.c
+**/parser.tab.h
+**/parser.tab.o
+*.out
