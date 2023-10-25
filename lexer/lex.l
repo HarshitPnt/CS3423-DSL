@@ -9,21 +9,21 @@
 
   // maintaining line number for error statement
   int line_no = 0;
-%} 
+%}
 
-letter              [a-zA-Z] //This deals with a single character
-digit               [0-9]//This deals with a single digit
+letter              [a-zA-Z] 
+digit               [0-9]
 special_char        ("@"|"#"|"*"|"-"|"+"|"/"|"_"|"\\")
-int_const           (({digit}+))//This takes cares of integer nkumbers
-float_const         (({digit}+)"."({digit}+))//This takes care of real numbers.It has decimal in it and integers on both side of it.
-string_const        ("\""({special_char}|{digit}|{letter}|" "|"'"|"\\\"")*"\"")//This takes care of string .
+int_const           (({digit}+))
+float_const         (({digit}+)"."({digit}+))
+string_const        ("\""({special_char}|{digit}|{letter}|" "|"'"|"\\\"")*"\"")
 char_const          ("\'"({letter}|{digit}|{special_char})"\'")
 reserved_keyword    ("if"|"elif"|"else"|"while")
-IO_stmts            ("out"|"inp") //reserved keywords of input and output
-bool_const          ("true"|"false")//Bool values true and false
-s_integer           ("int_8"|"int_16"|"int_32"|"int_64") //This takes care of int_64,int_32,int_16,int_8 datatypes.
-u_integer           ("uint_8"|"uint_16"|"uint_32"|"uint_64")//This takes care of uint_64,uint_32,uint_16,uint_8 datatypes.
-float_type          ("float_32"|"float_64")//This takes care of float_64,float_32 datatypes.
+IO_stmts            ("out"|"inp") 
+bool_const          ("true"|"false")
+s_integer           ("int_8"|"int_16"|"int_32"|"int_64")
+u_integer           ("uint_8"|"uint_16"|"uint_32"|"uint_64")
+float_type          ("float_32"|"float_64")
 bool_type           ("bool")
 string_type         ("string")
 char_type           ("char")
@@ -33,7 +33,7 @@ cfg_type            ("cfg")
 dfa_type            ("dfa")
 nfa_type            ("nfa")
 pda_type            ("pda")
-id                  (({letter}|"_")({letter}|{digit}|"_")*)//This takes care of identifiers .They start with letter or underscore and can be followed by multiple digits,letter and underscores
+id                  (({letter}|"_")({letter}|{digit}|"_")*)
 ar_ops              ("+"|"-"|"*"|"/"|"%"|"@")
 bi_lo_ops           ("&&"|"||")
 uni_lo_ops          ("!")
