@@ -1,54 +1,84 @@
-%option stack
+%option yylineno
 
 %{
-  #include <stdio.h>
-  #include <stdlib.h>
-  #include <stdbool.h>
-  #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
-  // Defining files
-  FILE *yyin, *seq_token;
-  char comment[10000];
-  int comm_len=0;
-  // maintaining line number for error statement
-  int line_no = 0;
+// Defining files
+FILE *yyin, *seq_token;
+char comment[10000];
+int comm_len=0;
+
+// Defining functions
+void error();
 %}
 
+/*Some standard Definitons*/
 letter              [a-zA-Z] 
 digit               [0-9]
 special_char        ("@"|"#"|"*"|"-"|"+"|"/"|"_"|"\\")
-int_const           (({digit}+))
-float_const         (({digit}+)"."({digit}+))
-string_const        ("\""({special_char}|{digit}|{letter}|" "|"'"|"\\\"")*"\"")
-char_const          ("\'"({letter}|{digit}|{special_char})"\'")
-reserved_keyword    ("if"|"elif"|"else"|"while")
-IO_stmts            ("out"|"inp") 
-bool_const          ("true"|"false")
-s_integer           ("int_8"|"int_16"|"int_32"|"int_64")
-u_integer           ("uint_8"|"uint_16"|"uint_32"|"uint_64")
-float_type          ("float_32"|"float_64")
-bool_type           ("bool")
-string_type         ("string")
-char_type           ("char")
-set_type            ("o_set"|"u_set")
-regex_type          ("regex")
-cfg_type            ("cfg")
-dfa_type            ("dfa")
-nfa_type            ("nfa")
-pda_type            ("pda")
+whitespace          (" "|"\t"|"\n")
+
+/*Constants*/
+const_int           (({digit}+))
+const_float         (({digit}+)"."({digit}+))
+const_string        ("\""({special_char}|{digit}|{letter}|" "|"'"|"\\\"")*"\"")
+const_char          ("\'"({letter}|{digit}|{special_char})"\'")
+const_bool          ("true"|"false")
+
+/*Identifiers*/
 id                  (({letter}|"_")({letter}|{digit}|"_")*)
-ar_ops              ("+"|"-"|"*"|"/"|"%"|"@")
-bi_lo_ops           ("&&"|"||")
-uni_lo_ops          ("!")
-comp_ops            ("=="|"!="|"<"|">"|"<="|">=")
-asn_ops             ("="|"+="|"-="|"*="|"/="|"%="|"&="|"|=")
-comm_begin         ("<!--")
-comm_end           ("--!>")
+
+/*Opeartors*/
+oper_ari            ("+"|"-"|"*"|"/"|"%"|"@")
+oper_bi_log         ("&&"|"||")
+oper_un_log         ("!")
+oper_comp           ("=="|"!="|"<"|">"|"<="|">=")
+oper_asn            ("="|"+="|"-="|"*="|"/="|"%="|"&="|"|=")
+operator            ({oper_ari}|{oper_bi_log}|{oper_un_log}|{oper_comp}|{oper_asn})
+
+/*Datatypes: Standard*/
+type_sint           ("int_8"|"int_16"|"int_32"|"int_64")
+type_uint           ("uint_8"|"uint_16"|"uint_32"|"uint_64")
+type_float          ("float_32"|"float_64")
+type_bool           ("bool")
+type_string         ("string")
+type_char           ("char")
+type_standard       ({type_sint}|{type_uint}|{type_float}|{type_bool}|{type_string}|{type_char})
+
+/*Datatypes: Non-Standard*/
+type_oset           ("o_set")
+type_uset           ("u_set")
+type_regex          ("regex")
+type_cfg            ("cfg")
+type_dfa            ("dfa")
+type_nfa            ("nfa")
+type_pda            ("pda")
+type_non_standard   ({type_oset}|{type_uset}|{type_regex}|{type_cfg}|{type_dfa}|{type_nfa}|{type_pda})
+
+/*Other Keywords*/
+keyword_control     ("if"|"elif"|"else"|"while")
+stmt_IO             ("out"|"inp") 
+comm_beg            ("<!--")
+comm_end            ("--!>")
+
+/*Punctuations*/
+/* Note that BRACE: {} BRACKETS: [] PARENTHESIS: () */
+brackets            ("(" | ")" | "[" | "]" | "{" | "}")
+punctuation         ("," | "." | "->" | ";" | ":")
+
 %x COMMENT
 
 %%
 
-{reserved_keyword}  {
+{whitespace}        {
+    // Ignoring whitespaces
+}
+
+
+{keyword_control}  {
     fprintf(seq_token,"reserved keyword: %s\n",yytext);
     if(strcmp(yytext,"if")==0 ) {
         // return IF_KW;
@@ -65,8 +95,8 @@ comm_end           ("--!>")
 }
 
 
-{IO_stmts}          {
-//This tells us which keyword is matched by comparing the keyword in the input program to given keywords
+{stmt_IO}          {
+    // Input and Output statements
     fprintf(seq_token,"reserved keyword: %s\n",yytext);
     if(strcmp(yytext,"out")==0) {
         // return OUT_KW;
@@ -76,158 +106,164 @@ comm_end           ("--!>")
     }
 }
 
-
-{s_integer}         {
-    //This tells us whether matched reserved word is out or inp .
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    // return S_INT_TYPE;
+{brackets}         {
+    fprintf(seq_token,"punctuation: %s\n",yytext);
+    if(strcmp(yytext,"(")==0) {
+        // return LPAREN;
+    }
+    else if(strcmp(yytext,")")==0) {
+        // return RPAREN;
+    }
+    else if(strcmp(yytext,"[")==0) {
+        // return LBRACK;
+    }
+    else if(strcmp(yytext,"]")==0) {
+        // return RBRACK;
+    }
+    else if(strcmp(yytext,"{")==0) {
+        // return LBRACE;
+    }
+    else if(strcmp(yytext,"}")==0) {
+        // return RBRACE;
+    }
 }
 
-
-{u_integer}         {
-    //Here we print the s_integer type (whether its int_8 or int_16 etc)
+{type_standard}     {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    // return U_INT_TYPE;
+    if(strcmp(yytext,"int_8")==0) {
+        // return INT_8;
+    }
+    else if(strcmp(yytext,"int_16")==0) {
+        // return INT_16;
+    }
+    else if(strcmp(yytext,"int_32")==0) {
+        // return INT_32;
+    }
+    else if(strcmp(yytext,"int_64")==0) {
+        // return INT_64;
+    }
+    else if(strcmp(yytext,"uint_8")==0) {
+        // return UINT_8;
+    }
+    else if(strcmp(yytext,"uint_16")==0) {
+        // return UINT_16;
+    }
+    else if(strcmp(yytext,"uint_32")==0) {
+        // return UINT_32;
+    }
+    else if(strcmp(yytext,"uint_64")==0) {
+        // return UINT_64;
+    }
+    else if(strcmp(yytext,"float_32")==0) {
+        // return FLOAT_32;
+    }
+    else if(strcmp(yytext,"float_64")==0) {
+        // return FLOAT_64;
+    }
+    else if(strcmp(yytext,"bool")==0) {
+        // return BOOL;
+    }
+    else if(strcmp(yytext,"string")==0) {
+        // return STRING;
+    }
+    else if(strcmp(yytext,"char")==0) {
+        // return CHAR;
+    }
 }
 
-
-{float_type}        {
-    //Here we print the u_integer type (whether its uint_8 or uint_16 etc)
+{type_non_standard} {
     fprintf(seq_token,"datatype: %s\n",yytext);
-    // return FLOAT_TYPE;
+    if(strcmp(yytext,"o_set")==0) {
+        // return O_SET;
+    }
+    else if(strcmp(yytext,"u_set")==0) {
+        // return U_SET;
+    }
+    else if(strcmp(yytext,"regex")==0) {
+        // return REGEX;
+    }
+    else if(strcmp(yytext,"cfg")==0) {
+        // return CFG;
+    }
+    else if(strcmp(yytext,"dfa")==0) {
+        // return DFA;
+    }
+    else if(strcmp(yytext,"nfa")==0) {
+        // return NFA;
+    }
+    else if(strcmp(yytext,"pda")==0) {
+        // return PDA;
+    }
 }
 
-
-{bool_type}         {
-    //Here we print the float_type(whether its float_32 or float_64)
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    // return BOOL_TYPE;
-}
-
-
-{string_type}       {
-    //Here we print the bool_type (bool).
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    // return STRING_TYPE;
-}
-
-
-{char_type}         {
-    //Here we print the string_type (string)
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    // return CHAR_TYPE;
-}
-
-
-{set_type}          {
-    //Here we print the char_type (char).
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    // return SET_TYPE;
-}
-
-
-{regex_type}        {
-    //Here we print the set_type (o_set or u_set).
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    // return REGEX_TYPE;
-}
-
-
-{cfg_type}          {
-    //Here we print the regex_type (regex).
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    // return CFG_TYPE;
-}
-
-
-{dfa_type}          {
-    //Here we print the cfg_type (cfg).
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    // return DFA_TYPE;
-}
-
-
-{nfa_type}          {
-    //Here we print the dfa_type (dfa).
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    // return NFA_TYPE;
-}
-
-
-{pda_type}          {
-    //Here we print the nfa_type (nfa).
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    // return PDA_TYPE;
-}
-
-
-{ar_ops}            {
-    //Here we print the pda_type (pda).
+{oper_ari}         {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return AR_OPS;
+    // return OPER_ARI;
 }
 
-
-{bi_lo_ops}         {
-    //Here we print the ar_ops used (whether + or - or * or / or % or @)
+{oper_bi_log}      {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return bin_lo_ops;
+    // return OPER_BI_LOG;
 }
 
-
-{uni_lo_ops}        {
-//Here we print the bi_lo_ops used (whether &&or ||)
+{oper_un_log}      {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return UNI_LO_OPS;
+    // return OPER_UN_LOG;
 }
-{comp_ops}          {
-    //Here we print the uni_lo_ops used (!)
+
+{oper_comp}      {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return COMP_OPS;
+    // return OPER_COMP;
 }
 
-
-{asn_ops}           {
-    //Here we print the comp_ops used (whether == or != or < or > or <= or>=)
+{oper_asn}      {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return ASN_OPS;
+    // return OPER_ASN;
 }
 
-
-{bool_const}        {
-    //Here we print the ASN_ops used (whether = or += or -= or *= or /= or %= or &= or |=)
-    fprintf(seq_token,"boolean constant: %s\n",yytext);
-    // return BOOL_CONST;
+{punctuation}      {
+    fprintf(seq_token,"punctuation: %s\n",yytext);
+    if(strcmp(yytext,";")==0) {
+        // return SEMICOLON;
+    }
+    else if(strcmp(yytext,",")==0) {
+        // return COMMA;
+    }
+    else if(strcmp(yytext,".")==0) {
+        // return DOT;
+    }
+    else if(strcmp(yytext,"->")==0) {
+        // return ARROW;
+    }
+    else if(strcmp(yytext,":")==0) {
+        // return COLON;
+    }
 }
 
-
-{char_const}        {
-    //Here we print the bool_const used in the input program.
-    fprintf(seq_token,"character constant: %s\n",yytext);
-    // return CHAR_CONST;
-}
-
-
-{string_const}      {
-    //Here we print the char_const used in the input program.
-    fprintf(seq_token,"string constant: %s\n",yytext);
-    // return STRING_CONST;
-}   
-
-
-{int_const}         {
-    //Here we print the string_const used in the input program.
-    fprintf(seq_token,"integer: %s\n",yytext);
+{const_int}         {
+    fprintf(seq_token,"int_const: %s\n",yytext);
     // return INT_CONST;
 }
 
-
-{float_const}       {
-    //Here we print the int_const used in the input program.
-    fprintf(seq_token,"float: %s\n",yytext);
+{const_float}       {
+    fprintf(seq_token,"float_const: %s\n",yytext);
     // return FLOAT_CONST;
 }
 
+{const_string}      {
+    fprintf(seq_token,"string_const: %s\n",yytext);
+    // return STRING_CONST;
+}
+
+{const_char}        {
+    fprintf(seq_token,"char_const: %s\n",yytext);
+    // return CHAR_CONST;
+}
+
+{const_bool}        {
+    fprintf(seq_token,"bool_const: %s\n",yytext);
+    // return BOOL_CONST;
+}
 
 {id}                {
     //Here we print the float_const used in the input program.
@@ -235,76 +271,7 @@ comm_end           ("--!>")
     // return ID;
 }
 
-
-"," {
-    //Here we print the identifier used in the input program.
-    fprintf(seq_token,"punctuation: %s\n",yytext);
-    // return COMMA;  
-}
-
-
-"."                 {
-    //Here we print ',' punctuation symbol when we encounter it in the input program.
-    fprintf(seq_token,"operator: %s\n",yytext);
-    // return DOT;
-}
-
-
-"->"                {
-    //Here we print '.' operator when we encounter it in the input program.
-    fprintf(seq_token,"operator: %s\n",yytext);
-    // return ARROW;
-}
-
-
-"("                 {
-    //Here we print '->' operator when we encounter it in the input program.
-    fprintf(seq_token,"left parenthesis: %s\n",yytext);
-    // return LBP;
-}
-
-
-")"                 {
-    //Here we print '(' (left parentheis) when we encounter it in the input program.
-    fprintf(seq_token,"right parenthesis: %s\n",yytext);
-    // return RBP;
-}
-
-
-"["                 {
-    //Here we print ')' (right parentheis) when we encounter it in the input program.
-    fprintf(seq_token,"left square parenthesis: %s\n",yytext);
-    // return LSP;
-}
-
-
-"]"                 {
-    //Here we print '[' (left square parentheis) when we encounter it in the input program.
-    fprintf(seq_token,"right square parenthesis: %s\n",yytext);
-    // return RSP;
-}
-
-
-"{"                 {
-    //Here we print ']' (right square parentheis) when we encounter it in the input program.
-    fprintf(seq_token,"left curly parenthesis: %s\n",yytext);
-    // return LCP;
-}
-
-
-"}"                 {
-    //Here we print '{' (left curly parentheis) when we encounter it in the input program.
-    fprintf(seq_token,"right curly parenthesis: %s\n",yytext);
-    // return RCP;
-}
-
-
-";"                 {
-    //Here we print '}' (right curly parentheis) when we encounter it in the input program.
-    fprintf(seq_token,"punctuation: %s\n",yytext);
-    // return SEMICOLON;
-}
-<COMMENT>{comm_begin} {
+<COMMENT>{comm_beg} {
     yy_push_state(YYSTATE);
     BEGIN COMMENT;
     printf("comment: %s\n",comment);
@@ -316,7 +283,7 @@ comm_end           ("--!>")
     comm_len+=4;
 }
 
-{comm_begin} {
+{comm_beg} {
     yy_push_state(YYSTATE);
     BEGIN COMMENT;
     fprintf(seq_token,"punctuation: %s\n",yytext);
@@ -340,6 +307,7 @@ comm_end           ("--!>")
     }
     yy_pop_state();
 }
+
 <COMMENT>(.|"\n") {
     printf("comment: %s\n",comment);
     comment[comm_len] = yytext[0];
@@ -352,24 +320,17 @@ comm_end           ("--!>")
     BEGIN INITIAL;
 }
 
-[ ]                 {
-    //Here we print ';' punctuation symbol when we encounter it in the input program.
-    // Handling empty spaces
-}
 
-"\n"                  {
-    line_no++;
-}
-.                   {
-//everytime we see a newline we increase line_no by 1 .
-    fprintf(seq_token,"Aborted\n");
-    fprintf(seq_token,"Lexical Error at line number : %d : %s\n",yylineno,yytext);
-    return 0;
-}
-
-
+. { error();}
 
 %%
+
+// Function to quit program
+void error(){
+        char *toprint = "Error at line number: ";
+        printf("%s%d\n", toprint, yylineno);
+        exit(1);
+}
 
 int yywrap() {}
 int main(int argc,char *argv[]) { 
