@@ -293,6 +293,7 @@ punctuation         ("," | "." | "->" | ";" | ":")
     {
         fprintf(seq_token,"comment: %s\n",comment);
         fprintf(seq_token,"punctuation: %s\n",yytext);
+        comment[0] = '\0';
         comm_len=0;
     }
     else

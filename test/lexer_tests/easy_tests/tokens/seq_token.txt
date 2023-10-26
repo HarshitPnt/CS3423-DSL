@@ -1,24 +1,101 @@
 punctuation: <!--
 comment:  <!-- Primitive
 Data
-Types --!>
-
-int_8 a, b, c;
-int_16 x, y, z=10;
-int_32 x = 12 + 3, y;
-int_64 z = -10;
-
-unit_8 a = 10, b;
-uint_16 c;
-uint_32 c, d = 30;
-uint_64 e = 40, d;
-
-char a;
-char b = 'a';
-
-float_32 a, b = 10.32, c = +12;
-float_64 xyz_abc = a;
-
-bool a;
-bool b = true;
-bool c = false;
+Types --!> 
+punctuation: --!>
+datatype: int_8
+identifier: a
+punctuation: ,
+identifier: b
+punctuation: ,
+identifier: c
+punctuation: ;
+datatype: int_16
+identifier: x
+punctuation: ,
+identifier: y
+punctuation: ,
+identifier: z
+operator: =
+integer: 10
+punctuation: ;
+datatype: int_32
+identifier: x
+operator: =
+integer: 12
+operator: +
+integer: 3
+punctuation: ,
+identifier: y
+punctuation: ;
+datatype: int_64
+identifier: z
+operator: =
+operator: -
+integer: 10
+punctuation: ;
+punctuation: <!--
+comment:  More comments 
+punctuation: --!>
+identifier: unit_8
+identifier: a
+operator: =
+integer: 10
+punctuation: ,
+identifier: b
+punctuation: ;
+datatype: uint_16
+identifier: c
+punctuation: ;
+datatype: uint_32
+identifier: c
+punctuation: ,
+identifier: d
+operator: =
+integer: 30
+punctuation: ;
+datatype: uint_64
+identifier: e
+operator: =
+integer: 40
+punctuation: ,
+identifier: d
+punctuation: ;
+datatype: char
+identifier: a
+punctuation: ;
+datatype: char
+identifier: b
+operator: =
+character constant: 'a'
+punctuation: ;
+datatype: float_32
+identifier: a
+punctuation: ,
+identifier: b
+operator: =
+float: 10.32
+punctuation: ,
+identifier: c
+operator: =
+operator: +
+integer: 12
+punctuation: ;
+datatype: float_64
+identifier: xyz_abc
+operator: =
+identifier: a
+punctuation: ;
+datatype: bool
+identifier: a
+punctuation: ;
+datatype: bool
+identifier: b
+operator: =
+boolean constant: true
+punctuation: ;
+datatype: bool
+identifier: c
+operator: =
+boolean constant: false
+punctuation: ;

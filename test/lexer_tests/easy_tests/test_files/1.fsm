@@ -1,12 +1,12 @@
 <!-- <!-- Primitive
 Data
-Types --!>
+Types --!> --!>
 
 int_8 a, b, c;
 int_16 x, y, z=10;
 int_32 x = 12 + 3, y;
 int_64 z = -10;
-
+<!-- More comments --!>
 unit_8 a = 10, b;
 uint_16 c;
 uint_32 c, d = 30;
