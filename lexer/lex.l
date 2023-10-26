@@ -1,4 +1,5 @@
 %option yylineno
+%option stack
 
 %{
 #include <stdio.h>
@@ -21,11 +22,19 @@ digit               [0-9]
 special_char        ("@"|"#"|"*"|"-"|"+"|"/"|"_"|"\\")
 whitespace          (" "|"\t"|"\n")
 
+/*Punctuations*/
+/* Note that BRACE: {} BRACKETS: [] PARENTHESIS: () */
+brackets            "("|")"|"["|"]"|"{"|"}"
+punctuation         ","|"."|"->"|";"|":"
+single_quote        "'"
+epsilon            "\\e"
+
 /*Constants*/
 const_int           (({digit}+))
 const_float         (({digit}+)"."({digit}+))
-const_string        ("\""([^\"]|"\"")*"\"")
-const_char          ("\'"([^\']|"\'")"\'")
+str_punct           "\""
+const_string        {str_punct}([^"]|"\\\"")*{str_punct}
+const_char          {single_quote}([^']|"\\'"){single_quote}
 const_bool          ("true"|"false")
 
 /*Identifiers*/
@@ -60,16 +69,15 @@ type_non_standard   ({type_oset}|{type_uset}|{type_regex}|{type_cfg}|{type_dfa}|
 
 /*Other Keywords*/
 keyword_control     ("if"|"elif"|"else"|"while")
-stmt_IO             ("out"|"inp") 
+stmt_IO             "out"|"inp"
 comm_beg            ("<!--")
 comm_end            ("--!>")
 
-/*Punctuations*/
-/* Note that BRACE: {} BRACKETS: [] PARENTHESIS: () */
-brackets            ("(" | ")" | "[" | "]" | "{" | "}")
-punctuation         ("," | "." | "->" | ";" | ":")
+
 
 %x COMMENT
+%x REGEX
+%x REGEX_START
 
 %%
 
@@ -95,6 +103,7 @@ punctuation         ("," | "." | "->" | ";" | ":")
 }
 
 
+
 {stmt_IO}          {
     // Input and Output statements
     fprintf(seq_token,"reserved keyword: %s\n",yytext);
@@ -106,7 +115,27 @@ punctuation         ("," | "." | "->" | ";" | ":")
     }
 }
 
-{brackets}         {
+"r"/{single_quote}([^']|"\'")*{single_quote}    {
+    fprintf(seq_token,"regex: %s\n",yytext);
+    BEGIN REGEX;
+}
+
+<REGEX>{single_quote} {
+    fprintf(seq_token,"punctuation: %s\n",yytext);
+    BEGIN REGEX_START;
+}
+
+
+<REGEX_START>{single_quote} {
+    fprintf(seq_token,"punctuation: %s\n",yytext);
+    BEGIN INITIAL;
+}
+
+<REGEX_START>. {
+    fprintf(seq_token,"regex_lit: %s\n",yytext);
+}
+
+{brackets}  {
     fprintf(seq_token,"punctuation: %s\n",yytext);
     if(strcmp(yytext,"(")==0) {
         // return LPAREN;
@@ -318,6 +347,10 @@ punctuation         ("," | "." | "->" | ";" | ":")
 <COMMENT><<EOF>> {
     fprintf(seq_token,"comment: %s\n",comment);
     BEGIN INITIAL;
+}
+
+{epsilon} {
+    fprintf(seq_token,"epsilon: %s\n",yytext);
 }
 
 
