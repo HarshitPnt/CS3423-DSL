@@ -24,8 +24,8 @@ whitespace          (" "|"\t"|"\n")
 /*Constants*/
 const_int           (({digit}+))
 const_float         (({digit}+)"."({digit}+))
-const_string        ("\""({special_char}|{digit}|{letter}|" "|"'"|"\\\"")*"\"")
-const_char          ("\'"({letter}|{digit}|{special_char})"\'")
+const_string        ("\""([^\"]|"\"")*"\"")
+const_char          ("\'"([^\']|"\'")"\'")
 const_bool          ("true"|"false")
 
 /*Identifiers*/
@@ -266,7 +266,6 @@ punctuation         ("," | "." | "->" | ";" | ":")
 }
 
 {id}                {
-    //Here we print the float_const used in the input program.
     fprintf(seq_token,"identifier: %s\n",yytext);
     // return ID;
 }
