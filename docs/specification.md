@@ -217,7 +217,7 @@ struct Point {
     int_8 y;
     float_32 z;
     string name;
-}
+};
 ```
 
 Additionally structs can contain other data types which have already been defined as structs
@@ -226,8 +226,8 @@ Additionally structs can contain other data types which have already been define
 Point a,b;
 
 struct set_of_coords {
-  o_set<Point> = {a,b};
-}
+  o_set<Point> coords = {a,b};
+};
 ```
 
 #### Regular Expressions:
