@@ -6,3 +6,5 @@
 **/parser.tab.h
 **/parser.tab.o
 *.out
+/lexer/lexer
+**/tokens/

@@ -78,6 +78,10 @@ comm_end            ("--!>")
 %x COMMENT
 %x REGEX
 %x REGEX_START
+%x REGEX_LIMIT
+%x REGEX_SQ
+%x REGEX_RANGE
+%x REGEX_VAR
 
 %%
 
@@ -118,21 +122,161 @@ comm_end            ("--!>")
 "r"/{single_quote}([^']|"\'")*{single_quote}    {
     fprintf(seq_token,"regex: %s\n",yytext);
     BEGIN REGEX;
+    //return REGEX;
 }
 
 <REGEX>{single_quote} {
     fprintf(seq_token,"punctuation: %s\n",yytext);
     BEGIN REGEX_START;
+    //return SIN_QUOTE;
 }
 
 
 <REGEX_START>{single_quote} {
     fprintf(seq_token,"punctuation: %s\n",yytext);
     BEGIN INITIAL;
+    // return SIN_QUOTE;
 }
 
-<REGEX_START>. {
+<REGEX_START>{letter}|{whitespace} {
     fprintf(seq_token,"regex_lit: %s\n",yytext);
+    // return REGEX_LIT;
+}
+
+<REGEX_START>{digit}+ {
+    fprintf(seq_token,"regex_num: %s\n",yytext);
+    // return REGEX_NUM;
+}
+
+<REGEX_START>"|" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    // return REGEX_OR;
+}
+
+<REGEX_START>"*" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    // return REGEX_STAR;
+}
+
+<REGEX_START>"+" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    // return REGEX_PLUS;
+}
+
+<REGEX_START>"?" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    // return REGEX_QUE;
+}
+
+<REGEX_START>"^" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    // return REGEX_CARET;
+}
+
+<REGEX_START>"$" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    // return REGEX_DOLLAR;
+} 
+
+<REGEX_START>"(" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    // return LPAREN;
+}
+
+<REGEX_START>")" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    // return RPAREN;
+}
+
+<REGEX_START>"{"/{digit}+","?({digit}+)?"}" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    BEGIN REGEX_LIMIT;
+    // return LBRACE;
+}
+
+<REGEX_LIMIT>{digit}+ {
+    fprintf(seq_token,"regex_num: %s\n",yytext);
+    // return REGEX_NUM;
+}
+
+<REGEX_LIMIT>"," {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    // return COMMA;
+}
+
+<REGEX_LIMIT>"}" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    BEGIN REGEX_START;
+    // return RBRACE;
+}
+
+<REGEX_START>"["/(("^")?[^\]]|"\\]")+"]" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    BEGIN REGEX_SQ;
+    // return REGEX_LBRACK;
+}
+<REGEX_SQ>"^" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    // return REGEX_CARET;
+}
+
+<REGEX_SQ>{letter}/("-"{letter}|{digit}) {
+    fprintf(seq_token,"regex_lit: %s\n",yytext);
+    BEGIN REGEX_RANGE;
+    // return REGEX_LRANGE;
+}
+
+<REGEX_RANGE>"-" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    //return REGEX_HYPHEN;
+}
+
+<REGEX_RANGE>{letter}|{digit} {
+    fprintf(seq_token,"regex_lit: %s\n",yytext);
+    BEGIN REGEX_SQ;
+    // return REGEX_RRANGE;
+}
+
+<REGEX_SQ>"]" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    BEGIN REGEX_START;
+    // return REGEX_RBRACK;
+}
+
+<REGEX_START,REGEX_SQ>"\\("|"\\)"|"\\{"|"\\}"|"\\["|"\\]"|"\\|"|"\\*"|"\\+"|"\\?"|"\\^"|"\\$"|"\\\\"|{digit}|{letter}|{whitespace}|{special_char}|{brackets} {
+    fprintf(seq_token,"regex_lit: %s\n",yytext);
+    // return REGEX_LIT;
+}
+
+<REGEX_START>(.|"\n") {
+    fprintf(seq_token,"regex_lit: %s\n",yytext);
+}
+
+<REGEX_START>"$"/"{"{id}"}" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    BEGIN REGEX_VAR;
+    //return REGEX_DOLLAR;
+}
+
+<REGEX_VAR>"{" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    // return LBRACE;
+}
+
+<REGEX_VAR>{id} {
+    fprintf(seq_token,"regex_var: %s\n",yytext);
+    //return REGEX_ID;
+}
+
+<REGEX_VAR>"}" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    BEGIN REGEX_START;
+    // return RBRACE;
+}
+
+<REGEX_START,REGEX_LIMIT,REGEX_SQ,REGEX_RANGE,REGEX_VAR>. {
+    fprintf(seq_token,"regex pattern error: %s\n",yytext);
+    // return REGEX_ERROR;
 }
 
 {brackets}  {
@@ -302,7 +446,6 @@ comm_end            ("--!>")
 <COMMENT>{comm_beg} {
     yy_push_state(YYSTATE);
     BEGIN COMMENT;
-    printf("comment: %s\n",comment);
     comment[comm_len] = '<';
     comment[comm_len+1] = '!';
     comment[comm_len+2] = '-';
@@ -338,7 +481,6 @@ comm_end            ("--!>")
 }
 
 <COMMENT>(.|"\n") {
-    printf("comment: %s\n",comment);
     comment[comm_len] = yytext[0];
     comment[comm_len+1] = '\0';
     comm_len=comm_len+1;
@@ -366,14 +508,33 @@ void error(){
 }
 
 int yywrap() {}
-int main(int argc,char *argv[]) { 
-  if(argc > 1)
-      yyin = fopen(argv[1], "r"); 
-      //Taking input file from argv[1]
-  else
-      yyin = stdin; 
-  seq_token = fopen("../test/lexer_tests/easy_tests/tokens/seq_token.txt", "w");
+int main(int argc,char *argv[]) {
+    yyin = fopen(argv[1],"r");
+    char *filename = (char*)malloc(sizeof(char)*strlen(argv[1]));
+     //position of last '.' in file name
+    char *pos = strrchr(argv[1],'.'); 
 
+    //position of last '/' in file name
+    char *x = strrchr(argv[1],'/');
+
+    // file name of the input file after removing .txt at the end
+    // This requires the input file to have an extension
+    if(x==NULL)
+        strncpy(filename,argv[1],pos-argv[1]);
+    else
+        strncpy(filename,x+1,pos-x-1);
+
+  // path to the folder of test file
+  char *path = (char*)malloc(sizeof(char)*strlen(argv[1]));
+  strncpy(path,argv[1],x-argv[1]);
+  x = strrchr(path,'/');
+  path[x-path] = '\0';
+  char *seq = (char*)malloc(sizeof(char)*(strlen(path)+50));
+
+  sprintf(seq,"%s/tokens/seq_tokens_%s.tok",path,filename);
+
+  // tokens file path
+  seq_token = fopen(seq, "w");
   yylex();
 
   if(argc > 1)
