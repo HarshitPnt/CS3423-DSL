@@ -424,7 +424,7 @@ Operators supports by YAFSM are similar to the operators supported by C.
 | Operator | Description | Associativity |
 | :------: | :---------: | :-----------: |
 |   `&&`   | Logical AND | Left to Right |
-|    \|    | Logical OR  | Left to Right |
+|   \|\|   | Logical OR  | Left to Right |
 |   `!`    | Logical NOT | Right to Left |
 
 ### Comparison Operators

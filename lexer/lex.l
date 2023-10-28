@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#define RED "\x1b[31m"
+#define GREEN "\x1b[32m"
+#define RESET "\x1b[0m"
 
 // Defining files
 FILE *yyin, *seq_token;
@@ -41,12 +44,15 @@ const_bool          ("true"|"false")
 id                  (({letter}|"_")({letter}|{digit}|"_")*)
 
 /*Opeartors*/
-oper_ari            ("+"|"-"|"*"|"/"|"%"|"@")
+oper_ari            ("/"|"%")
+oper_auto           ("@")
+oper_set            ("^2")
+oper_ovr_auto_set_ari ("+"|"*")
+oper_ovr_set_ari    ("-")
+oper_ovr_log_auto   ("!")
 oper_bi_log         ("&&"|"||")
-oper_un_log         ("!")
 oper_comp           ("=="|"!="|"<"|">"|"<="|">=")
 oper_asn            ("="|"+="|"-="|"*="|"/="|"%="|"&="|"|=")
-operator            ({oper_ari}|{oper_bi_log}|{oper_un_log}|{oper_comp}|{oper_asn})
 
 /*Datatypes: Standard*/
 type_sint           ("int_8"|"int_16"|"int_32"|"int_64")
@@ -68,7 +74,9 @@ type_pda            ("pda")
 type_non_standard   ({type_oset}|{type_uset}|{type_regex}|{type_cfg}|{type_dfa}|{type_nfa}|{type_pda})
 
 /*Other Keywords*/
-keyword_control     ("if"|"elif"|"else"|"while")
+keyword_control     ("if"|"elif"|"else"|"while"|"break")
+keyword_return      ("return")
+keyword_struct      ("struct")
 stmt_IO             "out"|"inp"
 comm_beg            ("<!--")
 comm_end            ("--!>")
@@ -104,9 +112,20 @@ comm_end            ("--!>")
     else if(strcmp(yytext,"while")==0) {
         // return WHILE_KW;
     }
+    else if(strcmp(yytext,"break")==0) {
+        // return BREAK_KW;
+    }
 }
 
+{keyword_struct} {
+    fprintf(seq_token,"reserved keyword: %s\n",yytext);
+    // return STRUCT_KW;
+}
 
+{keyword_return} {
+    fprintf(seq_token,"reserved keyword: %s\n",yytext);
+    // return RETURN_KW;
+}
 
 {stmt_IO}          {
     // Input and Output statements
@@ -210,7 +229,7 @@ comm_end            ("--!>")
     // return RBRACE;
 }
 
-<REGEX_START>"["/(("^")?[^\]]|"\\]")+"]" {
+<REGEX_START>"["/(("^")?[^\]']|"\\]")+"]" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_SQ;
     // return REGEX_LBRACK;
@@ -248,10 +267,6 @@ comm_end            ("--!>")
     // return REGEX_LIT;
 }
 
-<REGEX_START>(.|"\n") {
-    fprintf(seq_token,"regex_lit: %s\n",yytext);
-}
-
 <REGEX_START>"$"/"{"{id}"}" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_VAR;
@@ -276,7 +291,8 @@ comm_end            ("--!>")
 
 <REGEX_START,REGEX_LIMIT,REGEX_SQ,REGEX_RANGE,REGEX_VAR>. {
     fprintf(seq_token,"regex pattern error: %s\n",yytext);
-    // return REGEX_ERROR;
+    printf(RED "Error at line number: %d\n" RESET, yylineno);
+    exit(1);
 }
 
 {brackets}  {
@@ -374,14 +390,33 @@ comm_end            ("--!>")
     // return OPER_ARI;
 }
 
+{oper_auto}         {
+    fprintf(seq_token,"operator: %s\n",yytext);
+    // return OPER_AUTO;
+}
+
+{oper_set}          {
+    fprintf(seq_token,"operator: %s\n",yytext);
+    // return OPER_SET;
+}
+{oper_ovr_auto_set_ari}         {
+    fprintf(seq_token,"operator: %s\n",yytext);
+    // return OPER_OVR_AUTO_SET_ARI;
+}
+
+{oper_ovr_set_ari} {
+    fprintf(seq_token,"operator: %s\n",yytext);
+    // return OPER_OVR_SET_ARI;
+}
+
 {oper_bi_log}      {
     fprintf(seq_token,"operator: %s\n",yytext);
     // return OPER_BI_LOG;
 }
 
-{oper_un_log}      {
+{oper_ovr_log_auto}      {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return OPER_UN_LOG;
+    // return OPER_OVR_LOG_AUTO;
 }
 
 {oper_comp}      {
@@ -503,7 +538,7 @@ comm_end            ("--!>")
 // Function to quit program
 void error(){
         char *toprint = "Error at line number: ";
-        printf("%s%d\n", toprint, yylineno);
+        printf(RED "%s%d\n" RESET, toprint, yylineno);
         exit(1);
 }
 
