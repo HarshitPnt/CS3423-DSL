@@ -80,54 +80,57 @@ statement: variable_declaration
          | call_statement
          ;
 
-variable_declaration: data_type id_list SEMICOLON
+variable_declaration: primitive_dtype id_list SEMICOLON
+                    | set_type id_list SEMICOLON
+                    | STRING id_list SEMICOLON
+                    | REGEX id_list SEMICOLON
+                    | automata_dtype id_list SEMICOLON
                   ;
 
 id_list: ID
        | id_list COMMA ID
        ;
 
+primitive_dtype : INT_8
+                | INT_16
+                | INT_32
+                | INT_64
+                | UINT_8
+                | UINT_16
+                | UINT_32
+                | UINT_64
+                | FLOAT_32
+                | FLOAT_64
+                | BOOL
+                | CHAR
+                ;
 
-data_type: int_type %prec INT_8
-         | float_type %prec FLOAT_32
-         | BOOL
-         | STRING
-         | CHAR
-         | set_type %prec O_SET
-         | REGEX
-         | CFG
-         | DFA
-         | NFA
-         | PDA
-         | ID
-         ;
+complex_dtype : STRING
+              | REGEX
+              ;
 
-int_type : INT_8
-         | INT_16
-         | INT_32
-         | INT_64
-         | UINT_8
-         | UINT_16
-         | UINT_32
-         | UINT_64
+automata_dtype: CFG
+              | DFA
+              | NFA
+              | PDA
+              ;
 
-float_type : FLOAT_32
-           | FLOAT_64
-           ;
-
-set_type : O_SET COMP_LT data_type COMP_GT
-         | U_SET COMP_LT data_type COMP_GT
+set_type : O_SET COMP_LT primitive_dtype COMP_GT
+         | O_SET COMP_LT complex_dtype COMP_GT
+         | O_SET COMP_LT set_type COMP_GT
+         | O_SET COMP_LT automata_dtype COMP_GT
+         | U_SET COMP_LT primitive_dtype COMP_GT
+         | U_SET COMP_LT complex_dtype COMP_GT
+         | U_SET COMP_LT set_type COMP_GT
+         | U_SET COMP_LT automata_dtype COMP_GT
          ;
 
 assignment_statement: declaration_assignment
                     | expression_assignment
                     ;
 
-declaration_assignment: int_type ID OPER_ASN_SIMPLE expression SEMICOLON %prec PSEUDO_TOKEN
-                      | float_type ID OPER_ASN_SIMPLE expression SEMICOLON
-                      | BOOL ID OPER_ASN_SIMPLE expression SEMICOLON
+declaration_assignment: primitive_dtype ID OPER_ASN_SIMPLE expression SEMICOLON
                       | STRING ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON
-                      | CHAR ID OPER_ASN_SIMPLE CHAR_CONST SEMICOLON
                       | set_type ID OPER_ASN_SIMPLE set_values SEMICOLON
                       | REGEX ID OPER_ASN_SIMPLE REGEX_R SIN_QUOTE regex_expression SIN_QUOTE SEMICOLON
                       ;
@@ -153,6 +156,7 @@ expression : LPAREN expression RPAREN
            | OPER_MINUS FLOAT_CONST %prec PSEUDO_TOKEN
            | FLOAT_CONST
            | BOOL_CONST
+           | CHAR_CONST
            | pseudo_ID
            | call_statement
            ;
@@ -242,13 +246,19 @@ struct_body: struct_variable_declaration
            | struct_body struct_variable_declaration
            ;
 
-struct_variable_declaration: data_type id_list SEMICOLON
+struct_variable_declaration: primitive_dtype id_list SEMICOLON
+                            | complex_dtype id_list SEMICOLON
+                            | set_type id_list SEMICOLON
+                            | automata_dtype id_list SEMICOLON
                            ;
 
 function_declaration: function_header LBRACE instruction_list RBRACE
                      ;
 
-function_header: data_type ID LPAREN parameter_list RPAREN
+function_header: primitive_dtype ID LPAREN parameter_list RPAREN
+               | complex_dtype ID LPAREN parameter_list RPAREN
+               | set_type ID LPAREN parameter_list RPAREN
+               | automata_dtype ID LPAREN parameter_list RPAREN
                ;
 
 parameter_list: /* empty */
@@ -256,7 +266,10 @@ parameter_list: /* empty */
               | parameter_list COMMA parameter
               ;
 
-parameter: data_type ID
+parameter: primitive_dtype ID
+            | complex_dtype ID
+            | set_type ID
+            | automata_dtype ID
          ;
 
 %%
