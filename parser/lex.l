@@ -1,4 +1,5 @@
 %option yylineno
+%option noyywrap
 %option stack
 
 %{
@@ -6,14 +7,17 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include "tokens.h"
+
 #define RED "\x1b[31m"
 #define GREEN "\x1b[32m"
 #define RESET "\x1b[0m"
 
 // Defining files
-FILE *yyin, *seq_token;
+FILE *seq_token;
 char comment[10000];
 int comm_len=0;
+extern void yyerror(char *str);
 
 // Defining functions
 void error();
@@ -51,7 +55,7 @@ oper_ovr_auto_set_ari ("+"|"*")
 oper_ovr_set_ari    ("-")
 oper_ovr_log_auto   ("!")
 oper_bi_log         ("&&"|"||")
-oper_comp           ("=="|"!="|"<"|">"|"<="|">=")
+oper_comp           ("=="|"!="|"<="|">="|"<"|">")
 oper_asn            ("+="|"-="|"*="|"/="|"%="|"&="|"|=")
 oper_asn_simple     ("=")
 
@@ -101,122 +105,122 @@ comm_end            ("--!>")
 {keyword_control}  {
     fprintf(seq_token,"reserved keyword: %s\n",yytext);
     if(strcmp(yytext,"if")==0 ) {
-        // return IF_KW;
+        return IF_KW;
     }
     else if(strcmp(yytext,"elif")==0) {
-        // return ELIF_KW;
+        return ELIF_KW;
     }
     else if(strcmp(yytext,"else")==0) {
-        // return ELSE_KW;
+        return ELSE_KW;
     }
     else if(strcmp(yytext,"while")==0) {
-        // return WHILE_KW;
+        return WHILE_KW;
     }
     else if(strcmp(yytext,"break")==0) {
-        // return BREAK_KW;
+        return BREAK_KW;
     }
 }
 
 {keyword_struct} {
     fprintf(seq_token,"reserved keyword: %s\n",yytext);
-    // return STRUCT_KW;
+    return STRUCT_KW;
 }
 
 {keyword_return} {
     fprintf(seq_token,"reserved keyword: %s\n",yytext);
-    // return RETURN_KW;
+    return RETURN_KW;
 }
 
 "r"/{single_quote}([^']|"\'")*{single_quote}    {
     fprintf(seq_token,"regex: %s\n",yytext);
     BEGIN REGEX;
-    //return REGEX_R;
+    return REGEX_R;
 }
 
 <REGEX>{single_quote} {
     fprintf(seq_token,"punctuation: %s\n",yytext);
     BEGIN REGEX_START;
-    //return SIN_QUOTE;
+    return SIN_QUOTE;
 }
 
 
 <REGEX_START>{single_quote} {
     fprintf(seq_token,"punctuation: %s\n",yytext);
     BEGIN INITIAL;
-    // return SIN_QUOTE;
+    return SIN_QUOTE;
 }
 
 <REGEX_START>{letter}|{whitespace} {
     fprintf(seq_token,"regex_lit: %s\n",yytext);
-    // return REGEX_LIT;
+    return REGEX_LIT;
 }
 
 <REGEX_START>{digit}+ {
     fprintf(seq_token,"regex_num: %s\n",yytext);
-    // return REGEX_LIT;
+    return REGEX_LIT;
 }
 
 <REGEX_START>"|" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    // return REGEX_OR;
+    return REGEX_OR;
 }
 
 <REGEX_START>"*" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    // return REGEX_STAR;
+    return REGEX_STAR;
 }
 
 <REGEX_START>"+" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    // return REGEX_PLUS;
+    return REGEX_PLUS;
 }
 
 <REGEX_START>"?" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    // return REGEX_QUE;
+    return REGEX_QUE;
 }
 
 <REGEX_START>"^" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    // return REGEX_CARET;
+    return REGEX_CARET;
 }
 
 <REGEX_START>"(" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    // return LPAREN;
+    return LPAREN;
 }
 
 <REGEX_START>")" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    // return RPAREN;
+    return RPAREN;
 }
 
 <REGEX_START>"{"/{digit}+","?({digit}+)?"}" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_LIMIT;
-    // return LBRACE;
+    return LBRACE;
 }
 
 <REGEX_LIMIT>{digit}+ {
     fprintf(seq_token,"regex_num: %s\n",yytext);
-    // return REGEX_NUM;
+    return REGEX_NUM;
 }
 
 <REGEX_LIMIT>"," {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    // return COMMA;
+    return COMMA;
 }
 
 <REGEX_LIMIT>"}" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_START;
-    // return RBRACE;
+    return RBRACE;
 }
 
 <REGEX_START>"["/(("^")?[^\]']|"\\]")+"]" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_SQ;
-    // return LBRACK;
+    return LBRACK;
 }
 
 <REGEX_START>"[" {
@@ -226,45 +230,45 @@ comm_end            ("--!>")
 
 <REGEX_SQ>"^" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    // return REGEX_CARET;
+    return REGEX_CARET;
 }
 
 <REGEX_SQ>{letter}|{digit}/("-"{letter}|{digit}) {
     fprintf(seq_token,"regex_lit: %s\n",yytext);
     BEGIN REGEX_RANGE;
-    // return REGEX_LRANGE;
+    return REGEX_LRANGE;
 }
 
 <REGEX_RANGE>"-" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    //return REGEX_HYPHEN;
+    return REGEX_HYPHEN;
 }
 
 <REGEX_RANGE>{letter}|{digit} {
     fprintf(seq_token,"regex_lit: %s\n",yytext);
     BEGIN REGEX_SQ;
-    // return REGEX_RRANGE;
+    return REGEX_RRANGE;
 }
 
 <REGEX_SQ>"]" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_START;
-    // return RBRACK;
+    return RBRACK;
 }
 
 <REGEX_START,REGEX_SQ>"\\("|"\\)"|"\\{"|"\\}"|"\\["|"\\]"|"\\|"|"\\*"|"\\+"|"\\?"|"\\^"|"\\$"|"\\\\"|{digit}|{letter}|{whitespace}|{special_char}|{brackets} {
     fprintf(seq_token,"regex_lit: %s\n",yytext);
-    // return REGEX_LIT;
+    return REGEX_LIT;
 }
 
 <REGEX_START>"$"/"{"{id}"}" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_VAR;
-    //return REGEX_DOLLAR;
+    return REGEX_DOLLAR;
 }
 <REGEX_START>"$"/"'" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    // return REGEX_DOLLAR;
+    return REGEX_DOLLAR;
 }
 
 <REGEX_START>"$" {
@@ -274,18 +278,18 @@ comm_end            ("--!>")
 
 <REGEX_VAR>"{" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    // return LBRACE;
+    return LBRACE;
 }
 
 <REGEX_VAR>{id} {
     fprintf(seq_token,"regex_var: %s\n",yytext);
-    //return ID;
+    return ID;
 }
 
 <REGEX_VAR>"}" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_START;
-    // return RBRACE;
+    return RBRACE;
 }
 
 <REGEX_START,REGEX_LIMIT,REGEX_SQ,REGEX_RANGE,REGEX_VAR>. {
@@ -297,192 +301,207 @@ comm_end            ("--!>")
 {brackets}  {
     fprintf(seq_token,"punctuation: %s\n",yytext);
     if(strcmp(yytext,"(")==0) {
-        // return LPAREN;
+        return LPAREN;
     }
     else if(strcmp(yytext,")")==0) {
-        // return RPAREN;
+        return RPAREN;
     }
     else if(strcmp(yytext,"[")==0) {
-        // return LBRACK;
+        return LBRACK;
     }
     else if(strcmp(yytext,"]")==0) {
-        // return RBRACK;
+        return RBRACK;
     }
     else if(strcmp(yytext,"{")==0) {
-        // return LBRACE;
+        return LBRACE;
     }
     else if(strcmp(yytext,"}")==0) {
-        // return RBRACE;
+        return RBRACE;
     }
 }
 
 {type_standard}     {
     fprintf(seq_token,"datatype: %s\n",yytext);
     if(strcmp(yytext,"int_8")==0) {
-        // return INT_8;
+        return INT_8;
     }
     else if(strcmp(yytext,"int_16")==0) {
-        // return INT_16;
+        return INT_16;
     }
     else if(strcmp(yytext,"int_32")==0) {
-        // return INT_32;
+        return INT_32;
     }
     else if(strcmp(yytext,"int_64")==0) {
-        // return INT_64;
+        return INT_64;
     }
     else if(strcmp(yytext,"uint_8")==0) {
-        // return UINT_8;
+        return UINT_8;
     }
     else if(strcmp(yytext,"uint_16")==0) {
-        // return UINT_16;
+        return UINT_16;
     }
     else if(strcmp(yytext,"uint_32")==0) {
-        // return UINT_32;
+        return UINT_32;
     }
     else if(strcmp(yytext,"uint_64")==0) {
-        // return UINT_64;
+        return UINT_64;
     }
     else if(strcmp(yytext,"float_32")==0) {
-        // return FLOAT_32;
+        return FLOAT_32;
     }
     else if(strcmp(yytext,"float_64")==0) {
-        // return FLOAT_64;
+        return FLOAT_64;
     }
     else if(strcmp(yytext,"bool")==0) {
-        // return BOOL;
+        return BOOL;
     }
     else if(strcmp(yytext,"string")==0) {
-        // return STRING;
+        return STRING;
     }
     else if(strcmp(yytext,"char")==0) {
-        // return CHAR;
+        return CHAR;
     }
 }
 
 {type_non_standard} {
     fprintf(seq_token,"datatype: %s\n",yytext);
     if(strcmp(yytext,"o_set")==0) {
-        // return O_SET;
+        return O_SET;
     }
     else if(strcmp(yytext,"u_set")==0) {
-        // return U_SET;
+        return U_SET;
     }
     else if(strcmp(yytext,"regex")==0) {
-        // return REGEX;
+        return REGEX;
     }
     else if(strcmp(yytext,"cfg")==0) {
-        // return CFG;
+        return CFG;
     }
     else if(strcmp(yytext,"dfa")==0) {
-        // return DFA;
+        return DFA;
     }
     else if(strcmp(yytext,"nfa")==0) {
-        // return NFA;
+        return NFA;
     }
     else if(strcmp(yytext,"pda")==0) {
-        // return PDA;
+        return PDA;
     }
 }
 
 {oper_ari}         {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return OPER_ARI;
+    if(strcmp(yytext,"/")==0)
+        return OPER_DIV;
+    if(strcmp(yytext,"%")==0)
+        return OPER_MOD;
 }
 
 {oper_auto}         {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return OPER_AUTO;
+    return AT_THE_RATE;
 }
 
 {oper_set}          {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return OPER_SET;
+    return OPER_POWER;
 }
 {oper_ovr_auto_set_ari}         {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return OPER_OVR_AUTO_SET_ARI;
+    if(strcmp(yytext,"+")==0)
+        return OPER_PLUS;
+    if(strcmp(yytext,"*")==0)
+        return OPER_MUL;
 }
 
 {oper_ovr_set_ari} {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return OPER_OVR_SET_ARI;
+    return OPER_MINUS;
 }
 
 {oper_bi_log}      {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return OPER_BI_LOG;
+    if(strcmp(yytext,"&&")==0)
+        return OPER_AND;
+    if(strcmp(yytext,"||")==0) 
+        return OPER_OR;
 }
 
 {oper_ovr_log_auto}      {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return OPER_OVR_LOG_AUTO;
+    return OPER_NOT;
 }
 
 {oper_comp}      {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return OPER_COMP;
+    if(strcmp(yytext,"<")==0)
+        return COMP_LT;
+    if(strcmp(yytext,">")==0)
+        return COMP_GT;
+    return OPER_COMP;
 }
 
 {oper_asn_simple} {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return OPER_ASN_SIMPLE;
+    return OPER_ASN_SIMPLE;
 }
 
 {oper_asn}      {
     fprintf(seq_token,"operator: %s\n",yytext);
-    // return OPER_ASN;
+    return OPER_ASN;
 }
 
 {punctuation}      {
     fprintf(seq_token,"punctuation: %s\n",yytext);
     if(strcmp(yytext,";")==0) {
-        // return SEMICOLON;
+        return SEMICOLON;
     }
     else if(strcmp(yytext,",")==0) {
-        // return COMMA;
+        return COMMA;
     }
     else if(strcmp(yytext,".")==0) {
-        // return DOT;
+        return DOT;
     }
     else if(strcmp(yytext,"->")==0) {
-        // return ARROW;
+        return ARROW;
     }
     else if(strcmp(yytext,":")==0) {
-        // return COLON;
+        return COLON;
     }
 }
 
 {const_int}         {
     fprintf(seq_token,"int_const: %s\n",yytext);
-    // return INT_CONST;
+    return INT_CONST;
 }
 
 {const_float}       {
     fprintf(seq_token,"float_const: %s\n",yytext);
-    // return FLOAT_CONST;
+    return FLOAT_CONST;
 }
 
 {const_string}      {
     fprintf(seq_token,"string_const: %s\n",yytext);
-    // return STRING_CONST;
+    return STRING_CONST;
 }
 
 {const_char}        {
     fprintf(seq_token,"char_const: %s\n",yytext);
-    // return CHAR_CONST;
+    return CHAR_CONST;
 }
 
 {const_bool}        {
     fprintf(seq_token,"bool_const: %s\n",yytext);
-    // return BOOL_CONST;
+    return BOOL_CONST;
 }
 
 {id}                {
     fprintf(seq_token,"identifier: %s\n",yytext);
-    // return ID;
+    return ID;
 }
 
 <COMMENT>{comm_beg} {
+    printf("Here\n");
+    fflush(stdout);
     yy_push_state(YYSTATE);
     BEGIN COMMENT;
     comment[comm_len] = '<';
@@ -532,7 +551,7 @@ comm_end            ("--!>")
 
 {epsilon} {
     fprintf(seq_token,"epsilon: %s\n",yytext);
-    // return EPSILON;
+    return EPSILON;
 }
 
 
@@ -545,40 +564,4 @@ void error(){
         char *toprint = "Error at line number: ";
         printf(RED "%s%d\n" RESET, toprint, yylineno);
         exit(1);
-}
-
-int yywrap() {}
-int main(int argc,char *argv[]) {
-    yyin = fopen(argv[1],"r");
-    char *filename = (char*)malloc(sizeof(char)*strlen(argv[1]));
-     //position of last '.' in file name
-    char *pos = strrchr(argv[1],'.'); 
-
-    //position of last '/' in file name
-    char *x = strrchr(argv[1],'/');
-
-    // file name of the input file after removing .txt at the end
-    // This requires the input file to have an extension
-    if(x==NULL)
-        strncpy(filename,argv[1],pos-argv[1]);
-    else
-        strncpy(filename,x+1,pos-x-1);
-
-  // path to the folder of test file
-  char *path = (char*)malloc(sizeof(char)*strlen(argv[1]));
-  strncpy(path,argv[1],x-argv[1]);
-  x = strrchr(path,'/');
-  path[x-path] = '\0';
-  char *seq = (char*)malloc(sizeof(char)*(strlen(path)+50));
-
-  sprintf(seq,"%s/tokens/seq_tokens_%s.tok",path,filename);
-
-  // tokens file path
-  seq_token = fopen(seq, "w");
-  yylex();
-
-  if(argc > 1)
-    fclose(yyin);
-  fclose(seq_token);
-  return 0;
 }

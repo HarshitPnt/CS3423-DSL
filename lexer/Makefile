@@ -10,10 +10,10 @@ test: compile ${FILES}
 	@for file in $(FILES); do \
 		echo "Processing $$file" && ./lexer $$file; \
 		if [ $$? = 0 ]; then \
-            echo "${GREEN}Test Passed${RESET}"; \
+            echo "${GREEN}LEXER Test Passed${RESET}"; \
 			echo "-----------------------------------"; \
         else \
-            echo "${RED}Test Failed${RESET}"; \
+            echo "${RED}LEXER Test Failed${RESET}"; \
 			echo "-----------------------------------"; \
         fi \
 	done
