@@ -77,23 +77,44 @@ instruction_list: /* empty */
 
 
 statement: variable_declaration
-         | assignment_statement
+         | expression_assignment
          | control_statement
          | call_statement
          ;
 
-variable_declaration: primitive_dtype id_list SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
-                    | set_type id_list SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
-                    | STRING id_list SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
-                    | REG id_list SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
-                    | automata_dtype id_list SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
+variable_declaration: primitive_dtype id_list_arith SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
+                    | set_type id_list_set SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
+                    | STRING id_list_string SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
+                    | REG id_list_reg SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
+                    | automata_dtype id_list_auto SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
                     ;
 
-id_list: ID
-       | ID OPER_ASN_SIMPLE expression
-       | id_list COMMA ID OPER_ASN_SIMPLE expression
-       | id_list COMMA ID
-       ;
+id_list_arith : ID
+              | ID OPER_ASN_SIMPLE expression
+              | ID COMMA id_list_arith
+              | ID OPER_ASN_SIMPLE expression COMMA id_list_arith
+              ;
+
+id_list_string : ID
+              | ID OPER_ASN_SIMPLE STRING_CONST
+              | ID COMMA id_list_string
+              | ID OPER_ASN_SIMPLE STRING_CONST COMMA id_list_string
+              ;
+
+id_list_set: ID
+           | ID OPER_ASN_SIMPLE set_values
+           | ID COMMA id_list_set
+           | ID OPER_ASN_SIMPLE set_values COMMA id_list_set
+
+id_list_reg : ID
+            | ID OPER_ASN_SIMPLE REGEX_R SIN_QUOTE regex_expression SIN_QUOTE
+            | ID COMMA id_list_reg
+            | ID OPER_ASN_SIMPLE REGEX_R SIN_QUOTE regex_expression SIN_QUOTE id_list_reg
+            ;
+
+id_list_auto : ID
+             | ID COMMA id_list_arith
+             ;
 
 primitive_dtype: INT_8
                | INT_16
@@ -131,28 +152,6 @@ set_type: O_SET COMP_LT primitive_dtype COMP_GT
         | U_SET COMP_LT ID COMP_GT
         ;
 
-assignment_statement: declaration_assignment
-                    | expression_assignment
-                    ;
-
-declaration_assignment: primitive_dtype ID OPER_ASN_SIMPLE expression SEMICOLON {
-                            // semantic analysis needs to be done
-                            fprintf(parse_log,"decl assignment statement at line no: %d\n",yylineno);
-                        }
-                      | STRING ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON {
-                            // semantic analysis needs to be done
-                        fprintf(parse_log,"decl assignment statement at line no: %d\n",yylineno);
-                        }
-                      | set_type ID OPER_ASN_SIMPLE set_values SEMICOLON {
-                            // semantic analysis needs to be done
-                            fprintf(parse_log,"decl assignment statement at line no: %d\n",yylineno);
-                        }
-                      | REG ID OPER_ASN_SIMPLE REGEX_R SIN_QUOTE regex_expression SIN_QUOTE SEMICOLON {
-                            // semantic analysis needs to be done
-                            fprintf(parse_log,"decl assignment statement at line no: %d\n",yylineno);
-                        }
-                      ;
-
 pseudo_ID : ID
           | ID DOT pseudo_ID
           | ID LBRACK expression RBRACK
@@ -189,7 +188,8 @@ regex_expression: LPAREN regex_expression RPAREN
                 | regex_expression REGEX_PLUS
                 | regex_expression REGEX_QUE
                 | regex_expression REGEX_DOLLAR
-                | regex_expression REGEX_DOLLAR LBRACE pseudo_ID RBRACE REGEX_DOLLAR
+                | regex_expression REGEX_DOLLAR LBRACE pseudo RBRACE REGEX_DOLLAR
+                | regex_expression REGEX_DOLLAR LBRACE ID RBRACE REGEX_DOLLAR
                 | regex_expression LBRACK regex_class RBRACK
                 | regex_expression LBRACE REGEX_NUM RBRACE
                 | regex_expression LBRACE REGEX_NUM COMMA RBRACE
@@ -224,6 +224,7 @@ expression_assignment : pseudo_ID OPER_ASN expression SEMICOLON {fprintf(parse_l
                       | pseudo OPER_ASN_SIMPLE LBRACE cfg_fsm_symb_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
                       | pseudo OPER_ASN_SIMPLE LBRACE prod_transition_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
                       ;
+
 pseudo : ID DOT pseudo_ID
        | ID LBRACK expression RBRACK
        ;
@@ -340,10 +341,10 @@ struct_body: struct_variable_declaration
            | struct_body struct_variable_declaration
            ;
 
-struct_variable_declaration: primitive_dtype id_list SEMICOLON
-                           | complex_dtype id_list SEMICOLON
-                           | set_type id_list SEMICOLON
-                           | automata_dtype id_list SEMICOLON
+struct_variable_declaration: primitive_dtype id_list_auto SEMICOLON
+                           | complex_dtype id_list_auto SEMICOLON
+                           | set_type id_list_auto SEMICOLON
+                           | automata_dtype id_list_auto SEMICOLON
                            ;
 
 function_declaration: function_header LBRACE instruction_list RBRACE {fprintf(parse_log,"FUNCTION Declaration at line no: %d\n",yylineno);}
