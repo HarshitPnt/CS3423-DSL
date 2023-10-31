@@ -221,12 +221,14 @@ expression_assignment : pseudo_ID OPER_ASN expression SEMICOLON {fprintf(parse_l
                       | pseudo_ID OPER_ASN_SIMPLE expression SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE set_values SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_fsm_symb_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE prod_transition_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+                      | pseudo OPER_ASN_SIMPLE LBRACE cfg_fsm_symb_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+                      | pseudo OPER_ASN_SIMPLE LBRACE prod_transition_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
                       ;
+pseudo : ID DOT pseudo_ID
+       | ID LBRACK expression RBRACK
+       ;
 
-cfg_fsm_symb_list: /* empty */
-                 | cfg_fsm_symb
+cfg_fsm_symb_list: cfg_fsm_symb
                  | cfg_fsm_symb_list COMMA cfg_fsm_symb
                  ;
 
@@ -234,8 +236,7 @@ cfg_fsm_symb: ID
             | ID COLON STRING_CONST
             ;
 
-prod_transition_list: /* empty */
-                    | prod_transition
+prod_transition_list: prod_transition
                     | prod_transition_list COMMA prod_transition
                     ;
 
@@ -263,8 +264,7 @@ id_lhs : DOLLAR LBRACE ID RBRACE
 set_values_vars: LBRACE set_value_list_vars RBRACE
                ;
 
-set_value_list_vars: /* empty */
-                   | set_value_vars
+set_value_list_vars: set_value_vars
                    | set_value_list_vars COMMA set_value_vars
                    ;
 
@@ -274,8 +274,7 @@ set_value_vars: DOLLAR LBRACE ID RBRACE
 set_values_pda: LBRACE set_value_list_pda RBRACE
               ;
 
-set_value_list_pda: /* empty */
-                  | set_value_pda
+set_value_list_pda: set_value_pda
                   | set_value_list_pda COMMA set_value_pda
                   ;
 
@@ -327,9 +326,12 @@ call_statement: ID LPAREN argument_list RPAREN SEMICOLON {fprintf(parse_log,"CAL
               ;
 
 argument_list: /* empty */
-             | expression
-             | argument_list COMMA expression
+             | expression argument_list_cont
              ;
+
+argument_list_cont: /* empty */
+                  | COMMA expression argument_list_cont
+                  ;
 
 struct_declaration: STRUCT_KW ID LBRACE struct_body RBRACE SEMICOLON {fprintf(parse_log,"STRUCT Declaration at line no: %d\n",yylineno);}
                   ;
@@ -354,9 +356,12 @@ function_header: primitive_dtype ID LPAREN parameter_list RPAREN
                ;
 
 parameter_list: /* empty */
-              | parameter
-              | parameter_list COMMA parameter
+              | parameter parameter_list_cont
               ;
+
+parameter_list_cont: /* empty */
+                   | COMMA parameter parameter_list_cont
+                   ;
 
 parameter: primitive_dtype ID
          | complex_dtype ID
