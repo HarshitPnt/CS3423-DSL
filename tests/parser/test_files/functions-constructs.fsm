@@ -1,18 +1,22 @@
 struct Point {
-    int_64 x,y;
+    int_64 x, y;
     string name;
-}
+};
 
 struct Grid {
     o_set<Point> set;
-}
+};
 
 float_64 abs(float_64 x)
 {
     if(x>0)
+    {
         return x;
+    }
     else
+    {
         return -x;
+    }
 }
 
 
@@ -25,7 +29,9 @@ float_64 root_newton_raphson(float_64 num, float_64 precision)
     {
         new_guess = curr - (curr*curr - num)/(2*curr);
         if(abs(new_guess-curr)<precision)
+        {    
             return new_guess;
+        }
     }
 }
 

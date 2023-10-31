@@ -97,23 +97,32 @@ id_list_arith : ID
 
 id_list_string : ID
               | ID OPER_ASN_SIMPLE STRING_CONST
+              | ID OPER_ASN_SIMPLE call
               | ID COMMA id_list_string
               | ID OPER_ASN_SIMPLE STRING_CONST COMMA id_list_string
+              | ID OPER_ASN_SIMPLE call COMMA id_list_string
               ;
 
 id_list_set: ID
            | ID OPER_ASN_SIMPLE set_values
+           | ID OPER_ASN_SIMPLE call
            | ID COMMA id_list_set
            | ID OPER_ASN_SIMPLE set_values COMMA id_list_set
+           | ID OPER_ASN_SIMPLE call COMMA id_list_set
+           ;
 
 id_list_reg : ID
             | ID OPER_ASN_SIMPLE REGEX_R SIN_QUOTE regex_expression SIN_QUOTE
+            | ID OPER_ASN_SIMPLE call
             | ID COMMA id_list_reg
             | ID OPER_ASN_SIMPLE REGEX_R SIN_QUOTE regex_expression SIN_QUOTE id_list_reg
+            | ID OPER_ASN_SIMPLE call COMMA id_list_reg
             ;
 
 id_list_auto : ID
-             | ID COMMA id_list_arith
+             | ID COMMA id_list_auto
+             | ID OPER_ASN_SIMPLE call 
+             | ID OPER_ASN_SIMPLE call id_list_auto
              ;
 
 primitive_dtype: INT_8
@@ -155,6 +164,7 @@ set_type: O_SET COMP_LT primitive_dtype COMP_GT
 
 pseudo_ID : ID
           | ID DOT pseudo_ID
+          | pseudo_ID DOT ID
           | ID LBRACK expression RBRACK
           ;
 
@@ -173,15 +183,13 @@ expression: LPAREN expression RPAREN
           | expression COMP_GT expression
           | expression COMP_LT expression
           | INT_CONST
-          | OPER_MINUS INT_CONST %prec PSEUDO_HIGH
-          | OPER_MINUS FLOAT_CONST %prec PSEUDO_HIGH
-          | OPER_PLUS INT_CONST %prec PSEUDO_HIGH
-          | OPER_PLUS FLOAT_CONST %prec PSEUDO_HIGH
+          | OPER_MINUS expression %prec PSEUDO_HIGH
+          | OPER_PLUS expression %prec PSEUDO_HIGH
           | FLOAT_CONST
           | BOOL_CONST
           | CHAR_CONST
           | pseudo_ID
-          | call_statement
+          | call
           ;
 
 regex_expression: LPAREN regex_expression RPAREN
@@ -345,7 +353,9 @@ return_statement: RETURN_KW expression SEMICOLON {fprintf(parse_log,"RETURN Stat
                 | RETURN_KW SEMICOLON {fprintf(parse_log,"RETURN Statement at line no: %d\n",yylineno);}
                 ;
 
-call_statement: ID LPAREN argument_list RPAREN SEMICOLON {fprintf(parse_log,"CALL Statement at line no: %d\n",yylineno);}
+call : ID LPAREN argument_list RPAREN
+     ;
+call_statement: call SEMICOLON {fprintf(parse_log,"CALL Statement at line no: %d\n",yylineno);}
               ;
 
 argument_list: /* empty */
@@ -363,10 +373,14 @@ struct_body: struct_variable_declaration
            | struct_body struct_variable_declaration
            ;
 
-struct_variable_declaration: primitive_dtype id_list_auto SEMICOLON
-                           | complex_dtype id_list_auto SEMICOLON
-                           | set_type id_list_auto SEMICOLON
-                           | automata_dtype id_list_auto SEMICOLON
+id_lists: ID
+        | ID COMMA id_lists
+        ;
+
+struct_variable_declaration: primitive_dtype id_lists SEMICOLON
+                           | complex_dtype id_lists SEMICOLON
+                           | set_type id_lists SEMICOLON
+                           | automata_dtype id_lists SEMICOLON
                            ;
 
 function_declaration: function_header LBRACE instruction_list RBRACE {fprintf(parse_log,"FUNCTION Declaration at line no: %d\n",yylineno);}
@@ -402,9 +416,9 @@ void yyerror(const char *s) {
 
 }
 
-// #ifdef YYDEBUG
-//   int yydebug = 1;
-// #endif
+#ifdef YYDEBUG
+  int yydebug = 1;
+#endif
 
 int main(int argc, char **argv) {
     yyin = fopen(argv[1],"r");
