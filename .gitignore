@@ -11,3 +11,4 @@
 *.tok
 *.log
 **/tokens.h
+**/test.fsm
