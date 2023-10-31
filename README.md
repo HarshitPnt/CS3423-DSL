@@ -5,7 +5,7 @@ With YAFSM, you can easily define, specify, and manipulate the behavior of these
 
 ## Documentation
 
-The documentation for the project can be found ![here](./docs/group-6-specification.pdf)
+The documentation for the project can be found [here](./docs/group-6-specification.pdf)
 
 ## Contributors
 
