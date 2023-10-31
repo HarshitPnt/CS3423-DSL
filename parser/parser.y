@@ -66,7 +66,7 @@
 %%
 
 program: instruction_list
-        ;
+       ;
 
 
 instruction_list: statement
@@ -87,25 +87,25 @@ variable_declaration: primitive_dtype id_list SEMICOLON {fprintf(parse_log,"vari
                     | STRING id_list SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
                     | REG id_list SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
                     | automata_dtype id_list SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
-                  ;
+                    ;
 
 id_list: ID
        | id_list COMMA ID
        ;
 
-primitive_dtype : INT_8
-                | INT_16
-                | INT_32
-                | INT_64
-                | UINT_8
-                | UINT_16
-                | UINT_32
-                | UINT_64
-                | FLOAT_32
-                | FLOAT_64
-                | BOOL
-                | CHAR
-                ;
+primitive_dtype: INT_8
+               | INT_16
+               | INT_32
+               | INT_64
+               | UINT_8
+               | UINT_16
+               | UINT_32
+               | UINT_64
+               | FLOAT_32
+               | FLOAT_64
+               | BOOL
+               | CHAR
+               ;
 
 complex_dtype : STRING
               | REG
@@ -117,17 +117,17 @@ automata_dtype: CFG
               | PDA
               ;
 
-set_type : O_SET COMP_LT primitive_dtype COMP_GT
-         | O_SET COMP_LT complex_dtype COMP_GT
-         | O_SET COMP_LT set_type COMP_GT
-         | O_SET COMP_LT automata_dtype COMP_GT
-         | O_SET COMP_LT ID COMP_GT
-         | U_SET COMP_LT primitive_dtype COMP_GT
-         | U_SET COMP_LT complex_dtype COMP_GT
-         | U_SET COMP_LT set_type COMP_GT
-         | U_SET COMP_LT automata_dtype COMP_GT
-         | U_SET COMP_LT ID COMP_GT
-         ;
+set_type: O_SET COMP_LT primitive_dtype COMP_GT
+        | O_SET COMP_LT complex_dtype COMP_GT
+        | O_SET COMP_LT set_type COMP_GT
+        | O_SET COMP_LT automata_dtype COMP_GT
+        | O_SET COMP_LT ID COMP_GT
+        | U_SET COMP_LT primitive_dtype COMP_GT
+        | U_SET COMP_LT complex_dtype COMP_GT
+        | U_SET COMP_LT set_type COMP_GT
+        | U_SET COMP_LT automata_dtype COMP_GT
+        | U_SET COMP_LT ID COMP_GT
+        ;
 
 assignment_statement: declaration_assignment
                     | expression_assignment
@@ -156,50 +156,50 @@ pseudo_ID : ID
           | ID LBRACK expression RBRACK
           ;
 
-expression : LPAREN expression RPAREN
-           | expression OPER_PLUS expression
-           | expression OPER_MINUS expression
-           | expression OPER_MUL expression
-           | expression OPER_DIV expression
-           | expression OPER_MOD expression
-           | expression OPER_COMP expression
-           | expression OPER_AND expression
-           | expression OPER_OR expression
-           | OPER_NOT expression
-           | expression COMP_GT expression
-           | expression COMP_LT expression
-           | INT_CONST
-           | OPER_MINUS INT_CONST %prec PSEUDO_TOKEN
-           | OPER_MINUS FLOAT_CONST %prec PSEUDO_TOKEN
-           | FLOAT_CONST
-           | BOOL_CONST
-           | CHAR_CONST
-           | pseudo_ID
-           | call_statement
+expression: LPAREN expression RPAREN
+          | expression OPER_PLUS expression
+          | expression OPER_MINUS expression
+          | expression OPER_MUL expression
+          | expression OPER_DIV expression
+          | expression OPER_MOD expression
+          | expression OPER_COMP expression
+          | expression OPER_AND expression
+          | expression OPER_OR expression
+          | OPER_NOT expression
+          | expression COMP_GT expression
+          | expression COMP_LT expression
+          | INT_CONST
+          | OPER_MINUS INT_CONST %prec PSEUDO_TOKEN
+          | OPER_MINUS FLOAT_CONST %prec PSEUDO_TOKEN
+          | FLOAT_CONST
+          | BOOL_CONST
+          | CHAR_CONST
+          | pseudo_ID
+          | call_statement
+          ;
+
+regex_expression: LPAREN regex_expression RPAREN
+                | REGEX_CARET regex_expression
+                | regex_expression REGEX_OR regex_expression
+                | regex_expression REGEX_STAR
+                | regex_expression REGEX_PLUS
+                | regex_expression REGEX_QUE
+                | regex_expression REGEX_DOLLAR
+                | regex_expression REGEX_DOLLAR LBRACE pseudo_ID RBRACE REGEX_DOLLAR
+                | regex_expression LBRACK regex_class RBRACK
+                | regex_expression LBRACE REGEX_NUM RBRACE
+                | regex_expression LBRACE REGEX_NUM COMMA RBRACE
+                | regex_expression LBRACE REGEX_NUM COMMA REGEX_NUM RBRACE
+                | regex_expression REGEX_LIT
+                |
+                ;
+
+regex_class: REGEX_CARET regex_class
+           | REGEX_LRANGE REGEX_HYPHEN REGEX_RRANGE regex_class
+           | REGEX_LRANGE REGEX_HYPHEN REGEX_RRANGE
+           | REGEX_LIT regex_class
+           | REGEX_LIT
            ;
-
-regex_expression : LPAREN regex_expression RPAREN
-                 | REGEX_CARET regex_expression
-                 | regex_expression REGEX_OR regex_expression
-                 | regex_expression REGEX_STAR
-                 | regex_expression REGEX_PLUS
-                 | regex_expression REGEX_QUE
-                 | regex_expression REGEX_DOLLAR
-                 | regex_expression REGEX_DOLLAR LBRACE pseudo_ID RBRACE REGEX_DOLLAR
-                 | regex_expression LBRACK regex_class RBRACK
-                 | regex_expression LBRACE REGEX_NUM RBRACE
-                 | regex_expression LBRACE REGEX_NUM COMMA RBRACE
-                 | regex_expression LBRACE REGEX_NUM COMMA REGEX_NUM RBRACE
-                 | regex_expression REGEX_LIT
-                 |
-                 ;
-
-regex_class : REGEX_CARET regex_class
-            | REGEX_LRANGE REGEX_HYPHEN REGEX_RRANGE regex_class
-            | REGEX_LRANGE REGEX_HYPHEN REGEX_RRANGE
-            | REGEX_LIT regex_class
-            | REGEX_LIT
-            ;
 
 set_values: LBRACE set_value_list RBRACE
           ;
@@ -236,6 +236,7 @@ cfg_production_list: /* empty */
                    ;
 
 cfg_production: pseudo_ID ARROW cfg_prod_rhs
+              ;
 
 cfg_prod_rhs: LBRACE cfg_rhs cfg_rhs_list RBRACE
             | cfg_rhs
@@ -247,6 +248,7 @@ cfg_rhs_list: /* empty */
 
 cfg_rhs : LBRACE ID RBRACE pseudo_ID
         | EPSILON
+        ;
 
 fsm_transition_list: /* empty */
                    | fsm_transition
@@ -261,13 +263,13 @@ transition_symb: pseudo_ID
                ;
 
 control_statement: if_statement
-                | while_statement
-                | return_statement
-                ;
+                 | while_statement
+                 | return_statement
+                 ;
 
 
 if_statement: IF_KW LPAREN expression RPAREN {fprintf(parse_log,"IF Statement at line no: %d\n",yylineno);} LBRACE statement_list_extended RBRACE elif_statement else_statement
-           ;
+            ;
 
 statement_list_extended: instruction_list
                        | instruction_list BREAK_KW SEMICOLON
@@ -275,13 +277,13 @@ statement_list_extended: instruction_list
                        ;
 
 elif_statement: ELIF_KW LPAREN expression RPAREN LBRACE statement_list_extended RBRACE {fprintf(parse_log,"ELIF Statement at line no: %d\n",yylineno);}
-             |
-             ;
+              |
+              ;
 
 
 else_statement: ELSE_KW LBRACE statement_list_extended RBRACE {fprintf(parse_log,"ELSE Statement at line no: %d\n",yylineno);}
-             |
-             ;
+              |
+              ;
 
 
 while_statement: WHILE_KW LPAREN expression RPAREN LBRACE statement_list_extended RBRACE {fprintf(parse_log,"WHILE Statement at line no: %d\n",yylineno);}
@@ -307,9 +309,9 @@ struct_body: struct_variable_declaration
            ;
 
 struct_variable_declaration: primitive_dtype id_list SEMICOLON
-                            | complex_dtype id_list SEMICOLON
-                            | set_type id_list SEMICOLON
-                            | automata_dtype id_list SEMICOLON
+                           | complex_dtype id_list SEMICOLON
+                           | set_type id_list SEMICOLON
+                           | automata_dtype id_list SEMICOLON
                            ;
 
 function_declaration: function_header LBRACE instruction_list RBRACE {fprintf(parse_log,"FUNCTION Declaration at line no: %d\n",yylineno);}
@@ -327,12 +329,10 @@ parameter_list: /* empty */
               ;
 
 parameter: primitive_dtype ID
-            | complex_dtype ID
-            | set_type ID
-            | automata_dtype ID
+         | complex_dtype ID
+         | set_type ID
+         | automata_dtype ID
          ;
-
-
 
 %%
 
