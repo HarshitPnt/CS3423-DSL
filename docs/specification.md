@@ -268,9 +268,9 @@ a.T = {a:"a", demo:"b"};
 a.N = {A, B};
 a.S = A;
 a.P = {
-    A -> <a>B,
-    B -> <demo>A,
-    A -> {<a>A, \e}
+    A -> ${a}B,
+    B -> ${demo}A,
+    A -> {${a}A, \e}
 };
 ```
 
@@ -306,12 +306,12 @@ $\delta$ is either a set of such transitions or it can be represented as a matri
 ```c
 dfa a;
 a.Q = {q0, q1, q2};
-a.Sigma = {0,1,2};
+a.Sigma = {a:"0",b:"1",c:"2"};
 a.delta = {
-    q0, 0 -> q1,
-    a.Q[0] , 1 -> a.Q[1],
-    q1 , r'[12]' -> q2,
-    q2, {0,2} -> q1
+    q0, ${a} -> q1,
+    a.Q[0] , ${b} -> a.Q[1],
+    q1 , r'[${a}${c}]' -> q2,
+    q2, { ${a} , ${c} } -> q1
 };
 a.q0 = q0;
 a.F = {q1,q2};
@@ -344,12 +344,12 @@ Here input_symbols can include $\epsilon$ which is represented by '\\e'.
 ```c
 nfa a;
 a.Q = {q0, q1, q2};
-a.Sigma = {0,1,2};
+a.Sigma = {a:"0",b:"1",c:"2"};
 a.delta = {
-    q0, 0 -> {q1, q2},
-    a.Q[0] , 1 -> a.Q[1],
-    q1 , r'[12]' -> q2,
-    q2, {0,2} -> q1,
+    q0, ${a} -> {q1, q2},
+    a.Q[0] , ${b} -> a.Q[1],
+    q1 , r$'[${a}${b}]' -> q2,
+    q2, {${a},${c}} -> q1,
     q2, \e -> q0
 };
 a.q0 = q0;
@@ -770,31 +770,31 @@ a.T = {a:"a", demo:"b"};
 a.N = {A, B};
 a.S = A;
 a.P = {
-    A -> <a>B,
-    B -> <demo>A,
-    A -> {<a>A, \e}
+    A -> ${a}B,
+    B -> ${demo}A,
+    A -> {${a}A, \e}
 };
 
 add_T(a, c:"c", d:"d"); <!-- a.T = {a:"a", demo:"b", c:"c", d:"d"}--!>
 add_NT(a, E); <!-- a.N = {A, B, E} --!>
 add_T(a, e); <!-- error: e has no value --!>
 
-add_P(a, E -> <c>B); <!-- a.P = {A -> <a>B, B -> <demo>A, A -> <a>A,
-A-> \e, E -> <c>B} --!>
+add_P(a, E -> ${c}B); <!-- a.P = {A -> ${a}B, B -> ${demo}A, A -> ${a}A,
+A-> \e, E -> ${c}B} --!>
 
 add_P(a, erroneous-production) <!-- error: production is not in
 the correct form --!>
 
-remove_T(a, c); <!-- a.T = {a:"a", demo:"b", d:"d"}, a.P = {A -> <a>B,
-B -> <demo>A, A -> <a>A, A-> \e} --!>
-remove_NT(a, B); <!-- a.N = {A, B}, a.P = {A -> <a>A, A-> \e} --!>
+remove_T(a, c); <!-- a.T = {a:"a", demo:"b", d:"d"}, a.P = {A -> ${a}B,
+B -> ${demo}A, A -> ${a}A, A-> \e} --!>
+remove_NT(a, B); <!-- a.N = {A, B}, a.P = {A -> ${a}A, A-> \e} --!>
 
 <!-- if the deleted non-terminal is a start variable then
 entire CFG is deleted --!>
 
-remove_P(a, A -> <a>A); <!-- a.P = {A-> \e} --!>
+remove_P(a, A -> ${a}A); <!-- a.P = {A-> \e} --!>
 <!-- if production is not present then no change --!>
-remove_P(a, A -> <a>A); <!-- a.P = {A-> \e} --!>
+remove_P(a, A -> ${a}A); <!-- a.P = {A-> \e} --!>
 
 change_start(a, E); <!-- a.S = E --!>
 change_start(a, c); <!-- error: c is not a non-terminal --!>
@@ -831,38 +831,38 @@ dfa a;
 
 a.Q = {q0, q1, q2};
 a.q0 = q0;
-a.Sigma = {0,1,2};
+a.Sigma = {a:"0",b:"1",c:"2"};
 
 a.F = {q1, q2};
 a.delta = {
-  q0, 0 -> q1,
-  a.Q[0] , 1 -> a.Q[1],
-  q1 , r'[12]' -> q2,
-  q2, {0,2} -> q1
+  q0, ${a} -> q1,
+  a.Q[0] , ${b} -> a.Q[1],
+  q1 , r'[${a}${c}]' -> q2,
+  q2, { ${a}, ${c} } -> q1
 };
 
 insert_states(a, q3, q4); <!-- a.Q = {q0, q1, q2, q3, q4} --!>
 
-insert_letters(a, 3, 4); <!-- a.Sigma = {0,1,2,3,4} --!>
+insert_letters(a, d:"3", e:"4"); <!-- a.Sigma = {a:"0",b:"1",c:"2",d:"3",e:"4"} --!>
 
 change_start(a, q3); <!-- a.q0 = q3 --!>
 
-add_transition(a, q3, 3 -> q4); <!-- a.delta = {q0, 0 -> q1, q0, 1 -> q1,
-q1 , 1 -> q2, q1, 2 -> q2, q2, 0 -> q1, q2, 2 -> q1, q3, 3 -> q4} --!>
+add_transition(a, q3, ${d} -> q4); <!-- a.delta = {q0, ${a} -> q1, q0, ${e} -> q1,
+q1 , ${b} -> q2, q1, ${c} -> q2, q2, ${a} -> q1, q2, ${c} -> q1, q3, ${d} -> q4} --!>
 
 insert_final(a, q3); <!-- a.F = {q1, q2, q3} --!>
 
-remove_states(a, q4); <!-- a.Q = {q0, q1, q2}, a.delta = {q0, 0 -> q1,
-q0, 1 -> q1, q1 , 1 -> q2, q1, 2 -> q2, q2, 0 -> q1, q2, 2 -> q1} --!>
+remove_states(a, q4); <!-- a.Q = {q0, q1, q2}, a.delta = {q0, ${a} -> q1,
+q0, ${b} -> q1, q1 , ${b} -> q2, q1, ${c} -> q2, q2, ${a} -> q1, q2, ${c} -> q1} --!>
 
-remove_letters(a, 2); <!-- a.Sigma = {0,1,3,4}, a.delta = {q0, 0 -> q1,
-q0, 1 -> q1, q1 , 1 -> q2, q2, 0 -> q1} --!>
+remove_letters(a, c); <!-- a.Sigma = {a:"0",b:"1",d:"3",e:"4"}, a.delta = {q0, ${a} -> q1,
+q0, ${b} -> q1, q1 , ${b} -> q2, q2, ${a} -> q1} --!>
 
-remove_transition(a, q2, 0 -> q1); <!-- a.delta = {q0, 0 -> q1,
- q0, 1 -> q1,  q1 , 1 -> q2} --!>
+remove_transition(a, q2, ${a} -> q1); <!-- a.delta = {q0, ${a} -> q1,
+ q0, ${b} -> q1,  q1 , ${b} -> q2} --!>
 
-remove_transition(a, q2, 0 -> q1); <!-- a.delta = {q0, 0 -> q1,
- q0, 1 -> q1,  q1 , 1 -> q2} --!>
+remove_transition(a, q2, ${a} -> q1); <!-- a.delta = {q0, ${a} -> q1,
+ q0, ${b} -> q1,  q1 , ${b} -> q2} --!>
 
 simulate(a, 101); <!-- error: DFA a is not in stable state(does not have
 transitions for all letters from every state) --!>
