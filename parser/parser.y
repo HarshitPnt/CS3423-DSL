@@ -188,8 +188,7 @@ regex_expression: LPAREN regex_expression RPAREN
                 | regex_expression REGEX_PLUS
                 | regex_expression REGEX_QUE
                 | regex_expression REGEX_DOLLAR
-                | regex_expression REGEX_DOLLAR LBRACE pseudo RBRACE REGEX_DOLLAR
-                | regex_expression REGEX_DOLLAR LBRACE ID RBRACE REGEX_DOLLAR
+                | regex_expression REGEX_DOLLAR LBRACE pseudo_ID RBRACE REGEX_DOLLAR
                 | regex_expression LBRACK regex_class RBRACK
                 | regex_expression LBRACE REGEX_NUM RBRACE
                 | regex_expression LBRACE REGEX_NUM COMMA RBRACE
@@ -221,20 +220,15 @@ expression_assignment : pseudo_ID OPER_ASN expression SEMICOLON {fprintf(parse_l
                       | pseudo_ID OPER_ASN_SIMPLE expression SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE set_values SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
-                      | pseudo OPER_ASN_SIMPLE LBRACE cfg_fsm_symb_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
-                      | pseudo OPER_ASN_SIMPLE LBRACE prod_transition_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_fsm_symb_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+                      | pseudo_ID OPER_ASN_SIMPLE LBRACE prod_transition_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
                       ;
-
-pseudo : ID DOT pseudo_ID
-       | ID LBRACK expression RBRACK
-       ;
 
 cfg_fsm_symb_list: cfg_fsm_symb
                  | cfg_fsm_symb_list COMMA cfg_fsm_symb
                  ;
 
-cfg_fsm_symb: ID
-            | ID COLON STRING_CONST
+cfg_fsm_symb: ID COLON STRING_CONST
             ;
 
 prod_transition_list: prod_transition

@@ -11,7 +11,7 @@ run: compile
 parser: parser.y
 	rm -rf ./build
 	mkdir ./build
-	bison $(YACCDEFINE)=./build/tokens.h parser.y ${YACCFLAGS} ./build/parser.c
+	bison $(YACCDEFINE)=./build/tokens.h parser.y ${YACCFLAGS} ./build/parser.c -Wcounterexamples
 
 test: compile ${FILES}
 	@for file in $(FILES); do \
