@@ -128,185 +128,380 @@ comm_end            ("--!>")
 
 {keyword_return} {
     fprintf(seq_token,"reserved keyword: %s\n",yytext);
-    return RETURN_KW;
+     return RETURN_KW;
 }
 
-"r"/{single_quote}([^']|"\'")*{single_quote}    {
+
+"r"/{single_quote}([^']|"\'")*{single_quote} {
+
+    /*
+    If the character r is present , check whether there is a string in 
+    single quote is present ahead of it ,if so it is a reject string .
+    */ 
+
     fprintf(seq_token,"regex: %s\n",yytext);
     BEGIN REGEX;
     return REGEX_R;
 }
 
+
 <REGEX>{single_quote} {
+
+    /*
+    If the character "'" is present ,
+    then we  start we start with regex_start state .
+    */
+
     fprintf(seq_token,"punctuation: %s\n",yytext);
     BEGIN REGEX_START;
-    return SIN_QUOTE;
+    //return SIN_QUOTE;
 }
 
 
 <REGEX_START>{single_quote} {
+
+    /*
+    If the character "'" is present ,
+    then we begin initial state .
+    */
+
     fprintf(seq_token,"punctuation: %s\n",yytext);
     BEGIN INITIAL;
-    return SIN_QUOTE;
+     return SIN_QUOTE;
 }
 
 <REGEX_START>{letter}|{whitespace} {
+
+    /*
+    If any letter is present followed by a white space ,
+    then we return REGEX_LIT.
+    */
+
     fprintf(seq_token,"regex_lit: %s\n",yytext);
-    return REGEX_LIT;
+     return REGEX_LIT;
 }
 
 <REGEX_START>{digit}+ {
+
+    /*
+    If any integer is present then
+    we return REGEX_LIT.
+    */
+
     fprintf(seq_token,"regex_num: %s\n",yytext);
-    return REGEX_LIT;
+     return REGEX_LIT;
 }
 
 <REGEX_START>"|" {
+    
+    /*
+    if the symbol "|" is present then
+    we return REGEX_OR.
+    */
+
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_OR;
+     return REGEX_OR;
 }
 
 <REGEX_START>"*" {
+
+    /*
+    If the symbol "*" is present then 
+    we return REGEX_STAR .
+    */
+
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_STAR;
+     return REGEX_STAR;
 }
 
 <REGEX_START>"+" {
+
+    /*
+    If the symbol "+" is present then
+    we return REGEX_PLUS.
+    */
+
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_PLUS;
+     return REGEX_PLUS;
 }
 
 <REGEX_START>"?" {
+
+    /*
+    If the symbol "?" is present then
+    we retun REGEX_QUE. 
+    */
+
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_QUE;
+     return REGEX_QUE;
 }
 
 <REGEX_START>"^" {
+
+    /*
+    IF symbol "^" is present ,
+    then we return REGEX_CARET.
+    */
+
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_CARET;
+     return REGEX_CARET;
 }
 
 <REGEX_START>"(" {
+    
+    /*
+    If symbol "(" is present ,
+    then we return LPAREN
+    */
+
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return LPAREN;
+     return LPAREN;
 }
 
 <REGEX_START>")" {
+    
+    /*
+    If symbol ")" is present 
+    then we return RPAREN
+    */
+
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return RPAREN;
+     return RPAREN;
 }
 
 <REGEX_START>"{"/{digit}+","?({digit}+)?"}" {
+    
+    /*
+    If symbol "{" is followed by integer , ... }
+    then we return LBRACE
+    */
+    
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_LIMIT;
-    return LBRACE;
+     return LBRACE;
 }
 
 <REGEX_LIMIT>{digit}+ {
+    
+    /*
+    If integer is present then
+    we return REGEX_NUM .
+    */
+    
     fprintf(seq_token,"regex_num: %s\n",yytext);
-    return REGEX_NUM;
+     return REGEX_NUM;
 }
 
 <REGEX_LIMIT>"," {
+    
+    /*
+    If symbol "," is present 
+    then we return COMMA.
+    */
+    
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return COMMA;
+     return COMMA;
 }
 
 <REGEX_LIMIT>"}" {
+    
+    /*
+    If symbol "{" is present 
+    then we begin regex_start.
+    */
+    
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_START;
     return RBRACE;
 }
 
 <REGEX_START>"["/(("^")?[^\]']|"\\]")+"]" {
+    
+    /*
+    checks for regex class expression [abc] or [^abc]
+    and then begins regex_sq.
+    */
+    
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_SQ;
     return LBRACK;
 }
 
 <REGEX_START>"[" {
+    
+    /*
+    If the symbol "[" is present in situations 
+    otherthan those in above condition ,then it is 
+    an error.
+    */
+    
     printf("Error at line no: %d\n",yylineno);
     exit(1);
 }
 
 <REGEX_SQ>"^" {
+    
+    /*
+    If symbol "^" is present 
+    inside regex_sq expression
+    then we return REGEX_CARET.
+    */
+    
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     return REGEX_CARET;
 }
 
 <REGEX_SQ>{letter}|{digit}/("-"{letter}|{digit}) {
+    
+    /* 
+    check is any letter or digit is followed by "- letter or digit"
+    then we begin regex_range
+    */
+    
     fprintf(seq_token,"regex_lit: %s\n",yytext);
     BEGIN REGEX_RANGE;
     return REGEX_LRANGE;
 }
 
 <REGEX_RANGE>"-" {
+    
+    /*
+    If symbol "-" is present 
+    inside regex_range expression
+    then we return regex_hyphen
+    */
+    
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     return REGEX_HYPHEN;
 }
 
 <REGEX_RANGE>{letter}|{digit} {
+    
+    /*
+    If letter or digit is present 
+    in regex_range expression then 
+    we begin regex_sq.
+    */
+    
     fprintf(seq_token,"regex_lit: %s\n",yytext);
     BEGIN REGEX_SQ;
     return REGEX_RRANGE;
 }
 
 <REGEX_SQ>"]" {
+    
+    /*
+    If the symbol "]" is present
+    in the reger_sq expression then
+    we begin regex_start .
+    */
+    
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     BEGIN REGEX_START;
     return RBRACK;
 }
 
-<REGEX_SQ>"$"/"{"{id}"}" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    yy_push_state(YYSTATE);
-    BEGIN REGEX_VAR;
-    return REGEX_DOLLAR;
-}
-
 <REGEX_START,REGEX_SQ>"\\("|"\\)"|"\\{"|"\\}"|"\\["|"\\]"|"\\|"|"\\*"|"\\+"|"\\?"|"\\^"|"\\$"|"\\\\"|{digit}|{letter}|{whitespace}|{special_char}|{brackets} {
+    
+    /*
+    check for all possible REGEX_LIT
+    */
+    
     fprintf(seq_token,"regex_lit: %s\n",yytext);
     return REGEX_LIT;
 }
 
 <REGEX_START>"$"/"{"{id}"}" {
+    
+    /*
+    Check if dollar symbol is followed by {id}
+    in regex_start expression then 
+    we begin regex_var .
+    */
+    
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    yy_push_state(YYSTATE);
     BEGIN REGEX_VAR;
     return REGEX_DOLLAR;
 }
 <REGEX_START>"$"/"'" {
+    
+    /*
+     Check if dollar symbol is followed by '
+    in regex_start expression then 
+    we begin regex_dollar.
+    */
+    
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     return REGEX_DOLLAR;
 }
 
 <REGEX_START>"$" {
+    
+    /*
+    Check if dollar symbol is present (without following 
+    any of the above 2 conditions) ,in regex_start expression then 
+    we give an error.
+    */
+    
     printf("Error at line no: %d\n",yylineno);
     exit(1);
 }
 
 <REGEX_VAR>"{" {
+
+    /*
+    Check if "{" is present
+    in regex_var expression then 
+    we return lbrace .
+    */
+    
     fprintf(seq_token,"regex_punct: %s\n",yytext);
     return LBRACE;
 }
 
 <REGEX_VAR>{id} {
+
+    /*
+    Check if identifier is present
+    in regex_var expression then 
+    we return ID .
+    */
+    
     fprintf(seq_token,"regex_var: %s\n",yytext);
-    return ID;
+    //return ID;
 }
 
 <REGEX_VAR>"}" {
+
+    /*
+    Check if symbol "}" is present
+    in regex_var expression then 
+    we begin regex_start.
+    */
+    
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    yy_pop_state();
+    BEGIN REGEX_START;
     return RBRACE;
 }
 
 <REGEX_START,REGEX_LIMIT,REGEX_SQ,REGEX_RANGE,REGEX_VAR>. {
+
+    /*
+    Pattern errors detected by lexer are 
+    highlighted here .
+    */
+    
     fprintf(seq_token,"regex pattern error: %s\n",yytext);
     printf(RED "Error at line number: %d\n" RESET, yylineno);
     exit(1);
 }
 
+
 {brackets}  {
+      /*
+    In this we detect brackets 
+    and return corresponding tokens.
+    */
     fprintf(seq_token,"punctuation: %s\n",yytext);
     if(strcmp(yytext,"(")==0) {
         return LPAREN;
@@ -329,6 +524,10 @@ comm_end            ("--!>")
 }
 
 {type_standard}     {
+      /*
+    In this we detect primitive datatype
+    and return corresponding token.
+    */
     fprintf(seq_token,"datatype: %s\n",yytext);
     if(strcmp(yytext,"int_8")==0) {
         return INT_8;
@@ -372,6 +571,10 @@ comm_end            ("--!>")
 }
 
 {type_non_standard} {
+      /*
+     In this we detect non-standard datatype
+    and return corresponding token.
+    */
     fprintf(seq_token,"datatype: %s\n",yytext);
     if(strcmp(yytext,"o_set")==0) {
         return O_SET;
@@ -397,68 +600,91 @@ comm_end            ("--!>")
 }
 
 {oper_ari}         {
+    // detecting '/' and '%' which are exclusively arithmetic operators
     fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"/")==0)
+    if(strcmp(yytext,"/")==0){
         return OPER_DIV;
-    if(strcmp(yytext,"%")==0)
+    }
+    else if(strcmp(yytext,"%")==0){
         return OPER_MOD;
+    }
 }
 
 {oper_auto}         {
+    // detecting '@' which is exclusively an automata operator
     fprintf(seq_token,"operator: %s\n",yytext);
-    return AT_THE_RATE;
+        return AT_THE_RATE;
 }
 
 {oper_set}          {
+    // detecting '^2' which is exclusively a set operator
     fprintf(seq_token,"operator: %s\n",yytext);
-    return OPER_POWER;
+     return OPER_POWER;
 }
 {oper_ovr_auto_set_ari}         {
+    // detecting '+' and '*' operator which are overloaded for all sets, arithmetic and automata expressions
     fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"+")==0)
+    if(strcmp(yytext,"+")==0){
         return OPER_PLUS;
-    if(strcmp(yytext,"*")==0)
+    }
+    else if(strcmp(yytext,"*")==0){
         return OPER_MUL;
+    }
 }
 
 {oper_ovr_set_ari} {
+    // detecting '-' which is an overloaded operator for sets and arithmetic expressions
     fprintf(seq_token,"operator: %s\n",yytext);
     return OPER_MINUS;
 }
 
 {oper_bi_log}      {
+    // detecting binary logical operators
     fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"&&")==0)
+    if(strcmp(yytext,"&&")==0){
         return OPER_AND;
-    if(strcmp(yytext,"||")==0) 
+    }
+    else if(strcmp(yytext,"||")==0) {
         return OPER_OR;
+    }
 }
 
 {oper_ovr_log_auto}      {
+    // detecting unary logical operator '!'which is overloaded for logical and automata expressions
     fprintf(seq_token,"operator: %s\n",yytext);
     return OPER_NOT;
 }
 
 {oper_comp}      {
+    // detecting comparision operators
     fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"<")==0)
+    if(strcmp(yytext,"<")==0){
         return COMP_LT;
-    if(strcmp(yytext,">")==0)
+    }
+    else if(strcmp(yytext,">")==0){
         return COMP_GT;
+    }
     return OPER_COMP;
 }
 
 {oper_asn_simple} {
+    // detecting '=' operator
     fprintf(seq_token,"operator: %s\n",yytext);
     return OPER_ASN_SIMPLE;
 }
 
 {oper_asn}      {
+    // detecting other assignment operators
     fprintf(seq_token,"operator: %s\n",yytext);
     return OPER_ASN;
 }
-
-{punctuation}      {
+{punctuation} {
+    
+    /*
+        punctuation characters 
+        ';',',','.','->',':'
+    */
+    
     fprintf(seq_token,"punctuation: %s\n",yytext);
     if(strcmp(yytext,";")==0) {
         return SEMICOLON;
@@ -475,47 +701,80 @@ comm_end            ("--!>")
     else if(strcmp(yytext,":")==0) {
         return COLON;
     }
-    else if(strcmp(yytext,"$")==0) {
-        return DOLLAR;
-    }
-    else if(strcmp(yytext,")")==0) {
-        return RPAREN;
-    }
 }
 
-{const_int}         {
+{const_int} {
+    
+    /*
+        detecting positive integer constants
+        (negative integers handled by parser)
+    */
+    
     fprintf(seq_token,"int_const: %s\n",yytext);
     return INT_CONST;
 }
 
-{const_float}       {
+{const_float} {
+    
+    /*
+        detecting positive float constants
+        (negative floats handled by parser)
+    */
+    
     fprintf(seq_token,"float_const: %s\n",yytext);
     return FLOAT_CONST;
 }
 
-{const_string}      {
+{const_string} {
+    
+    /*
+        detecting string constants
+        "Test_1213#!@$!\"This is a string constant"
+    */
+    
     fprintf(seq_token,"string_const: %s\n",yytext);
     return STRING_CONST;
 }
 
-{const_char}        {
+{const_char} {
+    
+    /*
+        Detecting character constants
+        'a'
+        '\''
+    */
+    
     fprintf(seq_token,"char_const: %s\n",yytext);
     return CHAR_CONST;
 }
 
-{const_bool}        {
+{const_bool} {
+    
+    /*
+        detecting bool constants
+        true and false
+    */
+    
     fprintf(seq_token,"bool_const: %s\n",yytext);
     return BOOL_CONST;
 }
 
-{id}                {
+{id} {
+    
+    /*
+        detecting identifiers
+    */
+    
     fprintf(seq_token,"identifier: %s\n",yytext);
     return ID;
 }
 
 <COMMENT>{comm_beg} {
-    printf("Here\n");
-    fflush(stdout);
+    
+    /*
+        Detecting start of comment '<!--' inside a comment
+    */
+    
     yy_push_state(YYSTATE);
     BEGIN COMMENT;
     comment[comm_len] = '<';
@@ -527,12 +786,22 @@ comm_end            ("--!>")
 }
 
 {comm_beg} {
+    
+    /*
+        Detecting the first '<!--' for comments
+    */
+    
     yy_push_state(YYSTATE);
     BEGIN COMMENT;
     fprintf(seq_token,"punctuation: %s\n",yytext);
 }
 
 <COMMENT>{comm_end} {
+    
+    /*
+        Detecting end punctuator of comments '--!>'
+    */
+    
     if(yy_top_state()==INITIAL)
     {
         fprintf(seq_token,"comment: %s\n",comment);
@@ -553,24 +822,42 @@ comm_end            ("--!>")
 }
 
 <COMMENT>(.|"\n") {
+    
+    /*
+        Detecting comment body
+    */
+    
     comment[comm_len] = yytext[0];
     comment[comm_len+1] = '\0';
     comm_len=comm_len+1;
 }
 
 <COMMENT><<EOF>> {
+    
+    /*
+        If end of file detected inside a comment body
+    */
+    
     fprintf(seq_token,"comment: %s\n",comment);
     BEGIN INITIAL;
 }
 
+
 {epsilon} {
+    
+    /*
+        Epsilon token
+    */
+    
     fprintf(seq_token,"epsilon: %s\n",yytext);
     return EPSILON;
 }
 
 
-. { error();}
-
+. {
+    // everything else that is undetected by above patterns
+    error();
+}
 %%
 
 // Function to quit program
