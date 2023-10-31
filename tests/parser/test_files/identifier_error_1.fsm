@@ -1,0 +1,7 @@
+int_8 _123; <!-- Allowed --!>
+
+int_8 1a_b; <!-- Not Allowed PASSED BY LEXER --!>
+
+int_8 @a; <!--Not Allowed PASSED BY LEXER --!>
+
+int_8 a_1 <!-- Allowed --!>
