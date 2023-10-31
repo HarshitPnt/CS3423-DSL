@@ -165,6 +165,8 @@ expression: LPAREN expression RPAREN
           | expression OPER_MOD expression
           | expression OPER_COMP expression
           | expression OPER_AND expression
+          | expression OPER_POWER
+          | expression AT_THE_RATE expression
           | expression OPER_OR expression
           | OPER_NOT expression
           | expression COMP_GT expression
@@ -246,7 +248,7 @@ arrow_lhs: /* empty */
          | set_values_pda
          ;
 
-arrow_rhs:  cfg_rhs_rule
+arrow_rhs: cfg_rhs_rule
          | pseudo_ID
          | set_values
          | set_values_pda
@@ -277,9 +279,10 @@ set_value_pda: LPAREN DOLLAR LBRACE ID RBRACE COMMA DOLLAR LBRACE ID RBRACE RPAR
              ;
 
 cfg_rhs_rule : DOLLAR LBRACE ID RBRACE cfg_rhs_rule
-             | DOLLAR LBRACE ID RBRACE
+             | DOLLAR LBRACE ID RBRACE DOLLAR
              | ID cfg_rhs_rule
-             | ID
+             | ID DOLLAR
+             | EPSILON DOLLAR
              ;
 
 regex_expression_vars: DOLLAR LBRACE ID RBRACE regex_expression_vars
