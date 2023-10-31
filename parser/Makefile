@@ -1,5 +1,5 @@
 YACCDEFINE = --defines
-YACCFLAGS =  -t -v -o
+YACCFLAGS = -v -t -o
 FILES := $(wildcard ${FOLDER}/*)
 RED := \033[0;31m
 GREEN := \033[0;32m
@@ -17,10 +17,10 @@ test: compile ${FILES}
 	@for file in $(FILES); do \
 		echo "Processing $$file" && ./parser $$file; \
 		if [ $$? = 0 ]; then \
-            echo "${GREEN}LEXER Test Passed${RESET}"; \
+            echo "${GREEN}Parser: Test Passed${RESET}"; \
 			echo "-----------------------------------"; \
         else \
-            echo "${RED}LEXER Test Failed${RESET}"; \
+            echo "${RED}Parser: Test Failed${RESET}"; \
 			echo "-----------------------------------"; \
         fi \
 	done

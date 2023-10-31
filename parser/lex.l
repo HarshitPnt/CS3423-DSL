@@ -32,7 +32,7 @@ whitespace          (" "|"\t"|"\n")
 /*Punctuations*/
 /* Note that BRACE: {} BRACKETS: [] PARENTHESIS: () */
 brackets            "("|")"|"["|"]"|"{"|"}"
-punctuation         ","|"."|"->"|";"|":"
+punctuation         ","|"."|"->"|";"|":"|"$"
 single_quote        "'"
 epsilon            "\\e"
 
@@ -256,6 +256,13 @@ comm_end            ("--!>")
     return RBRACK;
 }
 
+<REGEX_SQ>"$"/"{"{id}"}" {
+    fprintf(seq_token,"regex_punct: %s\n",yytext);
+    yy_push_state(YYSTATE);
+    BEGIN REGEX_VAR;
+    return REGEX_DOLLAR;
+}
+
 <REGEX_START,REGEX_SQ>"\\("|"\\)"|"\\{"|"\\}"|"\\["|"\\]"|"\\|"|"\\*"|"\\+"|"\\?"|"\\^"|"\\$"|"\\\\"|{digit}|{letter}|{whitespace}|{special_char}|{brackets} {
     fprintf(seq_token,"regex_lit: %s\n",yytext);
     return REGEX_LIT;
@@ -263,6 +270,7 @@ comm_end            ("--!>")
 
 <REGEX_START>"$"/"{"{id}"}" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
+    yy_push_state(YYSTATE);
     BEGIN REGEX_VAR;
     return REGEX_DOLLAR;
 }
@@ -288,7 +296,7 @@ comm_end            ("--!>")
 
 <REGEX_VAR>"}" {
     fprintf(seq_token,"regex_punct: %s\n",yytext);
-    BEGIN REGEX_START;
+    yy_pop_state();
     return RBRACE;
 }
 
@@ -568,6 +576,7 @@ comm_end            ("--!>")
 // Function to quit program
 void error(){
         char *toprint = "Error at line number: ";
+        fprintf(seq_token,"%s%d\n", toprint, yylineno);
         printf(RED "%s%d\n" RESET, toprint, yylineno);
         exit(1);
 }

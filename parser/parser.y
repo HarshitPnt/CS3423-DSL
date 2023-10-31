@@ -138,6 +138,7 @@ automata_dtype: CFG
               | DFA
               | NFA
               | PDA
+              | ID
               ;
 
 set_type: O_SET COMP_LT primitive_dtype COMP_GT
@@ -242,16 +243,16 @@ prod_transition: pseudo_ID arrow_lhs ARROW arrow_rhs
                ;
 
 arrow_lhs: SEMICOLON id_lhs
-         | REGEX_R SIN_QUOTE regex_expression_vars SIN_QUOTE
-         | set_values_vars
+         | SEMICOLON REGEX_R SIN_QUOTE LBRACK regex_expression_vars RBRACK SIN_QUOTE
+         | SEMICOLON set_values_vars
          | SEMICOLON id_lhs COMMA id_lhs
-         | set_values_pda
+         | SEMICOLON set_values_pda
          ;
 
-arrow_rhs: pseudo_ID
-         | set_values
-         | set_values_pda
-         | EPSILON
+arrow_rhs: pseudo_ID DOLLAR
+         | set_values DOLLAR
+         | set_values_pda_rhs DOLLAR
+         | EPSILON DOLLAR
          ;
 
 id_lhs : DOLLAR LBRACE ID RBRACE
@@ -271,22 +272,46 @@ set_value_vars: DOLLAR LBRACE ID RBRACE
 set_values_pda: LBRACE set_value_list_pda RBRACE
               ;
 
+set_values_pda_rhs: LBRACE set_value_list_pda_rhs RBRACE
+                  | ID COMMA DOLLAR LBRACE ID RBRACE
+                  | ID COMMA EPSILON
+                  ;
+
+set_value_list_pda_rhs: set_value_pda_rhs
+                      | set_value_list_pda_rhs COMMA set_value_pda_rhs
+                      ;
+
+set_value_pda_rhs: LPAREN ID COMMA DOLLAR LBRACE ID RBRACE RPAREN
+                 | LPAREN ID COMMA EPSILON RPAREN
+                 ;
+
 set_value_list_pda: set_value_pda
                   | set_value_list_pda COMMA set_value_pda
                   ;
 
 set_value_pda: LPAREN DOLLAR LBRACE ID RBRACE COMMA DOLLAR LBRACE ID RBRACE RPAREN
+             | LPAREN EPSILON COMMA DOLLAR LBRACE ID RBRACE RPAREN
+             | LPAREN DOLLAR LBRACE ID RBRACE COMMA EPSILON RPAREN
+             | LPAREN EPSILON COMMA EPSILON RPAREN
              ;
 
-cfg_rhs_rule : DOLLAR LBRACE ID RBRACE cfg_rhs_rule
-             | DOLLAR LBRACE ID RBRACE DOLLAR
-             | ID cfg_rhs_rule
-             | ID DOLLAR
-             | EPSILON DOLLAR
-             ;
+cfg_rhs_rule: LBRACE cfg_rhs_rule_list RBRACE
+            | cfg_rhs_rule_item
+            ;
 
-regex_expression_vars: DOLLAR LBRACE ID RBRACE regex_expression_vars
-                     | DOLLAR LBRACE ID RBRACE
+cfg_rhs_rule_list: cfg_rhs_rule_item
+                 | cfg_rhs_rule_list COMMA cfg_rhs_rule_item
+                 ;
+
+cfg_rhs_rule_item : DOLLAR LBRACE ID RBRACE cfg_rhs_rule
+                  | DOLLAR LBRACE ID RBRACE DOLLAR
+                  | ID cfg_rhs_rule
+                  | ID DOLLAR
+                  | EPSILON DOLLAR
+                 ;
+
+regex_expression_vars: REGEX_DOLLAR LBRACE ID RBRACE regex_expression_vars
+                     | REGEX_DOLLAR LBRACE ID RBRACE
                      ;
 
 control_statement: if_statement
@@ -377,21 +402,43 @@ void yyerror(const char *s) {
 
 }
 
-#ifdef YYDEBUG
-  int yydebug = 1;
-#endif
+// #ifdef YYDEBUG
+//   int yydebug = 1;
+// #endif
 
 int main(int argc, char **argv) {
     yyin = fopen(argv[1],"r");
-    char *test = (char*)malloc(sizeof(char)*100);
-    // fscanf(yyin,"%s",test);
-    seq_token = fopen("seq_tokens_test.tok","w");
-    parse_log = fopen("parser_test.log","w");
-    // printf("%s\n",test);
-    fflush(stdout);
+    char *filename = (char*)malloc(sizeof(char)*strlen(argv[1]));
+     //position of last '.' in file name
+    char *pos = strrchr(argv[1],'.'); 
+
+    //position of last '/' in file name
+    char *x = strrchr(argv[1],'/');
+
+    // file name of the input file after removing .txt at the end
+    // This requires the input file to have an extension
+    if(x==NULL)
+        strncpy(filename,argv[1],pos-argv[1]);
+    else
+        strncpy(filename,x+1,pos-x-1);
+
+    // path to the folder of test file
+    char *path = (char*)malloc(sizeof(char)*strlen(argv[1]));
+    strncpy(path,argv[1],x-argv[1]);
+    x = strrchr(path,'/');
+    path[x-path] = '\0';
+    char *seq = (char*)malloc(sizeof(char)*(strlen(path)+50));
+    char *parser_log = (char*)malloc(sizeof(char)*(strlen(path)+50));
+    sprintf(seq,"%s/logs/seq_tokens_%s.tok",path,filename);
+    sprintf(parser_log,"%s/logs/parser_log_%s.log",path,filename);
+
+    // tokens file path
+    seq_token = fopen(seq, "w");
+    parse_log = fopen(parser_log,"w");
     yyparse();
     fclose(yyin);
     fclose(seq_token);
+    fclose(parse_log);
     return 0;
 
 }
