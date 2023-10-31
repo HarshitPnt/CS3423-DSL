@@ -120,7 +120,7 @@ comm_end            ("--!>")
 {keyword_struct} {
 
     /*
-      When keyword struct is read this 
+      When keyword struct is present ,struct keyword is returned .
     */
     fprintf(seq_token,"reserved keyword: %s\n",yytext);
     // return STRUCT_KW;
