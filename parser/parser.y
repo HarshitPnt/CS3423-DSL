@@ -238,21 +238,21 @@ prod_transition_list: prod_transition
                     ;
 
 prod_transition: pseudo_ID arrow_lhs ARROW arrow_rhs
+               | pseudo_ID ARROW cfg_rhs_rule
                ;
 
-arrow_lhs: /* empty */
-         | COMMA id_lhs
+arrow_lhs: SEMICOLON id_lhs
          | REGEX_R SIN_QUOTE regex_expression_vars SIN_QUOTE
          | set_values_vars
-         | COMMA id_lhs COMMA id_lhs %prec PSEUDO_HIGH
+         | SEMICOLON id_lhs COMMA id_lhs
          | set_values_pda
          ;
 
-arrow_rhs: cfg_rhs_rule
-         | pseudo_ID
+arrow_rhs: pseudo_ID
          | set_values
          | set_values_pda
          | EPSILON
+         ;
 
 id_lhs : DOLLAR LBRACE ID RBRACE
        | EPSILON
