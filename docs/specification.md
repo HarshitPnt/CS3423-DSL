@@ -270,7 +270,7 @@ a.S = A;
 a.P = {
     A -> ${a}B,
     B -> ${demo}A,
-    A -> {${a}A, \e}
+    A -> {${a}A, \e$}
 };
 ```
 
@@ -297,9 +297,9 @@ state1, {input_symbol1, input_symbol2, ...} -> state2
 
 This can also be done as:
 
-state1, \<regex> -> state2
+state1; \<regex> -> state2
 
-state1 , \<set> -> state2
+state1 ; \<set> -> state2
 
 $\delta$ is either a set of such transitions or it can be represented as a matrix of size $|Q| \times |\Sigma|$, where each element of the matrix is a state.
 
@@ -308,10 +308,10 @@ dfa a;
 a.Q = {q0, q1, q2};
 a.Sigma = {a:"0",b:"1",c:"2"};
 a.delta = {
-    q0, ${a} -> q1,
-    a.Q[0] , ${b} -> a.Q[1],
-    q1 , r'[${a}${c}]' -> q2,
-    q2, { ${a} , ${c} } -> q1
+    q0; ${a} -> q1,
+    a.Q[0] ; ${b} -> a.Q[1],
+    q1 ; r'[${a}${c}]' -> q2,
+    q2; { ${a} , ${c} } -> q1
 };
 a.q0 = q0;
 a.F = {q1,q2};
@@ -334,10 +334,10 @@ Here $2^Q$ represent the power set of $Q$.
 
 A transition can be represented as:
 
-- state1, input_symbol -> {state2, state3, ...}
-- state1, {input_symbol1, input_symbol2, ...} -> {state2, state3, ...}
-- state1, \<regex> -> {state2, state3, ...}
-- state1, \<set> -> {state2, state3, ...}
+- state1; input_symbol -> {state2, state3, ...}
+- state1; {input_symbol1, input_symbol2, ...} -> {state2, state3, ...}
+- state1; \<regex> -> {state2, state3, ...}
+- state1; \<set> -> {state2, state3, ...}
 
 Here input_symbols can include $\epsilon$ which is represented by '\\e'.
 
@@ -346,11 +346,11 @@ nfa a;
 a.Q = {q0, q1, q2};
 a.Sigma = {a:"0",b:"1",c:"2"};
 a.delta = {
-    q0, ${a} -> {q1, q2},
-    a.Q[0] , ${b} -> a.Q[1],
-    q1 , r$'[${a}${b}]' -> q2,
-    q2, {${a},${c}} -> q1,
-    q2, \e -> q0
+    q0; ${a} -> {q1, q2},
+    a.Q[0] ; ${b} -> a.Q[1],
+    q1 ; r$'[${a}${b}]' -> q2,
+    q2; {${a},${c}} -> q1,
+    q2; \e -> q0
 };
 a.q0 = q0;
 a.F = {q1,q2};
@@ -374,9 +374,9 @@ Here $2^{Q \times \Gamma_{\epsilon}}$ represent the power set of $Q \times \Gamm
 
 A transition can be represented as:
 
-- state1, input_symbol, stack_symbol -> state2, stack_symbol
-- state1, {(input_symbol1, stack_symbol1), (input_symbol2, stack_symbol2), ...} -> state2, stack_symbol
-- state1, input_symbol, stack_symbol -> {(state2, stack_symbol2), (state3,stack_symbol3), ...}
+- state1; input_symbol, stack_symbol -> state2, stack_symbol
+- state1; {(input_symbol1, stack_symbol1), (input_symbol2, stack_symbol2), ...} -> state2; stack_symbol
+- state1; input_symbol, stack_symbol -> {(state2, stack_symbol2), (state3,stack_symbol3), ...}
 
 ```c
 pda a;
@@ -384,11 +384,11 @@ a.Q = {A, B, C};
 a.S = {a:"a", b:"b", c:"c"};
 a.G = {a:"a", b:"b", d:"d"};
 a.delta = {
-    A, ${a}, ${a} -> A, ${a},
-    A, {(${b}, ${a}),(${b}, ${c})} -> {(B, ${a}), (A, ${d})},
-    B, {(${b}, ${a}), (${b}, ${c})} -> B, ${a},
-    B, ${c}, ${a} -> C, \e,
-    C, ${c}, ${a} -> {(C, \e), (C, ${a})}
+    A; ${a}, ${a} -> A, ${a},
+    A; {(${b}, ${a}),(${b}, ${c})} -> {(B, ${a}), (A, ${d})},
+    B; {(${b}, ${a}), (${b}, ${c})} -> B, ${a},
+    B; ${c}, ${a} -> C, \e,
+    C; ${c}, ${a} -> {(C, \e), (C, ${a})}
 };
 a.q0 = A;
 a.F = {C};
@@ -772,7 +772,7 @@ a.S = A;
 a.P = {
     A -> ${a}B,
     B -> ${demo}A,
-    A -> {${a}A, \e}
+    A -> {${a}A, \e$}
 };
 
 add_T(a, c:"c", d:"d"); <!-- a.T = {a:"a", demo:"b", c:"c", d:"d"}--!>
@@ -835,10 +835,10 @@ a.Sigma = {a:"0",b:"1",c:"2"};
 
 a.F = {q1, q2};
 a.delta = {
-  q0, ${a} -> q1,
-  a.Q[0] , ${b} -> a.Q[1],
-  q1 , r'[${a}${c}]' -> q2,
-  q2, { ${a}, ${c} } -> q1
+  q0; ${a} -> q1,
+  a.Q[0] ; ${b} -> a.Q[1],
+  q1 ; r'[${a}${c}]' -> q2,
+  q2; { ${a}, ${c} } -> q1
 };
 
 insert_states(a, q3, q4); <!-- a.Q = {q0, q1, q2, q3, q4} --!>
@@ -847,7 +847,7 @@ insert_letters(a, d:"3", e:"4"); <!-- a.Sigma = {a:"0",b:"1",c:"2",d:"3",e:"4"} 
 
 change_start(a, q3); <!-- a.q0 = q3 --!>
 
-add_transition(a, q3, ${d} -> q4); <!-- a.delta = {q0, ${a} -> q1, q0, ${e} -> q1,
+add_transition(a, q3; ${d} -> q4); <!-- a.delta = {q0, ${a} -> q1, q0, ${e} -> q1,
 q1 , ${b} -> q2, q1, ${c} -> q2, q2, ${a} -> q1, q2, ${c} -> q1, q3, ${d} -> q4} --!>
 
 insert_final(a, q3); <!-- a.F = {q1, q2, q3} --!>
@@ -858,10 +858,10 @@ q0, ${b} -> q1, q1 , ${b} -> q2, q1, ${c} -> q2, q2, ${a} -> q1, q2, ${c} -> q1}
 remove_letters(a, c); <!-- a.Sigma = {a:"0",b:"1",d:"3",e:"4"}, a.delta = {q0, ${a} -> q1,
 q0, ${b} -> q1, q1 , ${b} -> q2, q2, ${a} -> q1} --!>
 
-remove_transition(a, q2, ${a} -> q1); <!-- a.delta = {q0, ${a} -> q1,
+remove_transition(a, q2; ${a} -> q1); <!-- a.delta = {q0, ${a} -> q1,
  q0, ${b} -> q1,  q1 , ${b} -> q2} --!>
 
-remove_transition(a, q2, ${a} -> q1); <!-- a.delta = {q0, ${a} -> q1,
+remove_transition(a, q2; ${a} -> q1); <!-- a.delta = {q0, ${a} -> q1,
  q0, ${b} -> q1,  q1 , ${b} -> q2} --!>
 
 simulate(a, 101); <!-- error: DFA a is not in stable state(does not have
