@@ -381,14 +381,14 @@ A transition can be represented as:
 ```c
 pda a;
 a.Q = {A, B, C};
-a.S = {a, b, c};
-a.G = {a, b, d};
+a.S = {a:"a", b:"b", c:"c"};
+a.G = {a:"a", b:"b", d:"d"};
 a.delta = {
-    A, a, a -> A, a,
-    A, {(b, a),(b, c)} -> {(B, a), (A, d)},
-    B, {(b, a), (b, c)} -> B, a,
-    B, c, a -> C, \e,
-    C, c, a -> {(C, \e), (C, a)}
+    A, ${a}, ${a} -> A, ${a},
+    A, {(${b}, ${a}),(${b}, ${c})} -> {(B, ${a}), (A, ${d})},
+    B, {(${b}, ${a}), (${b}, ${c})} -> B, ${a},
+    B, ${c}, ${a} -> C, \e,
+    C, ${c}, ${a} -> {(C, \e), (C, ${a})}
 };
 a.q0 = A;
 a.F = {C};
@@ -826,7 +826,7 @@ delete(a); <!-- deletes the CFG a --!>
 |         delete(dfa a)         |                                            deletes the DFA a                                            |      -      |
 |          out(dfa a)           |                                            prints the DFA a                                             |      -      |
 
-```text
+```c
 dfa a;
 
 a.Q = {q0, q1, q2};
