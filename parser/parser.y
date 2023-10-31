@@ -416,9 +416,9 @@ void yyerror(const char *s) {
 
 }
 
-#ifdef YYDEBUG
-  int yydebug = 1;
-#endif
+// #ifdef YYDEBUG
+//   int yydebug = 1;
+// #endif
 
 int main(int argc, char **argv) {
     yyin = fopen(argv[1],"r");
