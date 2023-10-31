@@ -1,7 +1,8 @@
 <!-- EXPRESSIONS --!>
 
 int_8 a,b;
-a = 10,b=20;
+a = 10;
+b=20;
 
 <!-- Arithmetic Operators --!>
 int_8 result = a + b;
@@ -51,7 +52,8 @@ result = set^2;
 dfa a_dfa;
 dfa b_dfa;
 
-dfa result_dfa = a_dfa*;
+dfa result_dfa;
+result_dfa = a_dfa#;
 result_dfa = a_dfa+b_dfa;
 result_dfa = !a_dfa;
 result_dfa = a_dfa@b_dfa;
@@ -60,9 +62,9 @@ result_dfa = a_dfa@b_dfa;
 
 struct Point {
     int_64 x, y;
-}
+};
 
-Point p = {1,2};
+Point p;
 
 p.x = 2;
 p.y = 3;

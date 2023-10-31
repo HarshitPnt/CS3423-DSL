@@ -44,7 +44,7 @@
 
 %left OPER_POWER
 
-%left OPER_NOT
+%left OPER_NOT OPER_HASH
 
 %token OPER_ASN OPER_ASN_SIMPLE
 
@@ -87,6 +87,7 @@ variable_declaration: primitive_dtype id_list_arith SEMICOLON {fprintf(parse_log
                     | STRING id_list_string SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
                     | REG id_list_reg SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
                     | automata_dtype id_list_auto SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
+                    | ID id_lists SEMICOLON {fprintf(parse_log,"variable declaration of structs at line no: %d\n",yylineno);}
                     ;
 
 id_list_arith : ID
@@ -182,6 +183,7 @@ expression: LPAREN expression RPAREN
           | OPER_NOT expression
           | expression COMP_GT expression
           | expression COMP_LT expression
+          | expression OPER_HASH
           | INT_CONST
           | OPER_MINUS expression %prec PSEUDO_HIGH
           | OPER_PLUS expression %prec PSEUDO_HIGH
@@ -199,7 +201,7 @@ regex_expression: LPAREN regex_expression RPAREN
                 | regex_expression REGEX_PLUS
                 | regex_expression REGEX_QUE
                 | regex_expression REGEX_DOLLAR
-                | regex_expression REGEX_DOLLAR LBRACE pseudo_ID RBRACE REGEX_DOLLAR
+                | regex_expression REGEX_DOLLAR LBRACE pseudo_ID RBRACE
                 | regex_expression LBRACK regex_class RBRACK
                 | regex_expression LBRACE REGEX_NUM RBRACE
                 | regex_expression LBRACE REGEX_NUM COMMA RBRACE
@@ -229,6 +231,7 @@ set_value: expression
 
 expression_assignment : pseudo_ID OPER_ASN expression SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE expression SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
+                      | pseudo_ID OPER_ASN_SIMPLE REGEX_R  SIN_QUOTE regex_expression SIN_QUOTE SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE set_values SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_fsm_symb_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
