@@ -221,6 +221,50 @@ expression_assignment : pseudo_ID OPER_ASN expression SEMICOLON {fprintf(parse_l
                       | pseudo_ID OPER_ASN_SIMPLE expression SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE set_values SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_terminal_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_production_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+                      | pseudo_ID OPER_ASN_SIMPLE LBRACE fsm_transition_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+                      ;
+
+cfg_terminal_list: /* empty */
+                 | cfg_terminal
+                 | cfg_terminal_list COMMA cfg_terminal
+                 ;
+
+cfg_terminal: ID COLON STRING_CONST
+            ;
+
+cfg_production_list: /* empty */
+                   | cfg_production
+                   | cfg_production_list COMMA cfg_production
+                   ;
+
+cfg_production: pseudo_ID ARROW cfg_prod_rhs
+              ;
+
+cfg_prod_rhs: LBRACE cfg_rhs cfg_rhs_list RBRACE
+            | cfg_rhs
+            ;
+
+cfg_rhs_list: /* empty */
+            | COMMA cfg_rhs cfg_rhs_list
+            ;
+
+cfg_rhs : LBRACE ID RBRACE pseudo_ID
+        | EPSILON
+        ;
+
+fsm_transition_list: /* empty */
+                   | fsm_transition
+                   | fsm_transition_list COMMA fsm_transition
+                   ;
+
+fsm_transition: pseudo_ID COMMA transition_symb ARROW transition_rhs
+              ;
+
+transition_symb: pseudo_ID
+               | EPSILON
+               ;
                       ;
 
 control_statement: if_statement
