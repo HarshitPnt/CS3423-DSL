@@ -1,5 +1,8 @@
-read comp
-if [ $comp = "lexer" ]
+#!/bin/bash
+
+comp=$1
+
+if [ $comp == "lexer" ]
 then
     cd ../tests/lexer
     rm -rf tokens
@@ -8,7 +11,7 @@ then
     cd ../../lexer
     make compile
     make test FOLDER=../tests/lexer/test_files
-elif [ $comp = "parser" ]
+elif [ $comp == "parser" ]
 then
     cd ../tests/parser
     rm -rf logs
@@ -17,7 +20,7 @@ then
     cd ../../parser
     make compile
     make test FOLDER=../tests/parser/test_files
-# elif [ $comp = "semantic" ]
+# elif [ $comp == "semantic" ]
 # then
 #     cd ../tests/semantic
 #     rm -rf ast
@@ -26,7 +29,7 @@ then
 #     cd ../../semantic
 #     make compile
 #     make test FOLDER=../tests/semantic/test_files
-# elif [ $comp = "codegen" ]
+# elif [ $comp == "codegen" ]
 # then
 #     cd ../tests/codegen
 #     rm -rf ast
@@ -35,7 +38,7 @@ then
 #     cd ../../codegen
 #     make compile
 #     make test FOLDER=../tests/codegen/test_files
-elif [ $comp = "all" ]
+elif [ $comp == "all" ]
 then
     cd ../tests/lexer
     rm -rf tokens
