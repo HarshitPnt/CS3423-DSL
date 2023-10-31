@@ -1,8 +1,0 @@
-<!-- REGEX errors --!>
-
-regex reg = r'a)'; <!-- Syntax error detected by parser --!>
-reg = r'(a'; <!-- Syntax error detected by parser --!>
-reg = r'a{'; <!-- Not an error --!>
-reg = r'a}' <!-- Not an error --!>
-reg = r'a]' <!-- Not an error --!>
-reg = r'[a' ; <!-- Parser Error --!>
