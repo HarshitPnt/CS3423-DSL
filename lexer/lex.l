@@ -608,10 +608,12 @@ comm_end            ("--!>")
 {oper_ari}         {
     // detecting '/' and '%' which are exclusively arithmetic operators
     fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"/")==0)
+    if(strcmp(yytext,"/")==0){
         // return OPER_DIV;
-    else if(strcmp(yytext,"%")==0)
+    }
+    else if(strcmp(yytext,"%")==0){
         // return OPER_MOD;
+    }
 }
 
 {oper_auto}         {
@@ -628,10 +630,12 @@ comm_end            ("--!>")
 {oper_ovr_auto_set_ari}         {
     // detecting '+' and '*' operator which are overloaded for all sets, arithmetic and automata expressions
     fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"+")==0)
+    if(strcmp(yytext,"+")==0){
         // return OPER_PLUS;
-    else if(strcmp(yytext,"*")==0)
+    }
+    else if(strcmp(yytext,"*")==0){
         // return OPER_MUL;
+    }
 }
 
 {oper_ovr_set_ari} {
@@ -643,10 +647,12 @@ comm_end            ("--!>")
 {oper_bi_log}      {
     // detecting binary logical operators
     fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"&&")==0)
+    if(strcmp(yytext,"&&")==0){
         // return OPER_AND;
-    else if(strcmp(yytext,"||")==0) 
+    }
+    else if(strcmp(yytext,"||")==0) {
         // return OPER_OR;
+    }
 }
 
 {oper_ovr_log_auto}      {
@@ -658,10 +664,12 @@ comm_end            ("--!>")
 {oper_comp}      {
     // detecting comparision operators
     fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"<")==0)
+    if(strcmp(yytext,"<")==0){
         // return COMP_LT;
-    else if(strcmp(yytext,">")==0)
+    }
+    else if(strcmp(yytext,">")==0){
         // return COMP_GT;
+    }
     // return OPER_COMP;
 }
 
