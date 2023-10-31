@@ -69,7 +69,7 @@ program: instruction_list
        ;
 
 
-instruction_list: statement
+instruction_list: /* empty */
                 | instruction_list struct_declaration
                 | instruction_list function_declaration
                 | instruction_list statement
@@ -90,6 +90,8 @@ variable_declaration: primitive_dtype id_list SEMICOLON {fprintf(parse_log,"vari
                     ;
 
 id_list: ID
+       | ID OPER_ASN_SIMPLE expression
+       | id_list COMMA ID OPER_ASN_SIMPLE expression
        | id_list COMMA ID
        ;
 
@@ -171,6 +173,8 @@ expression: LPAREN expression RPAREN
           | INT_CONST
           | OPER_MINUS INT_CONST %prec PSEUDO_TOKEN
           | OPER_MINUS FLOAT_CONST %prec PSEUDO_TOKEN
+          | OPER_PLUS INT_CONST %prec PSEUDO_TOKEN
+          | OPER_PLUS FLOAT_CONST %prec PSEUDO_TOKEN
           | FLOAT_CONST
           | BOOL_CONST
           | CHAR_CONST
@@ -217,50 +221,7 @@ expression_assignment : pseudo_ID OPER_ASN expression SEMICOLON {fprintf(parse_l
                       | pseudo_ID OPER_ASN_SIMPLE expression SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE set_values SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_terminal_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_production_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE fsm_transition_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
                       ;
-
-cfg_terminal_list: /* empty */
-                 | cfg_terminal
-                 | cfg_terminal_list COMMA cfg_terminal
-                 ;
-
-cfg_terminal: ID COLON STRING_CONST
-            ;
-
-cfg_production_list: /* empty */
-                   | cfg_production
-                   | cfg_production_list COMMA cfg_production
-                   ;
-
-cfg_production: pseudo_ID ARROW cfg_prod_rhs
-              ;
-
-cfg_prod_rhs: LBRACE cfg_rhs cfg_rhs_list RBRACE
-            | cfg_rhs
-            ;
-
-cfg_rhs_list: /* empty */
-            | COMMA cfg_rhs cfg_rhs_list
-            ;
-
-cfg_rhs : LBRACE ID RBRACE pseudo_ID
-        | EPSILON
-        ;
-
-fsm_transition_list: /* empty */
-                   | fsm_transition
-                   | fsm_transition_list COMMA fsm_transition
-                   ;
-
-fsm_transition: pseudo_ID COMMA transition_symb ARROW transition_rhs
-              ;
-
-transition_symb: pseudo_ID
-               | EPSILON
-               ;
 
 control_statement: if_statement
                  | while_statement
@@ -276,18 +237,18 @@ statement_list_extended: instruction_list
                        | SEMICOLON
                        ;
 
-elif_statement: ELIF_KW LPAREN expression RPAREN LBRACE statement_list_extended RBRACE {fprintf(parse_log,"ELIF Statement at line no: %d\n",yylineno);}
-              |
+elif_statement: ELIF_KW LPAREN expression RPAREN LBRACE statement_list_extended RBRACE elif_statement {fprintf(parse_log,"ELIF Statement at line no: %d\n",yylineno);}
+              | /* empty */
               ;
 
 
 else_statement: ELSE_KW LBRACE statement_list_extended RBRACE {fprintf(parse_log,"ELSE Statement at line no: %d\n",yylineno);}
-              |
+              | /* empty */
               ;
 
 
 while_statement: WHILE_KW LPAREN expression RPAREN LBRACE statement_list_extended RBRACE {fprintf(parse_log,"WHILE Statement at line no: %d\n",yylineno);}
-              ;
+               ;
 
 return_statement: RETURN_KW expression SEMICOLON {fprintf(parse_log,"RETURN Statement at line no: %d\n",yylineno);}
                 | RETURN_KW SEMICOLON {fprintf(parse_log,"RETURN Statement at line no: %d\n",yylineno);}
