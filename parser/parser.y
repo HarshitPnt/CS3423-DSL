@@ -50,7 +50,7 @@
 
 %token LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE
 
-%left COMMA DOT SEMICOLON SIN_QUOTE
+%left COMMA DOT SEMICOLON SIN_QUOTE DOLLAR
 
 %token INT_CONST FLOAT_CONST STRING_CONST CHAR_CONST BOOL_CONST
 
@@ -60,7 +60,7 @@
 
 %token EPSILON
 
-%precedence PSEUDO_TOKEN
+%precedence PSEUDO_HIGH
 
 %start program
 %%
@@ -171,10 +171,10 @@ expression: LPAREN expression RPAREN
           | expression COMP_GT expression
           | expression COMP_LT expression
           | INT_CONST
-          | OPER_MINUS INT_CONST %prec PSEUDO_TOKEN
-          | OPER_MINUS FLOAT_CONST %prec PSEUDO_TOKEN
-          | OPER_PLUS INT_CONST %prec PSEUDO_TOKEN
-          | OPER_PLUS FLOAT_CONST %prec PSEUDO_TOKEN
+          | OPER_MINUS INT_CONST %prec PSEUDO_HIGH
+          | OPER_MINUS FLOAT_CONST %prec PSEUDO_HIGH
+          | OPER_PLUS INT_CONST %prec PSEUDO_HIGH
+          | OPER_PLUS FLOAT_CONST %prec PSEUDO_HIGH
           | FLOAT_CONST
           | BOOL_CONST
           | CHAR_CONST
@@ -221,51 +221,76 @@ expression_assignment : pseudo_ID OPER_ASN expression SEMICOLON {fprintf(parse_l
                       | pseudo_ID OPER_ASN_SIMPLE expression SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE set_values SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_terminal_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_production_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE fsm_transition_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_fsm_symb_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+                      | pseudo_ID OPER_ASN_SIMPLE LBRACE prod_transition_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
                       ;
 
-cfg_terminal_list: /* empty */
-                 | cfg_terminal
-                 | cfg_terminal_list COMMA cfg_terminal
+cfg_fsm_symb_list: /* empty */
+                 | cfg_fsm_symb
+                 | cfg_fsm_symb_list COMMA cfg_fsm_symb
                  ;
 
-cfg_terminal: ID COLON STRING_CONST
+cfg_fsm_symb: ID
+            | ID COLON STRING_CONST
             ;
 
-cfg_production_list: /* empty */
-                   | cfg_production
-                   | cfg_production_list COMMA cfg_production
-                   ;
+prod_transition_list: /* empty */
+                    | prod_transition
+                    | prod_transition_list COMMA prod_transition
+                    ;
 
-cfg_production: pseudo_ID ARROW cfg_prod_rhs
-              ;
-
-cfg_prod_rhs: LBRACE cfg_rhs cfg_rhs_list RBRACE
-            | cfg_rhs
-            ;
-
-cfg_rhs_list: /* empty */
-            | COMMA cfg_rhs cfg_rhs_list
-            ;
-
-cfg_rhs : LBRACE ID RBRACE pseudo_ID
-        | EPSILON
-        ;
-
-fsm_transition_list: /* empty */
-                   | fsm_transition
-                   | fsm_transition_list COMMA fsm_transition
-                   ;
-
-fsm_transition: pseudo_ID COMMA transition_symb ARROW transition_rhs
-              ;
-
-transition_symb: pseudo_ID
-               | EPSILON
+prod_transition: pseudo_ID arrow_lhs ARROW arrow_rhs
                ;
-                      ;
+
+arrow_lhs: /* empty */
+         | COMMA id_lhs
+         | REGEX_R SIN_QUOTE regex_expression_vars SIN_QUOTE
+         | set_values_vars
+         | COMMA id_lhs COMMA id_lhs %prec PSEUDO_HIGH
+         | set_values_pda
+         ;
+
+arrow_rhs:  cfg_rhs_rule
+         | pseudo_ID
+         | set_values
+         | set_values_pda
+         | EPSILON
+
+id_lhs : DOLLAR LBRACE ID RBRACE
+       | EPSILON
+       ;
+
+set_values_vars: LBRACE set_value_list_vars RBRACE
+               ;
+
+set_value_list_vars: /* empty */
+                   | set_value_vars
+                   | set_value_list_vars COMMA set_value_vars
+                   ;
+
+set_value_vars: DOLLAR LBRACE ID RBRACE
+              ;
+
+set_values_pda: LBRACE set_value_list_pda RBRACE
+              ;
+
+set_value_list_pda: /* empty */
+                  | set_value_pda
+                  | set_value_list_pda COMMA set_value_pda
+                  ;
+
+set_value_pda: LPAREN DOLLAR LBRACE ID RBRACE COMMA DOLLAR LBRACE ID RBRACE RPAREN
+             ;
+
+cfg_rhs_rule : DOLLAR LBRACE ID RBRACE cfg_rhs_rule
+             | DOLLAR LBRACE ID RBRACE
+             | ID cfg_rhs_rule
+             | ID
+             ;
+
+regex_expression_vars: DOLLAR LBRACE ID RBRACE regex_expression_vars
+                     | DOLLAR LBRACE ID RBRACE
+                     ;
 
 control_statement: if_statement
                  | while_statement
