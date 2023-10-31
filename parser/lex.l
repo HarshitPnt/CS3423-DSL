@@ -368,22 +368,22 @@ comm_end            ("--!>")
     if(strcmp(yytext,"o_set")==0) {
         return O_SET;
     }
-    else if(strcmp(yytext,"u_set")==0) {
+    if(strcmp(yytext,"u_set")==0) {
         return U_SET;
     }
-    else if(strcmp(yytext,"regex")==0) {
-        return REGEX;
+    if(strcmp(yytext,"regex")==0) {
+        return REG;
     }
-    else if(strcmp(yytext,"cfg")==0) {
+    if(strcmp(yytext,"cfg")==0) {
         return CFG;
     }
-    else if(strcmp(yytext,"dfa")==0) {
+    if(strcmp(yytext,"dfa")==0) {
         return DFA;
     }
-    else if(strcmp(yytext,"nfa")==0) {
+    if(strcmp(yytext,"nfa")==0) {
         return NFA;
     }
-    else if(strcmp(yytext,"pda")==0) {
+    if(strcmp(yytext,"pda")==0) {
         return PDA;
     }
 }
