@@ -272,6 +272,8 @@ parameter: primitive_dtype ID
             | automata_dtype ID
          ;
 
+
+
 %%
 
 void yyerror(const char *s) {

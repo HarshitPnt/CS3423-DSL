@@ -56,7 +56,7 @@ a.P = {
 dfa a;
 
 a.Q = {q0, q1, q2};
-a.Sigma = {0,1,2};
+a.Sigma = {a:"0",1,2};
 a.delta = {
     q0, 0 -> q1,
     a.Q[0], 1 -> a.Q[1],

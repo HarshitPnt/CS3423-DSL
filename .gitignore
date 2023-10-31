@@ -1,5 +1,4 @@
 /Temp/
-/build/
 **/lex.yy.c
 **/lex.yy.o
 **/parser.tab.c
@@ -7,5 +6,8 @@
 **/parser.tab.o
 *.out
 /lexer/lexer
-**/tokens/
 **/build/
+/parser/parser
+*.tok
+*.log
+**/tokens.h

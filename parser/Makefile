@@ -3,7 +3,7 @@ YACCFLAGS =  -t -v -o
 
 run: parser
 	flex -o ./build/lexer.c lex.l
-	rm ./parser
+	rm -f ./parser
 	gcc -c ./build/lexer.c -o ./build/lexer.o
 	gcc -c ./build/parser.c -o ./build/parser.o
 	gcc -lfl ./build/lexer.o ./build/parser.o -o parser
