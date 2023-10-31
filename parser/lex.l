@@ -467,6 +467,12 @@ comm_end            ("--!>")
     else if(strcmp(yytext,":")==0) {
         return COLON;
     }
+    else if(strcmp(yytext,"$")==0) {
+        return DOLLAR;
+    }
+    else if(strcmp(yytext,")")==0) {
+        return RPAREN;
+    }
 }
 
 {const_int}         {
