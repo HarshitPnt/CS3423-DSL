@@ -7,7 +7,7 @@ With YAFSM, you can easily define, specify, and manipulate the behavior of these
 
 The documentation for the project can be found [here](./docs/group-6-specification.pdf)
 
-The slides for the project can be found [here](https://docs.google.com/presentation/d/1BU0YLWs0I-gMG1dZB3picEcueNStOehfVuSABhHd2-8/edit?usp=sharing)
+The slides for the project can be found [online](https://docs.google.com/presentation/d/1BU0YLWs0I-gMG1dZB3picEcueNStOehfVuSABhHd2-8/edit?usp=sharing) or here in the [docs folder](./docs/Slides/General%20presentation.pdf)
 
 The link for the drive with videos explaining the project can be found [here](https://drive.google.com/drive/folders/1eDh5Q3hlLjKLKKadjpGaRpsJAHpO_KMG?usp=drive_link)
 
