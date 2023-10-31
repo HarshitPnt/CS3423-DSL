@@ -1,0 +1,3 @@
+<!-- REGEX errors --!>
+
+regex reg = r'a^b'; <!-- Syntax Error Detected By Parser PASSED BY LEXER --!>

@@ -1,0 +1,4 @@
+<!-- REGEX Errors --!>
+
+regex reg;
+reg = r'${@id_error}'; <!-- Parser Error --!>
