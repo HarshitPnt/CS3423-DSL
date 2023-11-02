@@ -4,7 +4,7 @@ GREEN := \033[0;32m
 RESET := \033[0m
 
 run: compile
-	./lexer ${FILE}
+	./lexer ${FILE} ${LOGS}
 
 test: compile ${FILES}
 	@for file in $(FILES); do \

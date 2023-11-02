@@ -451,6 +451,12 @@ int main(int argc, char **argv) {
     sprintf(parser_log,"%s/logs/parser_log_%s.log",path,filename);
 
     // tokens file path
+    
+    if(argc==3)
+    {
+        sprintf(seq,"%s/seq_tokens_%s.tok",argv[2],filename);
+        sprintf(parser_log,"%s/parser_log_%s.log",argv[2],filename);
+    }
     seq_token = fopen(seq, "w");
     parse_log = fopen(parser_log,"w");
     yyparse();

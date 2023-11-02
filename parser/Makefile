@@ -6,7 +6,7 @@ GREEN := \033[0;32m
 RESET := \033[0m
 
 run: compile
-	./parser ${FILE}
+	./parser ${FILE} ${LOGS}
 
 parser: parser.y
 	rm -rf ./build

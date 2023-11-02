@@ -901,6 +901,8 @@ int main(int argc,char *argv[]) {
   sprintf(seq,"%s/tokens/seq_tokens_%s.tok",path,filename);
 
   // tokens file path
+  if(argc==3)
+    sprintf(seq,"%s/tokens/seq_tokens_%s.tok",argv[2],filename);
   seq_token = fopen(seq, "w");
   yylex();
 
