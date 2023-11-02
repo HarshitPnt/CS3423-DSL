@@ -233,7 +233,7 @@ expression_assignment : pseudo_ID OPER_ASN expression SEMICOLON {fprintf(parse_l
                       | pseudo_ID OPER_ASN_SIMPLE expression SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE REGEX_R  SIN_QUOTE regex_expression SIN_QUOTE SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE set_values SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+                      | pseudo_ID OPER_ASN_SIMPLE set_values SEMICOLON {fprintf(parse_log,"expr assignment statement for sets at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_fsm_symb_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
                       | pseudo_ID OPER_ASN_SIMPLE LBRACE prod_transition_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
                       ;
@@ -356,8 +356,9 @@ return_statement: RETURN_KW expression SEMICOLON {fprintf(parse_log,"RETURN Stat
                 | RETURN_KW SEMICOLON {fprintf(parse_log,"RETURN Statement at line no: %d\n",yylineno);}
                 ;
 
-call : ID LPAREN argument_list RPAREN
+call : ID LPAREN argument_list RPAREN {fprintf(parse_log,"CALL Statement at line no: %d\n",yylineno);}
      ;
+
 call_statement: call SEMICOLON {fprintf(parse_log,"CALL Statement at line no: %d\n",yylineno);}
               ;
 
@@ -369,7 +370,7 @@ argument_list_cont: /* empty */
                   | COMMA expression argument_list_cont
                   ;
 
-struct_declaration: STRUCT_KW ID LBRACE struct_body RBRACE SEMICOLON {fprintf(parse_log,"STRUCT Declaration at line no: %d\n",yylineno);}
+struct_declaration: STRUCT_KW {fprintf(parse_log,"STRUCT Declaration at line no: %d\n",yylineno);} ID LBRACE struct_body RBRACE SEMICOLON 
                   ;
 
 struct_body: struct_variable_declaration
@@ -386,13 +387,13 @@ struct_variable_declaration: primitive_dtype id_lists SEMICOLON
                            | automata_dtype id_lists SEMICOLON
                            ;
 
-function_declaration: function_header LBRACE instruction_list RBRACE {fprintf(parse_log,"FUNCTION Declaration at line no: %d\n",yylineno);}
+function_declaration: function_header LBRACE instruction_list RBRACE
                      ;
 
-function_header: primitive_dtype ID LPAREN parameter_list RPAREN
-               | complex_dtype ID LPAREN parameter_list RPAREN
-               | set_type ID LPAREN parameter_list RPAREN
-               | automata_dtype ID LPAREN parameter_list RPAREN
+function_header: primitive_dtype ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
+               | complex_dtype ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
+               | set_type ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
+               | automata_dtype ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
                ;
 
 parameter_list: /* empty */
