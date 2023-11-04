@@ -27,7 +27,6 @@ make, lex, bison, gcc, g++
 
 To run the code, follow these steps:
 ```bash
-cd ./parser
 make run FILEPATH
 ```
 where FILEPATH is the path of the code to be compiled.
