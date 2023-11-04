@@ -1,14 +1,31 @@
-/Temp/
-**/lex.yy.c
-**/lex.yy.o
-**/parser.tab.c
-**/parser.tab.h
-**/parser.tab.o
-*.out
-/lexer/lexer
-**/build/
-/parser/parser
-*.tok
-*.log
+# Folders
+bin/
+obj/
+build/
+logs/
+
+# Files
+**/parser.c
+**/lexer.c
 **/tokens.h
 **/test.fsm
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+prog
+
+# Others
+**/parser.output
+*.tok
+*.log
+
+# Object files
+*.o
+*.obj
+*.elf
+*.bin

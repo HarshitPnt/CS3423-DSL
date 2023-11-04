@@ -1,4 +1,0 @@
-<!-- REGEX Errors --!>
-
-regex reg;
-reg = r'${@id_error}'; <!-- Lexer Detects Error --!>
