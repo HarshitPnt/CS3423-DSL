@@ -10,7 +10,7 @@ semantic: semantic.c
 	gcc -c ./semantic.c
 
 parser: parser.y
-	bison $(YACCDEFINE)=./tokens.h parser.y ${YACCFLAGS} ./parser.c -Wcounterexamples
+	bison $(YACCDEFINE)=./tokens.h parser.y ${YACCFLAGS} ./parser.c
 
 lexer: lexer.l ./tokens.h
 	flex -o ./lexer.c lexer.l
