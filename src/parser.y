@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "types.h"
+// #include "types.h"
 
 extern int yylex();
 void yyerror(char const* str);
@@ -38,7 +38,7 @@ int in_condition = 0;
     } constant;
 
     // Data types
-    VTYPE_STANDARD dtype_standard;
+    VTYPE_PRIMITIVE dtype_primitive;
 
 
     // Variables
@@ -48,7 +48,7 @@ int in_condition = 0;
     
 }
 
-%left <dtype_standard> TYPE_PRIMITIVE
+%left <dtype_primitive> TYPE_PRIMITIVE
 %left O_SET U_SET CFG DFA NFA PDA STRING REG
 %token <cint> INT_CONST <cfloat> FLOAT_CONST <cstring> STRING_CONST <cchar> CHAR_CONST <cbool> BOOL_CONST
 %left REGEX_R REGEX_LIT 
