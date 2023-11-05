@@ -1,8 +1,6 @@
 - [ ] Semantic Analysis
   - [ ] Type Checking
   - [ ] Scope Checking
-  - [ ] Type Conversion
-  - [ ] Type Inference
   - [ ] Symbol Table
     - [ ] Symbol Table for Variables
     - [ ] Symbol Table for Functions
