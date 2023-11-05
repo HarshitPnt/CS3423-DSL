@@ -1,24 +1,36 @@
 %{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+// #include "types.h"
+// #include "semantic.h"
 
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
+extern int yylex();
+void yyerror(char const* str);
+extern FILE* yyin;
+extern FILE* seq_token;
+FILE* parse_log;
+extern int yylineno;
 
-    extern int yylex();
-    void yyerror(char const* str);
-    extern FILE* yyin;
-    extern FILE* seq_token;
-    FILE* parse_log;
-    extern int yylineno;
-    int ret = 1;
+void terminate()
+{
+    fclose(yyin);
+    exit(1);
+}
 
-    void terminate()
-    {
-        fclose(yyin);
-        exit(1);
-    }
-
+int in_function = 0;
+int in_loop = 0;
+int in_condition = 0;
 %}
+%union {
+    // Constants
+    int cint;
+    float cfloat;
+    char cchar;
+    char* cstring;
+    bool cbool;
+}
 
 %left PSEUDO_LOW
 
