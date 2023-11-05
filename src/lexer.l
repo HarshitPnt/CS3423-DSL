@@ -13,6 +13,8 @@
 #define GREEN "\x1b[32m"
 #define RESET "\x1b[0m"
 
+#define printtoken(a) fprintf(seq_token,"%s: %s\n",a,yytext)
+
 // Defining files
 FILE *seq_token;
 char comment[10000];
@@ -79,13 +81,8 @@ type_pda            ("pda")
 type_non_standard   ({type_oset}|{type_uset}|{type_regex}|{type_cfg}|{type_dfa}|{type_nfa}|{type_pda})
 
 /*Other Keywords*/
-keyword_control     ("if"|"elif"|"else"|"while"|"break")
-keyword_return      ("return")
-keyword_struct      ("struct")
 comm_beg            ("<!--")
 comm_end            ("--!>")
-
-
 
 %x COMMENT
 %x REGEX
@@ -97,39 +94,15 @@ comm_end            ("--!>")
 
 %%
 
-{whitespace}        {
-    // Ignoring whitespaces
-}
+{whitespace}        {/* Ignoring whitespaces */}
 
-
-{keyword_control}  {
-    fprintf(seq_token,"reserved keyword: %s\n",yytext);
-    if(strcmp(yytext,"if")==0 ) {
-        return IF_KW;
-    }
-    else if(strcmp(yytext,"elif")==0) {
-        return ELIF_KW;
-    }
-    else if(strcmp(yytext,"else")==0) {
-        return ELSE_KW;
-    }
-    else if(strcmp(yytext,"while")==0) {
-        return WHILE_KW;
-    }
-    else if(strcmp(yytext,"break")==0) {
-        return BREAK_KW;
-    }
-}
-
-{keyword_struct} {
-    fprintf(seq_token,"reserved keyword: %s\n",yytext);
-    return STRUCT_KW;
-}
-
-{keyword_return} {
-    fprintf(seq_token,"reserved keyword: %s\n",yytext);
-    return RETURN_KW;
-}
+if {printtoken("reserved keyword"); return IF_KW;}
+elif {printtoken("reserved keyword"); return ELIF_KW;}
+else {printtoken("reserved keyword"); return ELSE_KW;}
+while {printtoken("reserved keyword"); return WHILE_KW;}
+break {printtoken("reserved keyword"); return BREAK_KW;}
+struct {printtoken("reserved keyword"); return STRUCT_KW;}
+return {printtoken("reserved keyword"); return RETURN_KW;}
 
 "r"/{single_quote}([^']|"\'")*{single_quote}    {
     fprintf(seq_token,"regex: %s\n",yytext);
@@ -306,27 +279,13 @@ comm_end            ("--!>")
     exit(1);
 }
 
-{brackets}  {
-    fprintf(seq_token,"punctuation: %s\n",yytext);
-    if(strcmp(yytext,"(")==0) {
-        return LPAREN;
-    }
-    else if(strcmp(yytext,")")==0) {
-        return RPAREN;
-    }
-    else if(strcmp(yytext,"[")==0) {
-        return LBRACK;
-    }
-    else if(strcmp(yytext,"]")==0) {
-        return RBRACK;
-    }
-    else if(strcmp(yytext,"{")==0) {
-        return LBRACE;
-    }
-    else if(strcmp(yytext,"}")==0) {
-        return RBRACE;
-    }
-}
+"(" {printtoken("punctuation"); return LPAREN;}
+")" {printtoken("punctuation"); return RPAREN;}
+"[" {printtoken("punctuation"); return LBRACK;}
+"]" {printtoken("punctuation"); return RBRACK;}
+"{" {printtoken("punctuation"); return LBRACE;}
+"}" {printtoken("punctuation"); return RBRACE;}
+
 
 {type_standard}     {
     fprintf(seq_token,"datatype: %s\n",yytext);
@@ -396,125 +355,42 @@ comm_end            ("--!>")
     }
 }
 
-{oper_ari}         {
-    fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"/")==0)
-        return OPER_DIV;
-    if(strcmp(yytext,"%")==0)
-        return OPER_MOD;
-}
+"/" {printtoken("operator"); return OPER_DIV;}
+"%" {printtoken("operator"); return OPER_MOD;}
+"@" {printtoken("operator"); return AT_THE_RATE;}
+"^2" {printtoken("operator"); return OPER_POWER;}
+"+" {printtoken("operator"); return OPER_PLUS;}
+"*" {printtoken("operator"); return OPER_MUL;}
+"-" {printtoken("operator"); return OPER_MINUS;}
 
-{oper_auto}         {
-    fprintf(seq_token,"operator: %s\n",yytext);
-    return AT_THE_RATE;
-}
+"!" {printtoken("operator"); return OPER_NOT;}
+"&&" {printtoken("operator"); return OPER_AND;}
+"||" {printtoken("operator"); return OPER_OR;}
 
-{oper_set}          {
-    fprintf(seq_token,"operator: %s\n",yytext);
-    return OPER_POWER;
-}
-{oper_ovr_auto_set_ari}         {
-    fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"+")==0)
-        return OPER_PLUS;
-    if(strcmp(yytext,"*")==0)
-        return OPER_MUL;
-}
-"#" {
-    fprintf(seq_token,"operator: %s\n",yytext);
-    return OPER_HASH;
-}
-{oper_ovr_set_ari} {
-    fprintf(seq_token,"operator: %s\n",yytext);
-    return OPER_MINUS;
-}
+"<" {printtoken("operator"); return COMP_LT;}
+">" {printtoken("operator"); return COMP_GT;}
 
-{oper_bi_log}      {
-    fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"&&")==0)
-        return OPER_AND;
-    if(strcmp(yytext,"||")==0) 
-        return OPER_OR;
-}
+"=" {printtoken("operator"); return OPER_ASN_SIMPLE;}
 
-{oper_ovr_log_auto}      {
-    fprintf(seq_token,"operator: %s\n",yytext);
-    return OPER_NOT;
-}
+{oper_comp} {printtoken("operator"); return OPER_COMP;}
+{oper_asn} {printtoken("operator"); return OPER_ASN;}
 
-{oper_comp}      {
-    fprintf(seq_token,"operator: %s\n",yytext);
-    if(strcmp(yytext,"<")==0)
-        return COMP_LT;
-    if(strcmp(yytext,">")==0)
-        return COMP_GT;
-    return OPER_COMP;
-}
+"#" {printtoken("operator"); return OPER_HASH;}
 
-{oper_asn_simple} {
-    fprintf(seq_token,"operator: %s\n",yytext);
-    return OPER_ASN_SIMPLE;
-}
+"," {printtoken("punctuation"); return COMMA;}
+"." {printtoken("punctuation"); return DOT;}
+"->" {printtoken("punctuation"); return ARROW;}
+":" {printtoken("punctuation"); return COLON;}
+";" {printtoken("punctuation"); return SEMICOLON;}
+"$" {printtoken("punctuation"); return DOLLAR;}
 
-{oper_asn}      {
-    fprintf(seq_token,"operator: %s\n",yytext);
-    return OPER_ASN;
-}
+{const_int} {printtoken("int_const"); return INT_CONST;}
+{const_float} {printtoken("float_const"); return FLOAT_CONST;}
+{const_string} {printtoken("string_const"); return STRING_CONST;}
+{const_char} {printtoken("char_const"); return CHAR_CONST;}
+{const_bool} {printtoken("bool_const"); return BOOL_CONST;}
 
-{punctuation}      {
-    fprintf(seq_token,"punctuation: %s\n",yytext);
-    if(strcmp(yytext,";")==0) {
-        return SEMICOLON;
-    }
-    else if(strcmp(yytext,",")==0) {
-        return COMMA;
-    }
-    else if(strcmp(yytext,".")==0) {
-        return DOT;
-    }
-    else if(strcmp(yytext,"->")==0) {
-        return ARROW;
-    }
-    else if(strcmp(yytext,":")==0) {
-        return COLON;
-    }
-    else if(strcmp(yytext,"$")==0) {
-        return DOLLAR;
-    }
-    else if(strcmp(yytext,")")==0) {
-        return RPAREN;
-    }
-}
-
-{const_int}         {
-    fprintf(seq_token,"int_const: %s\n",yytext);
-    return INT_CONST;
-}
-
-{const_float}       {
-    fprintf(seq_token,"float_const: %s\n",yytext);
-    return FLOAT_CONST;
-}
-
-{const_string}      {
-    fprintf(seq_token,"string_const: %s\n",yytext);
-    return STRING_CONST;
-}
-
-{const_char}        {
-    fprintf(seq_token,"char_const: %s\n",yytext);
-    return CHAR_CONST;
-}
-
-{const_bool}        {
-    fprintf(seq_token,"bool_const: %s\n",yytext);
-    return BOOL_CONST;
-}
-
-{id}                {
-    fprintf(seq_token,"identifier: %s\n",yytext);
-    return ID;
-}
+{id} {printtoken("identifier"); return ID;}
 
 <COMMENT>{comm_beg} {
     printf("Here\n");
@@ -566,10 +442,8 @@ comm_end            ("--!>")
     BEGIN INITIAL;
 }
 
-{epsilon} {
-    fprintf(seq_token,"epsilon: %s\n",yytext);
-    return EPSILON;
-}
+{epsilon} {printtoken("epsilon"); return EPSILON;}
+
 
 
 . { error();}
