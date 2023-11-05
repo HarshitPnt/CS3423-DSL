@@ -1,0 +1,14 @@
+- [ ] Semantic Analysis
+  - [ ] Type Checking
+  - [ ] Scope Checking
+  - [ ] Type Conversion
+  - [ ] Type Inference
+  - [ ] Symbol Table
+    - [ ] Symbol Table for Variables
+    - [ ] Symbol Table for Functions
+    - [ ] Symbol Table for Structs
+- [ ] Remove redundant code
+- [ ] Add more tests
+- [ ] Add more comments
+- [ ] Reduce Tokens?
+- [ ] Simplify Regex?
