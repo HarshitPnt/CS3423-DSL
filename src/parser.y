@@ -49,38 +49,22 @@ int in_condition = 0;
 }
 
 %left <dtype_standard> TYPE_PRIMITIVE
-
 %left O_SET U_SET CFG DFA NFA PDA STRING REG
-
+%token <cint> INT_CONST <cfloat> FLOAT_CONST <cstring> STRING_CONST <cchar> CHAR_CONST <cbool> BOOL_CONST
+%left REGEX_R REGEX_LIT 
 %left <identifier> ID
 
-%token IF_KW ELIF_KW ELSE_KW WHILE_KW BREAK_KW STRUCT_KW RETURN_KW
+%token IF_KW ELIF_KW ELSE_KW WHILE_KW BREAK_KW STRUCT_KW RETURN_KW CONTINUE_KW
 
 %token ARROW COLON
+%left COMMA DOT SEMICOLON DOLLAR
 
 %left OPER_AND OPER_OR
-
 %left OPER_COMP COMP_GT COMP_LT
-
-%left OPER_PLUS OPER_MINUS
-
-%left OPER_MUL OPER_DIV OPER_MOD
-
-%left AT_THE_RATE
-
-%left OPER_POWER
-
+%left OPER_PLUS OPER_MINUS OPER_MUL OPER_DIV OPER_MOD
+%left AT_THE_RATE OPER_POWER
 %left OPER_NOT OPER_HASH
-
 %token OPER_ASN OPER_ASN_SIMPLE
-
-%token LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE
-
-%left COMMA DOT SEMICOLON SIN_QUOTE DOLLAR
-
-%token <cint> INT_CONST <cfloat> FLOAT_CONST <cstring> STRING_CONST <cchar> CHAR_CONST <cbool> BOOL_CONST
-
-%left REGEX_R REGEX_LIT 
 
 %left LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE
 
@@ -119,17 +103,22 @@ automata_dtype: CFG
               | ID
               ;
 
-set_type: O_SET COMP_LT TYPE_PRIMITIVE COMP_GT
-        | O_SET COMP_LT complex_dtype COMP_GT
+dtype_noset: TYPE_PRIMITIVE
+     | complex_dtype
+     | automata_dtype
+     ;
+
+set_type: O_SET COMP_LT dtype_noset COMP_GT
         | O_SET COMP_LT set_type COMP_GT
-        | O_SET COMP_LT automata_dtype COMP_GT
         | O_SET COMP_LT ID COMP_GT
-        | U_SET COMP_LT TYPE_PRIMITIVE COMP_GT
-        | U_SET COMP_LT complex_dtype COMP_GT
+        | U_SET COMP_LT dtype_noset COMP_GT
         | U_SET COMP_LT set_type COMP_GT
-        | U_SET COMP_LT automata_dtype COMP_GT
         | U_SET COMP_LT ID COMP_GT
         ;
+
+dtype: set_type
+     | dtype_noset
+     ;
 
 variable_declaration: TYPE_PRIMITIVE id_list_arith SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
                     | set_type id_list_set SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
@@ -177,7 +166,6 @@ id_list_auto : ID
 
 
 pseudo_ID : ID
-          | ID DOT pseudo_ID
           | pseudo_ID DOT ID
           | ID LBRACK expression RBRACK
           ;
@@ -315,33 +303,35 @@ cfg_rhs_rule_item : DOLLAR LBRACE ID RBRACE cfg_rhs_rule
 control_statement: if_statement
                  | while_statement
                  | return_statement
+                 | continue_statement
+                 | break_statement
                  ;
 
 
-if_statement: IF_KW LPAREN expression RPAREN {fprintf(parse_log,"IF Statement at line no: %d\n",yylineno);} LBRACE statement_list_extended RBRACE elif_statement else_statement
+if_statement: IF_KW LPAREN expression RPAREN {fprintf(parse_log,"IF Statement at line no: %d\n",yylineno);} LBRACE instruction_list RBRACE elif_statement else_statement
             ;
 
-statement_list_extended: instruction_list
-                       | instruction_list BREAK_KW SEMICOLON
-                       | SEMICOLON
-                       ;
-
-elif_statement: ELIF_KW LPAREN expression RPAREN LBRACE statement_list_extended RBRACE elif_statement {fprintf(parse_log,"ELIF Statement at line no: %d\n",yylineno);}
+elif_statement: elif_statement ELIF_KW LPAREN expression RPAREN LBRACE instruction_list RBRACE {fprintf(parse_log,"ELIF Statement at line no: %d\n",yylineno);}
               | /* empty */
               ;
 
 
-else_statement: ELSE_KW LBRACE statement_list_extended RBRACE {fprintf(parse_log,"ELSE Statement at line no: %d\n",yylineno);}
+else_statement: ELSE_KW LBRACE instruction_list RBRACE {fprintf(parse_log,"ELSE Statement at line no: %d\n",yylineno);}
               | /* empty */
               ;
 
 
-while_statement: WHILE_KW LPAREN expression RPAREN LBRACE statement_list_extended RBRACE {fprintf(parse_log,"WHILE Statement at line no: %d\n",yylineno);}
+while_statement: WHILE_KW LPAREN expression RPAREN LBRACE instruction_list RBRACE {fprintf(parse_log,"WHILE Statement at line no: %d\n",yylineno);}
                ;
 
 return_statement: RETURN_KW expression SEMICOLON {fprintf(parse_log,"RETURN Statement at line no: %d\n",yylineno);}
                 | RETURN_KW SEMICOLON {fprintf(parse_log,"RETURN Statement at line no: %d\n",yylineno);}
                 ;
+
+continue_statement: CONTINUE_KW SEMICOLON {fprintf(parse_log,"CONTINUE Statement at line no: %d\n",yylineno);}
+                  ;
+
+break_statement: BREAK_KW SEMICOLON {fprintf(parse_log,"BREAK Statement at line no: %d\n",yylineno);}
 
 call : ID LPAREN argument_list RPAREN {fprintf(parse_log,"CALL Statement at line no: %d\n",yylineno);}
      ;
@@ -350,12 +340,9 @@ call_statement: call SEMICOLON {fprintf(parse_log,"CALL Statement at line no: %d
               ;
 
 argument_list: /* empty */
-             | expression argument_list_cont
+                | argument_list COMMA expression
+                | expression
              ;
-
-argument_list_cont: /* empty */
-                  | COMMA expression argument_list_cont
-                  ;
 
 struct_declaration: STRUCT_KW {fprintf(parse_log,"STRUCT Declaration at line no: %d\n",yylineno);} ID LBRACE struct_body RBRACE SEMICOLON 
                   ;
@@ -364,23 +351,20 @@ struct_body: struct_variable_declaration
            | struct_body struct_variable_declaration
            ;
 
-id_lists: ID
-        | ID COMMA id_lists
+id_lists: id_lists COMMA ID
+        | ID
         ;
 
-struct_variable_declaration: TYPE_PRIMITIVE id_lists SEMICOLON
-                           | complex_dtype id_lists SEMICOLON
-                           | set_type id_lists SEMICOLON
-                           | automata_dtype id_lists SEMICOLON
+
+struct_variable_declaration: dtype id_lists SEMICOLON {fprintf(parse_log,"STRUCT Variable Declaration at line no: %d\n",yylineno);}
+                            | ID id_lists SEMICOLON {fprintf(parse_log,"STRUCT Variable Declaration at line no: %d\n",yylineno);}
                            ;
 
 function_declaration: function_header LBRACE instruction_list RBRACE
                     ;
 
-function_header: TYPE_PRIMITIVE ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
-               | complex_dtype ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
-               | set_type ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
-               | automata_dtype ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
+function_header: dtype ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
+                | ID ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
                ;
 
 parameter_list: /* empty */
@@ -388,10 +372,8 @@ parameter_list: /* empty */
               | parameter 
               ;
 
-parameter: TYPE_PRIMITIVE ID
-         | complex_dtype ID
-         | set_type ID
-         | automata_dtype ID
+parameter: dtype ID
+        | ID ID
          ;
 
 %%
