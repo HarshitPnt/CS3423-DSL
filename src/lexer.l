@@ -94,16 +94,42 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 }
 
 <REGEX>{single_quote}([^']|"\'")*{single_quote}    {
+    // checkRegex(yytext);
     printtoken("regex");
     BEGIN INITIAL;
     return REGEX_LIT;
 }
 
-{const_int} {printtoken("int_const"); return INT_CONST;}
-{const_float} {printtoken("float_const"); return FLOAT_CONST;}
-{const_string} {printtoken("string_const"); return STRING_CONST;}
-{const_char} {printtoken("char_const"); return CHAR_CONST;}
-{const_bool} {printtoken("bool_const"); return BOOL_CONST;}
+{const_int} {
+    printtoken("int_const"); 
+    yylval.cint = atoi(yytext);
+    return INT_CONST;
+}
+
+{const_float} {
+    printtoken("float_const"); 
+    yylval.cfloat = atof(yytext);
+    return FLOAT_CONST;
+}
+{const_string} {
+    printtoken("string_const"); 
+    yylval.cstring = strdup(yytext);
+    return STRING_CONST;
+}
+
+{const_char} {
+    printtoken("char_const");
+    yylval.cchar = yytext[0];
+    return CHAR_CONST;
+}
+{const_bool} {
+    printtoken("bool_const"); 
+    if(strcmp(yytext,"true")==0)
+        yylval.cbool = true;
+    else
+        yylval.cbool = false;
+    return BOOL_CONST;
+}
 
 "(" {printtoken("punctuation"); return LPAREN;}
 ")" {printtoken("punctuation"); return RPAREN;}
