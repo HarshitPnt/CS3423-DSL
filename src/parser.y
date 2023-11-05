@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-// #include "types.h"
+#include "types.h"
 // #include "semantic.h"
 
 extern int yylex();
@@ -30,15 +30,27 @@ int in_condition = 0;
     char cchar;
     char* cstring;
     bool cbool;
-}
+    struct {
+        void* val;
+        CTYPE type;
+    } constant;
 
-%left PSEUDO_LOW
+    // Data types
+    VTYPE_STANDARD dtype_standard;
+
+
+    // Variables
+    char* identifier;
+
+
+    
+}
 
 %left STRING BOOL CHAR INT_8 INT_16 INT_32 INT_64 UINT_8 UINT_16 UINT_32 UINT_64 FLOAT_32 FLOAT_64 REG
 
 %left O_SET U_SET CFG DFA NFA PDA
 
-%left ID
+%left <identifier> ID
 
 %token IF_KW ELIF_KW ELSE_KW WHILE_KW BREAK_KW STRUCT_KW RETURN_KW
 
@@ -64,7 +76,7 @@ int in_condition = 0;
 
 %left COMMA DOT SEMICOLON SIN_QUOTE DOLLAR
 
-%token INT_CONST FLOAT_CONST STRING_CONST CHAR_CONST BOOL_CONST
+%token <cint> INT_CONST <cfloat> FLOAT_CONST <cstring> STRING_CONST <cchar> CHAR_CONST <cbool> BOOL_CONST
 
 %left REGEX_R REGEX_LIT REGEX_NUM REGEX_OR REGEX_STAR REGEX_PLUS REGEX_QUE REGEX_CARET REGEX_LRANGE REGEX_HYPHEN REGEX_RRANGE REGEX_DOLLAR 
 
@@ -400,7 +412,7 @@ struct_variable_declaration: primitive_dtype id_lists SEMICOLON
                            ;
 
 function_declaration: function_header LBRACE instruction_list RBRACE
-                     ;
+                    ;
 
 function_header: primitive_dtype ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
                | complex_dtype ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
@@ -409,12 +421,9 @@ function_header: primitive_dtype ID LPAREN parameter_list RPAREN {fprintf(parse_
                ;
 
 parameter_list: /* empty */
-              | parameter parameter_list_cont
+              | parameter_list COMMA parameter
+              | parameter 
               ;
-
-parameter_list_cont: /* empty */
-                   | COMMA parameter parameter_list_cont
-                   ;
 
 parameter: primitive_dtype ID
          | complex_dtype ID

@@ -288,46 +288,9 @@ return {printtoken("reserved keyword"); return RETURN_KW;}
 
 
 {type_standard}     {
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    if(strcmp(yytext,"int_8")==0) {
-        return INT_8;
-    }
-    else if(strcmp(yytext,"int_16")==0) {
-        return INT_16;
-    }
-    else if(strcmp(yytext,"int_32")==0) {
-        return INT_32;
-    }
-    else if(strcmp(yytext,"int_64")==0) {
-        return INT_64;
-    }
-    else if(strcmp(yytext,"uint_8")==0) {
-        return UINT_8;
-    }
-    else if(strcmp(yytext,"uint_16")==0) {
-        return UINT_16;
-    }
-    else if(strcmp(yytext,"uint_32")==0) {
-        return UINT_32;
-    }
-    else if(strcmp(yytext,"uint_64")==0) {
-        return UINT_64;
-    }
-    else if(strcmp(yytext,"float_32")==0) {
-        return FLOAT_32;
-    }
-    else if(strcmp(yytext,"float_64")==0) {
-        return FLOAT_64;
-    }
-    else if(strcmp(yytext,"bool")==0) {
-        return BOOL;
-    }
-    else if(strcmp(yytext,"string")==0) {
-        return STRING;
-    }
-    else if(strcmp(yytext,"char")==0) {
-        return CHAR;
-    }
+    printtoken("datatype");
+    yylval.dtype_standard = getStandardType(yytext);
+    return TYPE_STANDARD;
 }
 
 {type_non_standard} {
@@ -390,7 +353,11 @@ return {printtoken("reserved keyword"); return RETURN_KW;}
 {const_char} {printtoken("char_const"); return CHAR_CONST;}
 {const_bool} {printtoken("bool_const"); return BOOL_CONST;}
 
-{id} {printtoken("identifier"); return ID;}
+{id} {
+    printtoken("identifier");
+    yylval.identifier = strdup(yytext);
+    return ID;
+}
 
 <COMMENT>{comm_beg} {
     printf("Here\n");
@@ -443,8 +410,6 @@ return {printtoken("reserved keyword"); return RETURN_KW;}
 }
 
 {epsilon} {printtoken("epsilon"); return EPSILON;}
-
-
 
 . { error();}
 
