@@ -11,31 +11,29 @@ typedef enum ConstTYPE {
     CBOOL,
 } CTYPE;
 
-typedef enum VariableTYPE_Standard {
-    INT_8,
-    INT_16,
-    INT_32,
-    INT_64,
-    FLOAT_32,
-    FLOAT_64,
-    UINT_8,
-    UINT_16,
-    UINT_32,
-    UINT_64,
-    CHAR,
-    BOOL,
-    STRING
-} VTYPE_STANDARD;
+typedef enum VariableTYPE_Primitive {
+    TYPE_INT_8,
+    TYPE_INT_16,
+    TYPE_INT_32,
+    TYPE_INT_64,
+    TYPE_FLOAT_32,
+    TYPE_FLOAT_64,
+    TYPE_UINT_8,
+    TYPE_UINT_16,
+    TYPE_UINT_32,
+    TYPE_UINT_64,
+    TYPE_CHAR,
+    TYPE_BOOL,
+} VTYPE_PRIMITIVE;
 
-typedef enum VariableTYPE_Complex {
-    OSET,
-    USET,
-    REGEX,
-    CFG,
-    DFA,
-    NFA,
-    PDA
-} VTYPE_COMPLEX;
+// typedef enum VariableTYPE_Complex {
+//     TYPE_OSET,
+//     TYPE_USET,
+//     TYPE_CFG,
+//     TYPE_DFA,
+//     TYPE_NFA,
+//     TYPE_PDA
+// } VTYPE_COMPLEX;
 
-VTYPE_STANDARD getStandardType(char *type);
-VTYPE_COMPLEX getComplexType(char *type);
+VTYPE_PRIMITIVE getPrimitiveType(char *type);
+// VTYPE_COMPLEX getComplexType(char *type);

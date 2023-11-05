@@ -119,14 +119,14 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
     return TYPE_PRIMITIVE;
 }
 
-{type_oset} {printtoken("datatype"); return TYPE_OSET;}
-{type_uset} {printtoken("datatype"); return TYPE_USET;}
-{type_regex} {printtoken("datatype"); return TYPE_REGEX;}
-{type_cfg} {printtoken("datatype"); return TYPE_CFG;}
-{type_dfa} {printtoken("datatype"); return TYPE_DFA;}
-{type_nfa} {printtoken("datatype"); return TYPE_NFA;}
-{type_pda} {printtoken("datatype"); return TYPE_PDA;}
-{type_string} {printtoken("datatype"); return TYPE_STRING;}
+{type_oset} {printtoken("datatype"); return O_SET;}
+{type_uset} {printtoken("datatype"); return U_SET;}
+{type_regex} {printtoken("datatype"); return REG;}
+{type_cfg} {printtoken("datatype"); return CFG;}
+{type_dfa} {printtoken("datatype"); return DFA;}
+{type_nfa} {printtoken("datatype"); return NFA;}
+{type_pda} {printtoken("datatype"); return PDA;}
+{type_string} {printtoken("datatype"); return STRING;}
 
 "/" {printtoken("operator"); return OPER_DIV;}
 "%" {printtoken("operator"); return OPER_MOD;}
@@ -156,8 +156,6 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 ":" {printtoken("punctuation"); return COLON;}
 ";" {printtoken("punctuation"); return SEMICOLON;}
 "$" {printtoken("punctuation"); return DOLLAR;}
-"_" {printtoken("punctuation"); return UNDERSCORE;}
-"\\" {printtoken("punctuation"); return BACKSLASH;}
 
 {id} {
     printtoken("identifier");
