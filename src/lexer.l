@@ -49,16 +49,16 @@ id                  (({letter}|"_")({letter}|{digit}|"_")*)
 oper_comp           ("=="|"!="|"<="|">="|"<"|">")
 oper_asn            ("+="|"-="|"*="|"/="|"%="|"&="|"|=")
 
-/*Datatypes: Standard*/
+/*Datatypes: Primitive*/
 type_sint           ("int_8"|"int_16"|"int_32"|"int_64")
 type_uint           ("uint_8"|"uint_16"|"uint_32"|"uint_64")
 type_float          ("float_32"|"float_64")
 type_bool           ("bool")
-type_string         ("string")
 type_char           ("char")
-type_standard       ({type_sint}|{type_uint}|{type_float}|{type_bool}|{type_string}|{type_char})
+type_primitive       ({type_sint}|{type_uint}|{type_float}|{type_bool}|{type_char})
 
-/*Datatypes: Non-Standard*/
+/*Datatypes: Complex*/
+type_string         ("string")
 type_oset           ("o_set")
 type_uset           ("u_set")
 type_regex          ("regex")
@@ -66,7 +66,6 @@ type_cfg            ("cfg")
 type_dfa            ("dfa")
 type_nfa            ("nfa")
 type_pda            ("pda")
-type_non_standard   ({type_oset}|{type_uset}|{type_regex}|{type_cfg}|{type_dfa}|{type_nfa}|{type_pda})
 
 /*Other Keywords*/
 comm_beg            ("<!--")
@@ -99,6 +98,12 @@ return {printtoken("reserved keyword"); return RETURN_KW;}
     return REGEX_LIT;
 }
 
+{const_int} {printtoken("int_const"); return INT_CONST;}
+{const_float} {printtoken("float_const"); return FLOAT_CONST;}
+{const_string} {printtoken("string_const"); return STRING_CONST;}
+{const_char} {printtoken("char_const"); return CHAR_CONST;}
+{const_bool} {printtoken("bool_const"); return BOOL_CONST;}
+
 "(" {printtoken("punctuation"); return LPAREN;}
 ")" {printtoken("punctuation"); return RPAREN;}
 "[" {printtoken("punctuation"); return LBRACK;}
@@ -107,17 +112,20 @@ return {printtoken("reserved keyword"); return RETURN_KW;}
 "}" {printtoken("punctuation"); return RBRACE;}
 
 
-{type_standard}     {
+{type_primitive}     {
     printtoken("datatype");
-    yylval.dtype_standard = getStandardType(yytext);
-    return TYPE_STANDARD;
+    yylval.dtype_primitive = getPrimitiveType(yytext);
+    return TYPE_PRIMITIVE;
 }
 
-{type_non_standard} {
-    printtoken("datatype");
-    yylval.dtype_non_standard = getNonStandardType(yytext);
-    return TYPE_NON_STANDARD;
-}
+{type_oset} {printtoken("datatype"); return TYPE_OSET;}
+{type_uset} {printtoken("datatype"); return TYPE_USET;}
+{type_regex} {printtoken("datatype"); return TYPE_REGEX;}
+{type_cfg} {printtoken("datatype"); return TYPE_CFG;}
+{type_dfa} {printtoken("datatype"); return TYPE_DFA;}
+{type_nfa} {printtoken("datatype"); return TYPE_NFA;}
+{type_pda} {printtoken("datatype"); return TYPE_PDA;}
+{type_string} {printtoken("datatype"); return TYPE_STRING;}
 
 "/" {printtoken("operator"); return OPER_DIV;}
 "%" {printtoken("operator"); return OPER_MOD;}
@@ -149,12 +157,6 @@ return {printtoken("reserved keyword"); return RETURN_KW;}
 "$" {printtoken("punctuation"); return DOLLAR;}
 "_" {printtoken("punctuation"); return UNDERSCORE;}
 "\\" {printtoken("punctuation"); return BACKSLASH;}
-
-{const_int} {printtoken("int_const"); return INT_CONST;}
-{const_float} {printtoken("float_const"); return FLOAT_CONST;}
-{const_string} {printtoken("string_const"); return STRING_CONST;}
-{const_char} {printtoken("char_const"); return CHAR_CONST;}
-{const_bool} {printtoken("bool_const"); return BOOL_CONST;}
 
 {id} {
     printtoken("identifier");
