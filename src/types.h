@@ -27,7 +27,7 @@ typedef enum VariableTYPE_Standard {
     STRING
 } VTYPE_STANDARD;
 
-typedef enum VariableTYPE_Custom {
+typedef enum VariableTYPE_Complex {
     OSET,
     USET,
     REGEX,
@@ -35,7 +35,7 @@ typedef enum VariableTYPE_Custom {
     DFA,
     NFA,
     PDA
-} VTYPE_CUSTOM;
+} VTYPE_COMPLEX;
 
 VTYPE_STANDARD getStandardType(char *type);
-VTYPE_CUSTOM getCustomType(char *type);
+VTYPE_COMPLEX getComplexType(char *type);
