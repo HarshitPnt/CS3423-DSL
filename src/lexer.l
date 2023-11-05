@@ -28,13 +28,9 @@ void error();
 /*Some standard Definitons*/
 letter              [a-zA-Z] 
 digit               [0-9]
-special_char        ("@"|"#"|"*"|"-"|"+"|"/"|"_"|"\\")
 whitespace          (" "|"\t"|"\n")
 
-/*Punctuations*/
-/* Note that BRACE: {} BRACKETS: [] PARENTHESIS: () */
-brackets            "("|")"|"["|"]"|"{"|"}"
-punctuation         ","|"."|"->"|";"|":"|"$"
+
 single_quote        "'"
 epsilon            "\\e"
 
@@ -49,17 +45,9 @@ const_bool          ("true"|"false")
 /*Identifiers*/
 id                  (({letter}|"_")({letter}|{digit}|"_")*)
 
-/*Opeartors*/
-oper_ari            ("/"|"%")
-oper_auto           ("@")
-oper_set            ("^2")
-oper_ovr_auto_set_ari ("+"|"*")
-oper_ovr_set_ari    ("-")
-oper_ovr_log_auto   ("!")
-oper_bi_log         ("&&"|"||")
+/*Opertors*/
 oper_comp           ("=="|"!="|"<="|">="|"<"|">")
 oper_asn            ("+="|"-="|"*="|"/="|"%="|"&="|"|=")
-oper_asn_simple     ("=")
 
 /*Datatypes: Standard*/
 type_sint           ("int_8"|"int_16"|"int_32"|"int_64")
@@ -86,11 +74,6 @@ comm_end            ("--!>")
 
 %x COMMENT
 %x REGEX
-%x REGEX_START
-%x REGEX_LIMIT
-%x REGEX_SQ
-%x REGEX_RANGE
-%x REGEX_VAR
 
 %%
 
@@ -105,178 +88,15 @@ struct {printtoken("reserved keyword"); return STRUCT_KW;}
 return {printtoken("reserved keyword"); return RETURN_KW;}
 
 "r"/{single_quote}([^']|"\'")*{single_quote}    {
-    fprintf(seq_token,"regex: %s\n",yytext);
+    printtoken("regex_start");
     BEGIN REGEX;
     return REGEX_R;
 }
 
-<REGEX>{single_quote} {
-    fprintf(seq_token,"punctuation: %s\n",yytext);
-    BEGIN REGEX_START;
-    return SIN_QUOTE;
-}
-
-
-<REGEX_START>{single_quote} {
-    fprintf(seq_token,"punctuation: %s\n",yytext);
+<REGEX>{single_quote}([^']|"\'")*{single_quote}    {
+    printtoken("regex");
     BEGIN INITIAL;
-    return SIN_QUOTE;
-}
-
-<REGEX_START>{letter}|{whitespace} {
-    fprintf(seq_token,"regex_lit: %s\n",yytext);
     return REGEX_LIT;
-}
-
-<REGEX_START>{digit}+ {
-    fprintf(seq_token,"regex_num: %s\n",yytext);
-    return REGEX_LIT;
-}
-
-<REGEX_START>"|" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_OR;
-}
-
-<REGEX_START>"*" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_STAR;
-}
-
-<REGEX_START>"+" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_PLUS;
-}
-
-<REGEX_START>"?" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_QUE;
-}
-
-<REGEX_START>"^" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_CARET;
-}
-
-<REGEX_START>"(" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return LPAREN;
-}
-
-<REGEX_START>")" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return RPAREN;
-}
-
-<REGEX_START>"{"/{digit}+","?({digit}+)?"}" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    BEGIN REGEX_LIMIT;
-    return LBRACE;
-}
-
-<REGEX_LIMIT>{digit}+ {
-    fprintf(seq_token,"regex_num: %s\n",yytext);
-    return REGEX_NUM;
-}
-
-<REGEX_LIMIT>"," {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return COMMA;
-}
-
-<REGEX_LIMIT>"}" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    BEGIN REGEX_START;
-    return RBRACE;
-}
-
-<REGEX_START>"["/(("^")?[^\]']|"\\]")+"]" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    BEGIN REGEX_SQ;
-    return LBRACK;
-}
-
-<REGEX_START>"[" {
-    printf("Error at line no: %d\n",yylineno);
-    exit(1);
-}
-
-<REGEX_SQ>"^" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_CARET;
-}
-
-<REGEX_SQ>{letter}|{digit}/("-"{letter}|{digit}) {
-    fprintf(seq_token,"regex_lit: %s\n",yytext);
-    BEGIN REGEX_RANGE;
-    return REGEX_LRANGE;
-}
-
-<REGEX_RANGE>"-" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_HYPHEN;
-}
-
-<REGEX_RANGE>{letter}|{digit} {
-    fprintf(seq_token,"regex_lit: %s\n",yytext);
-    BEGIN REGEX_SQ;
-    return REGEX_RRANGE;
-}
-
-<REGEX_SQ>"]" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    BEGIN REGEX_START;
-    return RBRACK;
-}
-
-<REGEX_SQ>"$"/"{"{id}"}" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    yy_push_state(YYSTATE);
-    BEGIN REGEX_VAR;
-    return REGEX_DOLLAR;
-}
-
-<REGEX_START,REGEX_SQ>"\\("|"\\)"|"\\{"|"\\}"|"\\["|"\\]"|"\\|"|"\\*"|"\\+"|"\\?"|"\\^"|"\\$"|"\\\\"|{digit}|{letter}|{whitespace}|{special_char}|{brackets} {
-    fprintf(seq_token,"regex_lit: %s\n",yytext);
-    return REGEX_LIT;
-}
-
-<REGEX_START>"$"/"{"{id}"}" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    yy_push_state(YYSTATE);
-    BEGIN REGEX_VAR;
-    return REGEX_DOLLAR;
-}
-<REGEX_START>"$"/"'" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return REGEX_DOLLAR;
-}
-
-<REGEX_START>"$" {
-    printf("Error at line no: %d\n",yylineno);
-    exit(1);
-}
-
-<REGEX_VAR>"{" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    return LBRACE;
-}
-
-<REGEX_VAR>{id} {
-    fprintf(seq_token,"regex_var: %s\n",yytext);
-    return ID;
-}
-
-<REGEX_VAR>"}" {
-    fprintf(seq_token,"regex_punct: %s\n",yytext);
-    yy_pop_state();
-    return RBRACE;
-}
-
-<REGEX_START,REGEX_LIMIT,REGEX_SQ,REGEX_RANGE,REGEX_VAR>. {
-    fprintf(seq_token,"regex pattern error: %s\n",yytext);
-    printf(RED "Error at line number: %d\n" RESET, yylineno);
-    exit(1);
 }
 
 "(" {printtoken("punctuation"); return LPAREN;}
@@ -294,28 +114,9 @@ return {printtoken("reserved keyword"); return RETURN_KW;}
 }
 
 {type_non_standard} {
-    fprintf(seq_token,"datatype: %s\n",yytext);
-    if(strcmp(yytext,"o_set")==0) {
-        return O_SET;
-    }
-    if(strcmp(yytext,"u_set")==0) {
-        return U_SET;
-    }
-    if(strcmp(yytext,"regex")==0) {
-        return REG;
-    }
-    if(strcmp(yytext,"cfg")==0) {
-        return CFG;
-    }
-    if(strcmp(yytext,"dfa")==0) {
-        return DFA;
-    }
-    if(strcmp(yytext,"nfa")==0) {
-        return NFA;
-    }
-    if(strcmp(yytext,"pda")==0) {
-        return PDA;
-    }
+    printtoken("datatype");
+    yylval.dtype_non_standard = getNonStandardType(yytext);
+    return TYPE_NON_STANDARD;
 }
 
 "/" {printtoken("operator"); return OPER_DIV;}
@@ -346,6 +147,8 @@ return {printtoken("reserved keyword"); return RETURN_KW;}
 ":" {printtoken("punctuation"); return COLON;}
 ";" {printtoken("punctuation"); return SEMICOLON;}
 "$" {printtoken("punctuation"); return DOLLAR;}
+"_" {printtoken("punctuation"); return UNDERSCORE;}
+"\\" {printtoken("punctuation"); return BACKSLASH;}
 
 {const_int} {printtoken("int_const"); return INT_CONST;}
 {const_float} {printtoken("float_const"); return FLOAT_CONST;}
