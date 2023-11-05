@@ -85,6 +85,7 @@ while {printtoken("reserved keyword"); return WHILE_KW;}
 break {printtoken("reserved keyword"); return BREAK_KW;}
 struct {printtoken("reserved keyword"); return STRUCT_KW;}
 return {printtoken("reserved keyword"); return RETURN_KW;}
+continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 
 "r"/{single_quote}([^']|"\'")*{single_quote}    {
     printtoken("regex_start");
