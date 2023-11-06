@@ -12,14 +12,13 @@ _CSRC := lexer.l parser.y semantic.c
 OBJS := lexer.o parser.o semantic.o
 CSRC := $(pathsubst %,${SRC}/%,$(_CSRC))
 
-run: build
+run: compile
 	./prog ${FILE} ${LOGS}
 
-build: ${CSRC}
-	echo "${CSRC}"
+compile:
 	 ${MAKE} -C ./build compile
 	
-test: build
+test: compile
 	rm -rf ${TESTS_TOKS}
 	mkdir ${TESTS_TOKS}
 	@for file in $(FILES); do \
