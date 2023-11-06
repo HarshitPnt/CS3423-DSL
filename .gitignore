@@ -1,7 +1,8 @@
 # Folders
 bin/
 obj/
-build/
+build/*
+!build/Makefile
 logs/
 /Temp/
 
