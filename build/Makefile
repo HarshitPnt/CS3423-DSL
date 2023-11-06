@@ -6,10 +6,10 @@ OBJS := lexer.o parser.o semantic.o
 CSRC := $(pathsubst %,${SRC}/%,$(_CSRC))
 
 parser: ${SRC}/parser.y
-	yacc ${YACCDEFINE}=tokens.h ${YACCFLAGS} parser.c ${SRC}/parser.y
+	bison ${YACCDEFINE}=tokens.h ${YACCFLAGS} parser.c ${SRC}/parser.y
 
 lexer: ${SRC}/lexer.l
-	lex -o lexer.c ${SRC}/lexer.l
+	flex -o lexer.c ${SRC}/lexer.l
 
 semantic: ${SRC}/semantic.c
 	gcc -c ${SRC}/semantic.c
