@@ -3,6 +3,7 @@ bin/
 obj/
 build/
 logs/
+/Temp/
 
 # Files
 **/parser.c

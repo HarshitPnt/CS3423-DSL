@@ -23,7 +23,7 @@ int in_loop = 0;
 int in_condition = 0;
 %}
 %code requires {
-    #include "types.h"
+    #include "../includes/types.h"
 }
 %union {
     // Constants

@@ -1,21 +1,25 @@
 RED := \033[01;31m
 GREEN := \033[01;32m
 RESET := \033[01;0m
+YACCDEFINE := --defines
+YACCFLAGS := -v -t -o
 SRC := src
+BUILD := build
 TESTS := tests/test_files
 FILES := $(wildcard ${TESTS}/*)
 TESTS_TOKS := tests/logs
+_CSRC := lexer.l parser.y semantic.c
+OBJS := lexer.o parser.o semantic.o
+CSRC := $(pathsubst %,${SRC}/%,$(_CSRC))
 
-run: compile
+run: build
 	./prog ${FILE} ${LOGS}
 
-compile:
-	$(MAKE) -C ${SRC} compile
-	rm -rf ./build
-	mkdir ./build
-	cp ${SRC}/prog ./build/prog
-
-test: compile
+build: ${CSRC}
+	echo "${CSRC}"
+	 ${MAKE} -C ./build compile
+	
+test: build
 	rm -rf ${TESTS_TOKS}
 	mkdir ${TESTS_TOKS}
 	@for file in $(FILES); do \
@@ -30,7 +34,5 @@ test: compile
 	done
 
 clean:
-	rm -rf ./build
-	$(MAKE) -C ${SRC} clean
-	rm -rf ${TESTS_TOKS}
+	${MAKE} -C ./build clean
 	echo "${GREEN}Clean Successful${RESET}"
