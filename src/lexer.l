@@ -122,7 +122,7 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 
 {const_char} {
     printtoken("char_const");
-    yylval.cchar = yytext[0];
+    yylval.cchar = yytext[1];
     return CHAR_CONST;
 }
 {const_bool} {
