@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-// #include "types.h"
 
 extern int yylex();
 void yyerror(char const* str);
@@ -20,6 +19,8 @@ void terminate()
 int in_function = 0;
 int in_loop = 0;
 int in_condition = 0;
+
+#define printlog(a) fprintf(parse_log,"%s declaration at line no: %d\n",a,yylineno)
 %}
 %code requires {
     #include "../includes/types.hh"
@@ -102,7 +103,6 @@ complex_dtype : STRING
               ;
 
 automata_dtype: TYPE_AUTOMATA
-              | ID
               ;
 
 dtype_noset: TYPE_PRIMITIVE
@@ -119,50 +119,45 @@ dtype: set_type
      | dtype_noset
      ;
 
-variable_declaration: TYPE_PRIMITIVE id_list_arith SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
-                    | set_type id_list_set SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
-                    | STRING id_list_string SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
-                    | REG id_list_reg SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
-                    | automata_dtype id_list_auto SEMICOLON {fprintf(parse_log,"variable declaration at line no: %d\n",yylineno);}
-                    | ID id_lists SEMICOLON {fprintf(parse_log,"variable declaration of structs at line no: %d\n",yylineno);}
+variable_declaration: TYPE_PRIMITIVE id_list_arith SEMICOLON {printlog("variable");}
+                    | set_type id_list_set SEMICOLON {printlog("set");}
+                    | STRING id_list_string SEMICOLON {printlog("string");}
+                    | REG id_list_reg SEMICOLON {printlog("regex");}
+                    | automata_dtype id_list_auto SEMICOLON {printlog("automata");}
+                    | ID id_lists SEMICOLON {printlog("custom type variable");}
                     ;
 
 id_list_arith : ID
               | ID OPER_ASN_SIMPLE expression
-              | ID COMMA id_list_arith
-              | ID OPER_ASN_SIMPLE expression COMMA id_list_arith
+              | id_list_arith COMMA id_list_arith
               ;
 
 id_list_string : ID
               | ID OPER_ASN_SIMPLE STRING_CONST
-
               | ID OPER_ASN_SIMPLE call
-              | ID COMMA id_list_string
-              | ID OPER_ASN_SIMPLE STRING_CONST COMMA id_list_string
-              | ID OPER_ASN_SIMPLE call COMMA id_list_string
+              | id_list_string COMMA id_list_string
               ;
 
 id_list_set: ID
            | ID OPER_ASN_SIMPLE set_values
            | ID OPER_ASN_SIMPLE call
-           | ID COMMA id_list_set
-           | ID OPER_ASN_SIMPLE set_values COMMA id_list_set
-           | ID OPER_ASN_SIMPLE call COMMA id_list_set
+           | id_list_set COMMA id_list_set
            ;
 
 id_list_reg : ID
             | ID OPER_ASN_SIMPLE regex
             | ID OPER_ASN_SIMPLE call
-            | ID COMMA id_list_reg
-            | ID OPER_ASN_SIMPLE regex id_list_reg
-            | ID OPER_ASN_SIMPLE call COMMA id_list_reg
+            | id_list_reg COMMA id_list_reg
             ;
 
 id_list_auto : ID
-             | ID COMMA id_list_auto
-             | ID OPER_ASN_SIMPLE call 
-             | ID OPER_ASN_SIMPLE call id_list_auto
+             | ID OPER_ASN_SIMPLE call
+             | id_list_auto COMMA id_list_auto
              ;
+
+id_lists: id_lists COMMA id_lists
+        | ID
+        ;
 
 
 pseudo_ID : ID
@@ -208,13 +203,13 @@ set_value: expression
          | regex
          ;
 
-expression_assignment : pseudo_ID OPER_ASN expression SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE expression SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE regex SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON {fprintf(parse_log,"expr assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE set_values SEMICOLON {fprintf(parse_log,"expr assignment statement for sets at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_fsm_symb_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE prod_transition_list RBRACE SEMICOLON {fprintf(parse_log,"expr(automata) assignment statement at line no: %d\n",yylineno);}
+expression_assignment : pseudo_ID OPER_ASN expression SEMICOLON {printlog("expression assignment");}
+                      | pseudo_ID OPER_ASN_SIMPLE expression SEMICOLON {printlog("expression assignment");;}
+                      | pseudo_ID OPER_ASN_SIMPLE regex SEMICOLON {printlog("expression assignment(regex)");}
+                      | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON {printlog("expression assignment(string)");}
+                      | pseudo_ID OPER_ASN_SIMPLE set_values SEMICOLON {printlog("expression assignment(set)");}
+                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_fsm_symb_list RBRACE SEMICOLON {printlog("expression assignment(automata)");}
+                      | pseudo_ID OPER_ASN_SIMPLE LBRACE prod_transition_list RBRACE SEMICOLON {printlog("expression assignment(automata)");}
                       ;
 
 cfg_fsm_symb_list: cfg_fsm_symb
@@ -308,35 +303,36 @@ control_statement: if_statement
                  ;
 
 
-if_statement: IF_KW LPAREN expression RPAREN {fprintf(parse_log,"IF Statement at line no: %d\n",yylineno);} LBRACE instruction_list RBRACE elif_statement else_statement
+if_statement: IF_KW LPAREN expression RPAREN {printlog("IF");} LBRACE instruction_list RBRACE elif_statement else_statement
             ;
 
-elif_statement: elif_statement ELIF_KW LPAREN expression RPAREN LBRACE instruction_list RBRACE {fprintf(parse_log,"ELIF Statement at line no: %d\n",yylineno);}
+elif_statement: elif_statement ELIF_KW LPAREN expression RPAREN {printlog("ELIF");} LBRACE instruction_list RBRACE
               | /* empty */
               ;
 
 
-else_statement: ELSE_KW LBRACE instruction_list RBRACE {fprintf(parse_log,"ELSE Statement at line no: %d\n",yylineno);}
+else_statement: ELSE_KW {printlog("ELSE");} LBRACE instruction_list RBRACE
               | /* empty */
               ;
 
 
-while_statement: WHILE_KW LPAREN expression RPAREN LBRACE instruction_list RBRACE {fprintf(parse_log,"WHILE Statement at line no: %d\n",yylineno);}
+while_statement: WHILE_KW LPAREN expression RPAREN {in_loop++; printlog("while");} LBRACE instruction_list RBRACE {in_loop--;}
                ;
 
-return_statement: RETURN_KW expression SEMICOLON {fprintf(parse_log,"RETURN Statement at line no: %d\n",yylineno);}
-                | RETURN_KW SEMICOLON {fprintf(parse_log,"RETURN Statement at line no: %d\n",yylineno);}
+return_statement: RETURN_KW expression SEMICOLON {printlog("return"); if(in_function == 0) yyerror("Not in function, return statement");} 
+                | RETURN_KW SEMICOLON {printlog("return"); if(in_function == 0) yyerror("Not in function, return statement");}
                 ;
 
-continue_statement: CONTINUE_KW SEMICOLON {fprintf(parse_log,"CONTINUE Statement at line no: %d\n",yylineno);}
+continue_statement: CONTINUE_KW SEMICOLON {printlog("continue"); if(in_loop <= 0) yyerror("Not in loop, continue statement");}
                   ;
 
-break_statement: BREAK_KW SEMICOLON {fprintf(parse_log,"BREAK Statement at line no: %d\n",yylineno);}
+break_statement: BREAK_KW SEMICOLON {printlog("break"); if(in_loop <= 0) yyerror("Not in loop, break statement");}
+                ;
 
-call : ID LPAREN argument_list RPAREN {fprintf(parse_log,"CALL Statement at line no: %d\n",yylineno);}
+call : ID LPAREN argument_list RPAREN {printlog("call");}
      ;
 
-call_statement: call SEMICOLON {fprintf(parse_log,"CALL Statement at line no: %d\n",yylineno);}
+call_statement: call SEMICOLON {printlog("call");}
               ;
 
 argument_list: /* empty */
@@ -344,27 +340,23 @@ argument_list: /* empty */
                 | expression
              ;
 
-struct_declaration: STRUCT_KW {fprintf(parse_log,"STRUCT Declaration at line no: %d\n",yylineno);} ID LBRACE struct_body RBRACE SEMICOLON 
+struct_declaration: STRUCT_KW ID {printlog("struct");} LBRACE struct_body RBRACE SEMICOLON 
                   ;
 
 struct_body: struct_variable_declaration
            | struct_body struct_variable_declaration
            ;
 
-id_lists: id_lists COMMA ID
-        | ID
-        ;
 
-
-struct_variable_declaration: dtype id_lists SEMICOLON {fprintf(parse_log,"STRUCT Variable Declaration at line no: %d\n",yylineno);}
-                            | ID id_lists SEMICOLON {fprintf(parse_log,"STRUCT Variable Declaration at line no: %d\n",yylineno);}
+struct_variable_declaration: dtype id_lists SEMICOLON {printlog("struct variable");}
+                            | ID id_lists SEMICOLON {printlog("struct variable");}
                            ;
 
-function_declaration: function_header LBRACE instruction_list RBRACE
+function_declaration: function_header {if(in_function == 1) yyerror("In function, function declaration"); in_function = 1;} LBRACE instruction_list RBRACE {in_function = 0;}
                     ;
 
-function_header: dtype ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
-                | ID ID LPAREN parameter_list RPAREN {fprintf(parse_log,"Function Declaration at line no: %d\n",yylineno);}
+function_header: dtype ID LPAREN parameter_list RPAREN {printlog("function");}
+                | ID ID LPAREN parameter_list RPAREN {printlog("function");}
                ;
 
 parameter_list: /* empty */
