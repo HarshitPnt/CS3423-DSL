@@ -26,14 +26,18 @@ typedef enum VariableTYPE_Primitive {
     TYPE_BOOL,
 } VTYPE_PRIMITIVE;
 
-// typedef enum VariableTYPE_Complex {
-//     TYPE_OSET,
-//     TYPE_USET,
-//     TYPE_CFG,
-//     TYPE_DFA,
-//     TYPE_NFA,
-//     TYPE_PDA
-// } VTYPE_COMPLEX;
+typedef enum VariableTYPE_Automata {
+    TYPE_CFG,
+    TYPE_DFA,
+    TYPE_NFA,
+    TYPE_PDA
+} VTYPE_AUTOMATA;
+
+typedef enum VariableTYPE_Set {
+    TYPE_USET,
+    TYPE_OSET
+} VTYPE_SET;
 
 VTYPE_PRIMITIVE getPrimitiveType(char *type);
-// VTYPE_COMPLEX getComplexType(char *type);
+VTYPE_AUTOMATA getAutomataType(char *type);
+VTYPE_SET getSetType(char *type);

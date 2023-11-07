@@ -11,7 +11,6 @@ extern FILE* yyin;
 extern FILE* seq_token;
 FILE* parse_log;
 extern int yylineno;
-
 void terminate()
 {
     fclose(yyin);
@@ -23,7 +22,7 @@ int in_loop = 0;
 int in_condition = 0;
 %}
 %code requires {
-    #include "../includes/types.h"
+    #include "../includes/types.hh"
 }
 %union {
     // Constants
@@ -39,7 +38,8 @@ int in_condition = 0;
 
     // Data types
     VTYPE_PRIMITIVE dtype_primitive;
-
+    VTYPE_AUTOMATA dtype_automata;
+    VTYPE_SET dtype_set;
 
     // Variables
     char* identifier;
@@ -49,7 +49,10 @@ int in_condition = 0;
 }
 
 %left <dtype_primitive> TYPE_PRIMITIVE
-%left O_SET U_SET CFG DFA NFA PDA STRING REG
+%left STRING REG
+%left <dtype_set> TYPE_SET
+%left <dtype_automata> TYPE_AUTOMATA
+
 %token <cint> INT_CONST <cfloat> FLOAT_CONST <cstring> STRING_CONST <cchar> CHAR_CONST <cbool> BOOL_CONST
 %left REGEX_R REGEX_LIT 
 %left <identifier> ID
@@ -71,6 +74,8 @@ int in_condition = 0;
 %token EPSILON
 
 %precedence PSEUDO_HIGH
+
+
 
 %start program
 %%
@@ -96,10 +101,7 @@ complex_dtype : STRING
               | REG
               ;
 
-automata_dtype: CFG
-              | DFA
-              | NFA
-              | PDA
+automata_dtype: TYPE_AUTOMATA
               | ID
               ;
 
@@ -108,12 +110,9 @@ dtype_noset: TYPE_PRIMITIVE
      | automata_dtype
      ;
 
-set_type: O_SET COMP_LT dtype_noset COMP_GT
-        | O_SET COMP_LT set_type COMP_GT
-        | O_SET COMP_LT ID COMP_GT
-        | U_SET COMP_LT dtype_noset COMP_GT
-        | U_SET COMP_LT set_type COMP_GT
-        | U_SET COMP_LT ID COMP_GT
+set_type: TYPE_SET COMP_LT dtype_noset COMP_GT
+        | TYPE_SET COMP_LT set_type COMP_GT
+        | TYPE_SET COMP_LT ID COMP_GT
         ;
 
 dtype: set_type
@@ -136,6 +135,7 @@ id_list_arith : ID
 
 id_list_string : ID
               | ID OPER_ASN_SIMPLE STRING_CONST
+
               | ID OPER_ASN_SIMPLE call
               | ID COMMA id_list_string
               | ID OPER_ASN_SIMPLE STRING_CONST COMMA id_list_string

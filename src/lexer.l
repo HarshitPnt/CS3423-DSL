@@ -7,7 +7,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "tokens.h"
+#include "tokens.hh"
+#include <string>
 
 #define RED "\x1b[31m"
 #define GREEN "\x1b[32m"
@@ -66,6 +67,8 @@ type_cfg            ("cfg")
 type_dfa            ("dfa")
 type_nfa            ("nfa")
 type_pda            ("pda")
+type_automata        ({type_cfg}|{type_dfa}|{type_nfa}|{type_pda})
+type_set           ({type_oset}|{type_uset})
 
 /*Other Keywords*/
 comm_beg            ("<!--")
@@ -145,13 +148,20 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
     return TYPE_PRIMITIVE;
 }
 
-{type_oset} {printtoken("datatype"); return O_SET;}
-{type_uset} {printtoken("datatype"); return U_SET;}
+{type_set} {
+    printtoken("datatype");
+    yylval.dtype_set = getSetType(yytext);
+    return TYPE_SET;
+}
+
 {type_regex} {printtoken("datatype"); return REG;}
-{type_cfg} {printtoken("datatype"); return CFG;}
-{type_dfa} {printtoken("datatype"); return DFA;}
-{type_nfa} {printtoken("datatype"); return NFA;}
-{type_pda} {printtoken("datatype"); return PDA;}
+
+{type_automata} {
+    printtoken("datatype");
+    yylval.dtype_automata = getAutomataType(yytext);
+    return TYPE_AUTOMATA;
+}
+
 {type_string} {printtoken("datatype"); return STRING;}
 
 "/" {printtoken("operator"); return OPER_DIV;}

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../includes/types.h"
-#include "../includes/st.h"
+#include "../includes/types.hh"
+#include "../includes/st.hh"
 
 VTYPE_PRIMITIVE getPrimitiveType(char *type)
 {
@@ -54,6 +54,40 @@ VTYPE_PRIMITIVE getPrimitiveType(char *type)
     else if (strcmp(type, "float_64") == 0)
     {
         return TYPE_FLOAT_64;
+    }
+    exit(1);
+}
+
+VTYPE_AUTOMATA getAutomataType(char *type)
+{
+    if (strcmp(type, "cfg") == 0)
+    {
+        return TYPE_CFG;
+    }
+    else if (strcmp(type, "dfa") == 0)
+    {
+        return TYPE_DFA;
+    }
+    else if (strcmp(type, "nfa") == 0)
+    {
+        return TYPE_NFA;
+    }
+    else if (strcmp(type, "pda") == 0)
+    {
+        return TYPE_PDA;
+    }
+    exit(1);
+}
+
+VTYPE_SET getSetType(char *type)
+{
+    if (strcmp(type, "uset") == 0)
+    {
+        return TYPE_USET;
+    }
+    else if (strcmp(type, "oset") == 0)
+    {
+        return TYPE_OSET;
     }
     exit(1);
 }

@@ -4,18 +4,23 @@ YACCDEFINE := --defines
 YACCFLAGS := -v -t -o
 OBJS := lexer.o parser.o semantic.o
 CSRC := $(pathsubst %,${SRC}/%,$(_CSRC))
+COMPILER := g++
 
 parser: ${SRC}/parser.y
-	bison ${YACCDEFINE}=tokens.h ${YACCFLAGS} parser.c ${SRC}/parser.y
+	bison ${YACCDEFINE}=tokens.hh ${YACCFLAGS} parser.cc ${SRC}/parser.y
+	${COMPILER} -c parser.cc
 
 lexer: ${SRC}/lexer.l
-	flex -o lexer.c ${SRC}/lexer.l
+	flex -o lexer.cc ${SRC}/lexer.l
+	${COMPILER} -c lexer.cc
 
-semantic: ${SRC}/semantic.c
-	gcc -c ${SRC}/semantic.c
+semantic: ${SRC}/semantic.cc
+	${COMPILER} -c ${SRC}/semantic.cc
 
 compile:clean parser lexer semantic
-	gcc -lfl -o prog parser.c lexer.c semantic.o
+	${COMPILER} -o prog parser.o lexer.o semantic.o
 
 clean:
-	rm -rf *.o parser.c lexer.c tokens.h parser.output prog
+	rm -f *.o parser.o lexer.o semantic.o
+	rm -f parser.cc lexer.cc
+	rm -f tokens.hh parser.output prog
