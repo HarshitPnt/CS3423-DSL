@@ -78,11 +78,12 @@ bool checkRegex(std::string reg)
                 j++;
                 // std::cout << var << std::endl;
             }
-            if (checkValidID((char *)var.c_str()) == false)
+            char *c = (char *)var.c_str();
+            if (checkValidID(c) == false)
                 return false;
-            if (var_st_list.lookup(var) == NULL)
-                return false;
-            i = j + 1;
+            // if (var_st_list.lookup(var) == NULL)
+            //     return false;
+            i = j;
         }
     }
     return true;
@@ -90,22 +91,25 @@ bool checkRegex(std::string reg)
 
 bool checkValidID(char *id)
 {
-    regex_t regex;
     try
     {
-        int reti = regcomp(&regex, "[a-zA-Z_][a-zA-Z0-9_]*", 0);
+        regex_t regex;
+        int reti = regcomp(&regex, "^[a-zA-Z_][a-zA-Z0-9_]*", 0);
         if (reti == 0)
         {
-            reti = regexec(&regex, id, 0, NULL, 0);
-            if (reti != 0)
+            int val = regexec(&regex, id, 0, NULL, 0);
+            std::cout << val << std::endl;
+            if (val == REG_NOMATCH)
                 return false;
+            return true;
         }
-        return true;
+        return false;
     }
     catch (const std::exception &e)
     {
         std::cerr << e.what() << '\n';
     }
+    return false;
 }
 
 VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, std::string dimension, std::string value)

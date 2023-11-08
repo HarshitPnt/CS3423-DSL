@@ -165,6 +165,7 @@ id_lists: id_lists COMMA id_lists
 
 pseudo_ID : ID
           | pseudo_ID DOT ID
+          | ID DOT pseudo_ID
           | ID LBRACK expression RBRACK
           ;
 
