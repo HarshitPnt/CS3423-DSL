@@ -1,55 +1,72 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#pragma once
+#include <string>
+#include <map>
+#include <list>
 
-typedef struct InnerType {
+class VarSymbolTableEntry
+{
+public:
+    std::string name;
+    std::string type;
+    std::string inner_type;
+    std::string dimension;
+    std::string value;
+    VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, std::string dimension, std::string value);
+};
 
-} InnerType;
+class VarSymbolTable
+{
+public:
+    std::map<std::string, VarSymbolTableEntry *> entries;
+    int insert(VarSymbolTableEntry *vste);
+    VarSymbolTableEntry *lookup(std::string name);
+};
 
-typedef struct Type {
+class VarSymbolTableList
+{
+public:
+    std::list<VarSymbolTable *> entries;
+    int insert(VarSymbolTable *vst);
+    VarSymbolTable *lookup(std::string name);
+};
 
-} Type;
+class StructSymbolTableEntry
+{
+public:
+    std::string name;
+    std::map<std::string, VarSymbolTableEntry *> fields;
+    StructSymbolTableEntry(std::string name, std::map<std::string, VarSymbolTableEntry *> fields);
+};
 
-typedef struct VarSymTabItem {
+class StructSymbolTable
+{
+public:
+    std::map<std::string, StructSymbolTableEntry *> entries;
+    int insert(StructSymbolTableEntry *sste);
+    StructSymbolTableEntry *lookup(std::string name);
+};
 
-} VarSymTabItem;
+class StructSymbolTableList
+{
+public:
+    std::map<std::string, StructSymbolTable *> entries;
+    int insert(StructSymbolTable *sste);
+    StructSymbolTable *lookup(std::string name);
+};
 
-typedef struct VarSymTab {
+class FunctionSymbolTableEntry
+{
+public:
+    std::string name;
+    VarSymbolTable *params;
+    std::string return_type;
+    FunctionSymbolTableEntry(std::string name, VarSymbolTable *params, std::string return_type);
+};
 
-} VarSymTab;
-
-typedef struct VarSymTabList {
-
-} VarSymTabList;
-
-
-typedef struct FuncSymTabItem {
-
-} FuncSymTabItem;
-
-typedef struct FuncSymTab {
-
-} FuncSymTab;
-
-typedef struct StructSymTabItem {
-
-} StructSymTabItem;
-
-typedef struct StructSymTab {
-
-} StructSymTab;
-
-
-void insertToVarSymTab(char *); // To edit
-VarSymTabItem * VarSearch(char *); // To edit
-void printVarSymTab(VarSymTab *); // To edit
-void printVarSymTabList(); // To edit
-
-void insertToFuncSymTab(char *); // To edit
-FuncSymTabItem * FuncSearch(char *); // To edit
-void printFuncSymTab(FuncSymTab *); // To edit
-
-void insertToStructSymTab(char *); // To edit
-StructSymTabItem * StructSearch(char *); // To edit
-void printStructSymTab(StructSymTab *); // To edit
-
+class FunctionSymbolTable
+{
+public:
+    std::map<std::string, FunctionSymbolTableEntry *> entries;
+    int insert(FunctionSymbolTableEntry *fste);
+    FunctionSymbolTableEntry *lookup(std::string name);
+};

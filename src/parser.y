@@ -1,4 +1,5 @@
 %{
+#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,10 +21,12 @@ int in_function = 0;
 int in_loop = 0;
 int in_condition = 0;
 
+
 #define printlog(a) fprintf(parse_log,"%s declaration at line no: %d\n",a,yylineno)
 %}
 %code requires {
-    #include "../includes/types.hh"
+    #include "../includes/semantic.hh"
+
 }
 %union {
     // Constants
@@ -81,12 +84,12 @@ int in_condition = 0;
 %start program
 %%
 
-program: instruction_list
+program: instruction_list struct_declaration
+        | instruction_list function_declaration
+        | instruction_list
        ;
 
 instruction_list: /* empty */
-                | instruction_list struct_declaration
-                | instruction_list function_declaration
                 | instruction_list statement
                 ;
 

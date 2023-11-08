@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#pragma once
 
 // Types of Constants 
 typedef enum ConstTYPE {
@@ -41,3 +39,4 @@ typedef enum VariableTYPE_Set {
 VTYPE_PRIMITIVE getPrimitiveType(char *type);
 VTYPE_AUTOMATA getAutomataType(char *type);
 VTYPE_SET getSetType(char *type);
+

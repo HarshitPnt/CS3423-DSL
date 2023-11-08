@@ -3,6 +3,7 @@
 %option stack
 
 %{
+#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -13,13 +14,11 @@
 #define RED "\x1b[31m"
 #define GREEN "\x1b[32m"
 #define RESET "\x1b[0m"
-
 #define printtoken(a) fprintf(seq_token,"%s: %s\n",a,yytext)
 
 // Defining files
 FILE *seq_token;
-char comment[10000];
-int comm_len=0;
+std::string comment; 
 extern void yyerror(char *str);
 
 // Defining functions
@@ -97,7 +96,10 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 }
 
 <REGEX>{single_quote}([^']|"\'")*{single_quote}    {
-    // checkRegex(yytext);
+    int len = strlen(yytext);
+    std::string s = std::string(yytext).substr(1,len-2);
+    // if(checkRegex(s) == false)
+    //     error();
     printtoken("regex");
     BEGIN INITIAL;
     return REGEX_LIT;
@@ -204,12 +206,8 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
     fflush(stdout);
     yy_push_state(YYSTATE);
     BEGIN COMMENT;
-    comment[comm_len] = '<';
-    comment[comm_len+1] = '!';
-    comment[comm_len+2] = '-';
-    comment[comm_len+3] = '-';   
-    comment[comm_len+4] = '\0';
-    comm_len+=4;
+    comment.append(std::string(yytext));
+
 }
 
 {comm_beg} {
@@ -221,31 +219,22 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 <COMMENT>{comm_end} {
     if(yy_top_state()==INITIAL)
     {
-        fprintf(seq_token,"comment: %s\n",comment);
+        fprintf(seq_token,"comment: %s\n",comment.c_str());
         fprintf(seq_token,"punctuation: %s\n",yytext);
-        comment[0] = '\0';
-        comm_len=0;
     }
     else
     {
-        comment[comm_len] = '-';
-        comment[comm_len+1] = '-';
-        comment[comm_len+2] = '!';
-        comment[comm_len+3] = '>';
-        comment[comm_len+4] = '\0';
-        comm_len+=4;
+        comment.append(std::string(yytext));
     }
     yy_pop_state();
 }
 
 <COMMENT>(.|"\n") {
-    comment[comm_len] = yytext[0];
-    comment[comm_len+1] = '\0';
-    comm_len=comm_len+1;
+    comment.append(std::string(yytext));
 }
 
 <COMMENT><<EOF>> {
-    fprintf(seq_token,"comment: %s\n",comment);
+    fprintf(seq_token,"comment: %s\n",comment.c_str());
     BEGIN INITIAL;
 }
 
