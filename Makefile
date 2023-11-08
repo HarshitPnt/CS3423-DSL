@@ -34,4 +34,5 @@ test: compile
 
 clean:
 	${MAKE} -C ./build clean
+	rm -rf ${TESTS_TOKS}
 	echo "${GREEN}Clean Successful${RESET}"
