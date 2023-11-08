@@ -89,17 +89,17 @@ struct {printtoken("reserved keyword"); return STRUCT_KW;}
 return {printtoken("reserved keyword"); return RETURN_KW;}
 continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 
-"r"/{single_quote}([^']|"\'")*{single_quote}    {
+"r"/{single_quote}([^'])*{single_quote}    {
     printtoken("regex_start");
     BEGIN REGEX;
     return REGEX_R;
 }
 
-<REGEX>{single_quote}([^']|"\'")*{single_quote}    {
+<REGEX>{single_quote}([^'])*{single_quote}    {
     int len = strlen(yytext);
     std::string s = std::string(yytext).substr(1,len-2);
-    // if(checkRegex(s) == false)
-    //     error();
+    if(checkRegex(s) == false)
+        error();
     printtoken("regex");
     BEGIN INITIAL;
     return REGEX_LIT;
