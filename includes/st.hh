@@ -3,6 +3,31 @@
 #include <map>
 #include <list>
 
+/*
+Symbol Table:
+
+VarSymbolTableList: List of VarSymbolTables. 
+VarSymbolTable: Map of VarSymbolTableEntries.
+VarSymbolTableEntry: name, type, inner_type, dimension, value.
+name: name of variable.
+type: int, float, char, struct, void, set, user-defined type(struct).
+inner_type: int, float, char, struct, void, set, user-defined type(struct).
+dimension: Number of dimensions of the variable. 0 if not an array.
+value: Value of dimension. 0 if not an array.
+
+StructSymbolTable: Map of StructSymbolTableEntries.
+StructSymbolTableEntry: name, map of VarSymbolTableEntries.
+name: name of struct.
+map of VarSymbolTableEntries: contains all the fields of the struct.
+
+FunctionSymbolTable: Map of FunctionSymbolTableEntries.
+FunctionSymbolTableEntry: name, VarSymbolTable, return_type.
+name: name of function.
+VarSymbolTable: Map of VarSymbolTableEntries.
+return_type: int, float, char, struct, void, set, user-defined type(struct).
+
+*/
+
 class VarSymbolTableEntry
 {
 public:
@@ -46,14 +71,6 @@ public:
     StructSymbolTableEntry *lookup(std::string name);
 };
 
-class StructSymbolTableList
-{
-public:
-    std::map<std::string, StructSymbolTable *> entries;
-    int insert(StructSymbolTable *sste);
-    StructSymbolTable *lookup(std::string name);
-};
-
 class FunctionSymbolTableEntry
 {
 public:
@@ -70,3 +87,4 @@ public:
     int insert(FunctionSymbolTableEntry *fste);
     FunctionSymbolTableEntry *lookup(std::string name);
 };
+

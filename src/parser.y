@@ -84,13 +84,13 @@ int in_condition = 0;
 %start program
 %%
 
-program: instruction_list struct_declaration
-        | instruction_list function_declaration
-        | instruction_list
+program: instruction_list
        ;
 
 instruction_list: /* empty */
                 | instruction_list statement
+                | instruction_list struct_declaration
+                | instruction_list function_declaration
                 ;
 
 statement: variable_declaration
@@ -381,9 +381,9 @@ void yyerror(const char *s) {
 
 }
 
-// #ifdef YYDEBUG
-//   int yydebug = 1;
-// #endif
+/* #ifdef YYDEBUG
+int yydebug = 1;
+#endif */
 
 int main(int argc, char **argv) {
     yyin = fopen(argv[1],"r");

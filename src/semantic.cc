@@ -49,9 +49,9 @@ VTYPE_AUTOMATA getAutomataType(char *type)
 VTYPE_SET getSetType(char *type)
 {
     std::string s = std::string(type);
-    if (s.compare("uset") == 0)
+    if (s.compare("u_set") == 0)
         return TYPE_USET;
-    else if (s.compare("oset") == 0)
+    else if (s.compare("o_set") == 0)
         return TYPE_OSET;
     exit(1);
 }
@@ -59,27 +59,30 @@ VTYPE_SET getSetType(char *type)
 bool checkRegex(std::string reg)
 {
     regex_t regex;
+    // std::cout<< reg << std::endl;
     int reti = regcomp(&regex, reg.c_str(), 0);
     if (reti != 0)
         return false;
-    for (int i = 0; i < reg.length(); i++)
+    int len = reg.length();
+    for (int i = 0; i < len; i++)
     {
-        if (reg[i] == '$' && reg[i + 1] == '{')
+        if (i != len - 1 && reg[i] == '$' && reg[i + 1] == '{')
         {
             std::string var = "";
             int j = i + 2;
             while (reg[j] != '}')
             {
-                var += reg[j];
                 if (reg[j] == '\0')
                     return false;
+                var += reg[j];
                 j++;
+                // std::cout << var << std::endl;
             }
             if (checkValidID((char *)var.c_str()) == false)
                 return false;
             if (var_st_list.lookup(var) == NULL)
                 return false;
-            i = j;
+            i = j + 1;
         }
     }
     return true;
@@ -94,11 +97,10 @@ bool checkValidID(char *id)
         if (reti == 0)
         {
             reti = regexec(&regex, id, 0, NULL, 0);
-            if (reti == 0)
-                return true;
-            else
+            if (reti != 0)
                 return false;
         }
+        return true;
     }
     catch (const std::exception &e)
     {
@@ -160,5 +162,31 @@ int StructSymbolTable::insert(StructSymbolTableEntry *sste)
     return 0;
 }
 
+StructSymbolTableEntry *StructSymbolTable::lookup(std::string name)
+{
+    if (this->entries.find(name) == this->entries.end())
+        return NULL;
+    return this->entries[name];
+}
 
+FunctionSymbolTableEntry::FunctionSymbolTableEntry(std::string name, VarSymbolTable *params, std::string return_type)
+{
+    this->name = name;
+    this->params = params;
+    this->return_type = return_type;
+}
 
+int FunctionSymbolTable::insert(FunctionSymbolTableEntry *fste)
+{
+    if (this->entries.find(fste->name) != this->entries.end())
+        return 1;
+    this->entries[fste->name] = fste;
+    return 0;
+}
+
+FunctionSymbolTableEntry *FunctionSymbolTable::lookup(std::string name)
+{
+    if (this->entries.find(name) == this->entries.end())
+        return NULL;
+    return this->entries[name];
+}
