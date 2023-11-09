@@ -1,4 +1,3 @@
-#pragma once
 #include "../includes/semantic.hh"
 #include "../includes/stdecl.hh"
 

@@ -3,21 +3,21 @@
 %option stack
 
 %{
-#pragma once
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include "tokens.hh"
 #include <string>
+#include <iostream>
+#include <fstream>
 
-#define RED "\x1b[31m"
-#define GREEN "\x1b[32m"
-#define RESET "\x1b[0m"
-#define printtoken(a) fprintf(seq_token,"%s: %s\n",a,yytext)
+#define RED() system("04")
+#define GREEN() system("02")
+#define RESET() system("07")
+#define printtoken(a) seq_token<<a<<": "<<yytext<<std::endl
 
 // Defining files
-FILE *seq_token;
+std::fstream seq_token;
 std::string comment; 
 extern void yyerror(char *str);
 
@@ -213,14 +213,14 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 {comm_beg} {
     yy_push_state(YYSTATE);
     BEGIN COMMENT;
-    fprintf(seq_token,"punctuation: %s\n",yytext);
+    printtoken("punctuation");
 }
 
 <COMMENT>{comm_end} {
     if(yy_top_state()==INITIAL)
     {
-        fprintf(seq_token,"comment: %s\n",comment.c_str());
-        fprintf(seq_token,"punctuation: %s\n",yytext);
+        seq_token<<"comment"<<": "<<comment.c_str()<<std::endl;
+        printtoken("punctuation");
     }
     else
     {
@@ -234,7 +234,7 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 }
 
 <COMMENT><<EOF>> {
-    fprintf(seq_token,"comment: %s\n",comment.c_str());
+    seq_token<<"comment: "<<comment.c_str();
     BEGIN INITIAL;
 }
 
@@ -246,8 +246,10 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 
 // Function to quit program
 void error(){
-        char *toprint = "Error at line number: ";
-        fprintf(seq_token,"%s%d\n", toprint, yylineno);
-        printf(RED "%s%d\n" RESET, toprint, yylineno);
+        std::string toprint("Error at line number: ");
+        seq_token<<toprint<<yylineno<<std::endl;
+        RED();
+        std::cout<<toprint<<yylineno<<std::endl;
+        RESET();
         exit(1);
 }

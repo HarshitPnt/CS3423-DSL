@@ -1,14 +1,15 @@
 %{
-#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <fstream>
+#include <iostream>
 
 extern int yylex();
 void yyerror(char const* str);
 extern FILE* yyin;
-extern FILE* seq_token;
+extern std::fstream seq_token;
 FILE* parse_log;
 extern int yylineno;
 void terminate()
@@ -419,11 +420,11 @@ int main(int argc, char **argv) {
         sprintf(seq,"%s/seq_tokens_%s.tok",argv[2],filename);
         sprintf(parser_log,"%s/parser_log_%s.log",argv[2],filename);
     }
-    seq_token = fopen(seq, "w");
+    seq_token.open(seq,std::ios::out);
     parse_log = fopen(parser_log,"w");
     yyparse();
     fclose(yyin);
-    fclose(seq_token);
+    seq_token.close();
     fclose(parse_log);
     return 0;
 

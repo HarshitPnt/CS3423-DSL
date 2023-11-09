@@ -1,7 +1,6 @@
-#pragma once
-
-// Types of Constants 
-typedef enum ConstTYPE {
+// Types of Constants
+typedef enum ConstTYPE
+{
     CINT,
     CFLOAT,
     CCHAR,
@@ -9,7 +8,8 @@ typedef enum ConstTYPE {
     CBOOL,
 } CTYPE;
 
-typedef enum VariableTYPE_Primitive {
+typedef enum VariableTYPE_Primitive
+{
     TYPE_INT_8,
     TYPE_INT_16,
     TYPE_INT_32,
@@ -24,14 +24,16 @@ typedef enum VariableTYPE_Primitive {
     TYPE_BOOL,
 } VTYPE_PRIMITIVE;
 
-typedef enum VariableTYPE_Automata {
+typedef enum VariableTYPE_Automata
+{
     TYPE_CFG,
     TYPE_DFA,
     TYPE_NFA,
     TYPE_PDA
 } VTYPE_AUTOMATA;
 
-typedef enum VariableTYPE_Set {
+typedef enum VariableTYPE_Set
+{
     TYPE_USET,
     TYPE_OSET
 } VTYPE_SET;
@@ -39,4 +41,3 @@ typedef enum VariableTYPE_Set {
 VTYPE_PRIMITIVE getPrimitiveType(char *type);
 VTYPE_AUTOMATA getAutomataType(char *type);
 VTYPE_SET getSetType(char *type);
-

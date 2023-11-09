@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ST_HH
+#define ST_HH
 #include <string>
 #include <map>
 #include <list>
@@ -6,7 +7,7 @@
 /*
 Symbol Table:
 
-VarSymbolTableList: List of VarSymbolTables. 
+VarSymbolTableList: List of VarSymbolTables.
 VarSymbolTable: Map of VarSymbolTableEntries.
 VarSymbolTableEntry: name, type, inner_type, dimension, value.
 name: name of variable.
@@ -87,4 +88,4 @@ public:
     int insert(FunctionSymbolTableEntry *fste);
     FunctionSymbolTableEntry *lookup(std::string name);
 };
-
+#endif
