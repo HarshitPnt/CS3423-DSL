@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <fstream>
 #include <iostream>
+#include "../includes/semantic.hh"
 
 extern int yylex();
 void yyerror(char const* str);
@@ -22,12 +23,17 @@ int in_function = 0;
 int in_loop = 0;
 int in_condition = 0;
 
+VarSymbolTableList *vstl;
+StructSymbolTableList *sstl;
+FunctionSymbolTable *fst;
+
+VarSymbolTable *global_vst;
+StructSymbolTable *global_sst;
 
 #define printlog(a) fprintf(parse_log,"%s declaration at line no: %d\n",a,yylineno)
 %}
 %code requires {
     #include "../includes/semantic.hh"
-
 }
 %union {
     // Constants
@@ -49,7 +55,6 @@ int in_condition = 0;
     // Variables
     char* identifier;
 
-
     
 }
 
@@ -59,7 +64,7 @@ int in_condition = 0;
 %left <dtype_automata> TYPE_AUTOMATA
 
 %token <cint> INT_CONST <cfloat> FLOAT_CONST <cstring> STRING_CONST <cchar> CHAR_CONST <cbool> BOOL_CONST
-%left REGEX_R REGEX_LIT 
+%left REGEX_R REGEX_LIT
 %left <identifier> ID
 
 %token IF_KW ELIF_KW ELSE_KW WHILE_KW BREAK_KW STRUCT_KW RETURN_KW CONTINUE_KW
@@ -165,8 +170,7 @@ id_lists: id_lists COMMA id_lists
 
 
 pseudo_ID : ID
-          | pseudo_ID DOT ID
-          | ID DOT pseudo_ID
+          | pseudo_ID DOT pseudo_ID
           | ID LBRACK expression RBRACK
           ;
 
@@ -388,6 +392,7 @@ int yydebug = 1;
 #endif */
 
 int main(int argc, char **argv) {
+    initST();
     yyin = fopen(argv[1],"r");
     char *filename = (char*)malloc(sizeof(char)*strlen(argv[1]));
      //position of last '.' in file name

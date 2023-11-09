@@ -1,5 +1,15 @@
 #include "../includes/semantic.hh"
-#include "../includes/stdecl.hh"
+
+void initST(){
+    vstl = new VarSymbolTableList();
+    sstl = new StructSymbolTableList();
+    fst = new FunctionSymbolTable();
+    global_vst = new VarSymbolTable();
+    global_sst = new StructSymbolTable();
+
+    vstl->insert(global_vst);
+    sstl->insert(global_sst);
+}
 
 VTYPE_PRIMITIVE getPrimitiveType(char *type)
 {
@@ -151,12 +161,11 @@ VarSymbolTable *VarSymbolTableList::lookup(std::string name)
     return NULL;
 }
 
-StructSymbolTableEntry::StructSymbolTableEntry(std::string name, std::map<std::string, VarSymbolTableEntry *> fields)
+StructSymbolTableEntry::StructSymbolTableEntry(std::string name, VarSymbolTable *fields)
 {
     this->name = name;
     this->fields = fields;
 }
-
 int StructSymbolTable::insert(StructSymbolTableEntry *sste)
 {
     if (this->entries.find(sste->name) != this->entries.end())
@@ -170,6 +179,22 @@ StructSymbolTableEntry *StructSymbolTable::lookup(std::string name)
     if (this->entries.find(name) == this->entries.end())
         return NULL;
     return this->entries[name];
+}
+
+int StructSymbolTableList::insert(StructSymbolTable *sst)
+{
+    this->entries.push_front(sst);
+    return 0;
+}
+
+StructSymbolTable *StructSymbolTableList::lookup(std::string name)
+{
+    for (auto it = this->entries.begin(); it != this->entries.end(); it++)
+    {
+        if ((*it)->lookup(name) != NULL)
+            return *it;
+    }
+    return NULL;
 }
 
 FunctionSymbolTableEntry::FunctionSymbolTableEntry(std::string name, VarSymbolTable *params, std::string return_type)

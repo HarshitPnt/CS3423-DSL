@@ -100,6 +100,7 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
     std::string s = std::string(yytext).substr(1,len-2);
     if(checkRegex(s) == false)
         error();
+
     printtoken("regex");
     BEGIN INITIAL;
     return REGEX_LIT;
