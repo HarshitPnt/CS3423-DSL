@@ -157,7 +157,7 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
     return TYPE_SET;
 }
 
-{type_regex} {printtoken("datatype"); return REG;}
+{type_regex} {printtoken("datatype"); return TYPE_REG;}
 
 {type_automata} {
     printtoken("datatype");
@@ -165,7 +165,7 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
     return TYPE_AUTOMATA;
 }
 
-{type_string} {printtoken("datatype"); return STRING;}
+{type_string} {printtoken("datatype"); return TYPE_STRING;}
 
 "/" {printtoken("operator"); return OPER_DIV;}
 "%" {printtoken("operator"); return OPER_MOD;}

@@ -13,7 +13,7 @@ OBJS := lexer.o parser.o semantic.o
 CSRC := $(pathsubst %,${SRC}/%,$(_CSRC))
 
 run: compile
-	./prog ${FILE} ${LOGS}
+	./build/prog ${FILE} ${LOGS}
 
 compile:
 	 ${MAKE} -C ./build compile

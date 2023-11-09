@@ -1,13 +1,13 @@
 SRC := ../src
 _CSRC := semantic.c
 YACCDEFINE := --defines
-YACCFLAGS := -v -t -o
+YACCFLAGS := -v --debug -o
 OBJS := lexer.o parser.o semantic.o
 CSRC := $(patsubst %,${SRC}/%,$(_CSRC))
 COMPILER := g++
 
-parser: ${SRC}/parser.y
-	bison ${YACCDEFINE}=tokens.hh ${YACCFLAGS} parser.cc ${SRC}/parser.y
+parser: ${SRC}/parser_copy.y
+	bison ${YACCDEFINE}=tokens.hh ${YACCFLAGS} parser.cc ${SRC}/parser_copy.y
 	${COMPILER} -c parser.cc
 
 lexer: ${SRC}/lexer.l
