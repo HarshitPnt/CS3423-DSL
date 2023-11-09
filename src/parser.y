@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <fstream>
 #include <iostream>
-#include "../includes/semantic.hh"
+#include "../includes/st.hh"
 
 extern int yylex();
 void yyerror(char const* str);
