@@ -57,7 +57,7 @@ StructSymbolTable *global_sst;
 
     
 }
-
+%left PSEUDO_LOW
 %left <dtype_primitive> TYPE_PRIMITIVE
 %left STRING REG
 %left <dtype_set> TYPE_SET
@@ -111,12 +111,9 @@ complex_dtype : STRING
               | REG
               ;
 
-automata_dtype: TYPE_AUTOMATA
-              ;
-
 dtype_noset: TYPE_PRIMITIVE
      | complex_dtype
-     | automata_dtype
+     | TYPE_AUTOMATA
      ;
 
 set_type: TYPE_SET COMP_LT dtype_noset COMP_GT
@@ -124,7 +121,7 @@ set_type: TYPE_SET COMP_LT dtype_noset COMP_GT
         | TYPE_SET COMP_LT ID COMP_GT
         ;
 
-dtype: set_type
+dtype: set_type %prec PSEUDO_LOW
      | dtype_noset
      ;
 
@@ -132,7 +129,7 @@ variable_declaration: TYPE_PRIMITIVE id_list_arith SEMICOLON {printlog("variable
                     | set_type id_list_set SEMICOLON {printlog("set");}
                     | STRING id_list_string SEMICOLON {printlog("string");}
                     | REG id_list_reg SEMICOLON {printlog("regex");}
-                    | automata_dtype id_list_auto SEMICOLON {printlog("automata");}
+                    | TYPE_AUTOMATA id_list_auto SEMICOLON {printlog("automata");}
                     | ID id_lists SEMICOLON {printlog("custom type variable");}
                     ;
 

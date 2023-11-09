@@ -3,7 +3,7 @@ _CSRC := semantic.c
 YACCDEFINE := --defines
 YACCFLAGS := -v -t -o
 OBJS := lexer.o parser.o semantic.o
-CSRC := $(pathsubst %,${SRC}/%,$(_CSRC))
+CSRC := $(patsubst %,${SRC}/%,$(_CSRC))
 COMPILER := g++
 
 parser: ${SRC}/parser.y
