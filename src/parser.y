@@ -23,6 +23,7 @@ int in_function = 0;
 int in_loop = 0;
 int in_condition = 0;
 
+
 VarSymbolTableList *vstl;
 StructSymbolTableList *sstl;
 FunctionSymbolTable *fst;
