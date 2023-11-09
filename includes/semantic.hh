@@ -1,4 +1,3 @@
-#pragma once
 #include "st.hh"
 #include "types.hh"
 #include <string>
