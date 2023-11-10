@@ -21,15 +21,12 @@ void terminate()
 
 int in_function = 0;
 int in_loop = 0;
-int in_condition = 0;
-
 
 VarSymbolTableList *vstl;
-StructSymbolTableList *sstl;
-FunctionSymbolTable *fst;
 
+StructSymbolTable *sst;
+FunctionSymbolTable *fst;
 VarSymbolTable *global_vst;
-StructSymbolTable *global_sst;
 
 #define printlog(a) fprintf(parse_log,"%s declaration at line no: %d\n",a,yylineno)
 %}
@@ -60,7 +57,7 @@ StructSymbolTable *global_sst;
 }
 %left PSEUDO_LOW
 %left <dtype_primitive> TYPE_PRIMITIVE
-%left STRING REG
+%left TYPE_STRING TYPE_REG
 %left <dtype_set> TYPE_SET
 %left <dtype_automata> TYPE_AUTOMATA
 
@@ -91,86 +88,123 @@ StructSymbolTable *global_sst;
 %start program
 %%
 
-program: instruction_list
-       ;
+program : instruction_list
 
-instruction_list: /* empty */
-                | instruction_list statement
-                | instruction_list struct_declaration
+instruction_list: instruction_list struct_declaration
                 | instruction_list function_declaration
+                | instruction_list statements
+                |
                 ;
 
-statement: variable_declaration
-         | expression_assignment
-         | control_statement
-         | call_statement
-         ;
+struct_declaration: STRUCT_KW ID LBRACE struct_body RBRACE SEMICOLON
+                {
+                    printlog("Struct");
+                }
+                ;
 
-regex: REGEX_R REGEX_LIT;
-
-complex_dtype : STRING
-              | REG
-              ;
-
-dtype_noset: TYPE_PRIMITIVE
-     | complex_dtype
-     | TYPE_AUTOMATA
-     ;
-
-set_type: TYPE_SET COMP_LT dtype_noset COMP_GT
-        | TYPE_SET COMP_LT set_type COMP_GT
-        | TYPE_SET COMP_LT ID COMP_GT
-        ;
-
-dtype: set_type %prec PSEUDO_LOW
-     | dtype_noset
-     ;
-
-variable_declaration: TYPE_PRIMITIVE id_list_arith SEMICOLON {printlog("variable");}
-                    | set_type id_list_set SEMICOLON {printlog("set");}
-                    | STRING id_list_string SEMICOLON {printlog("string");}
-                    | REG id_list_reg SEMICOLON {printlog("regex");}
-                    | TYPE_AUTOMATA id_list_auto SEMICOLON {printlog("automata");}
-                    | ID id_lists SEMICOLON {printlog("custom type variable");}
-                    ;
-
-id_list_arith : ID
-              | ID OPER_ASN_SIMPLE expression
-              | id_list_arith COMMA id_list_arith
-              ;
-
-id_list_string : ID
-              | ID OPER_ASN_SIMPLE STRING_CONST
-              | ID OPER_ASN_SIMPLE call
-              | id_list_string COMMA id_list_string
-              ;
-
-id_list_set: ID
-           | ID OPER_ASN_SIMPLE set_values
-           | ID OPER_ASN_SIMPLE call
-           | id_list_set COMMA id_list_set
-           ;
-
-id_list_reg : ID
-            | ID OPER_ASN_SIMPLE regex
-            | ID OPER_ASN_SIMPLE call
-            | id_list_reg COMMA id_list_reg
+struct_body: struct_body struct_member
+            | struct_member
             ;
 
-id_list_auto : ID
-             | ID OPER_ASN_SIMPLE call
-             | id_list_auto COMMA id_list_auto
+struct_member: dtype id_list_decl SEMICOLON
+            ;
+
+id_list_decl: ID
+            | id_list_decl COMMA ID
+            ;
+
+expression_list: expression
+               | expression_list COMMA expression
+               ;
+
+function_declaration: function_header LBRACE function_body RBRACE {in_function = 0;}
+                    ;
+
+function_header: dtype ID LPAREN param_list RPAREN {
+                        printlog("Function");
+                        if(in_function)
+                            yyerror("Nested function declaration");
+                        in_function = 1;
+                    }
+                | ID ID LPAREN param_list RPAREN {
+                        printlog("Function");
+                        if(in_function)
+                            yyerror("Nested function declaration");
+                        in_function = 1;
+                    }
+                ;
+
+param_list: 
+          | param next_param
+          ;
+
+param: dtype ID
+     | ID ID
+     ;
+
+next_param : 
+           | COMMA param next_param
+           ;
+
+function_body: function_body statements
+             | SEMICOLON
+             |
              ;
 
-id_lists: id_lists COMMA id_lists
-        | ID
-        ;
-
-
-pseudo_ID : ID
-          | pseudo_ID DOT pseudo_ID
-          | ID LBRACK expression RBRACK
+statements: variable_declaration {printlog("Variable declaration");}
+          | assignment {printlog("Assignment");}
+          | if_statement
+          | while_statement
+          | return_statement {printlog("Return");}
+          | break_statement {printlog("Break");}
+          | continue_statement {printlog("Continue");}
+          | call_statement {printlog("Function call");}
+          | LBRACE statements RBRACE {printlog("Block");}
           ;
+
+variable_declaration: dtype id_list SEMICOLON
+                    | ID id_list SEMICOLON
+                    ;
+
+id_list: ID
+       | ID OPER_ASN_SIMPLE rhs
+       | id_list COMMA ID
+       | id_list COMMA ID OPER_ASN_SIMPLE rhs
+       ;
+
+pseudo_ID: pseudo_ID LBRACK expression RBRACK
+         | pseudo_ID DOT pseudo_ID
+         | ID
+         ;
+
+assignment: pseudo_ID OPER_ASN rhs SEMICOLON
+          | pseudo_ID OPER_ASN_SIMPLE rhs SEMICOLON
+          | pseudo_ID OPER_ASN_SIMPLE REGEX_R REGEX_LIT SEMICOLON
+          | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON
+          | pseudo_ID COLON OPER_ASN_SIMPLE rhs_automata SEMICOLON
+          | pseudo_ID COLON OPER_ASN_SIMPLE cfg_rules SEMICOLON
+          | pseudo_ID COLON OPER_ASN_SIMPLE ID SEMICOLON
+          | pseudo_ID COLON OPER_ASN_SIMPLE LBRACE states_list RBRACE SEMICOLON
+          ;
+
+states_list: ID
+           | states_list COMMA ID
+           ;
+
+cfg_rules : LBRACE cfg_rule_list RBRACE
+          ;
+
+cfg_rule_list : cfg_rule
+              | cfg_rule_list COMMA cfg_rule
+              ;
+
+cfg_rule : pseudo_ID ARROW cfg_rhs
+         ;
+
+rhs: expression
+   | LBRACE expression_list RBRACE
+   | REGEX_R REGEX_LIT
+   ;
 
 expression: LPAREN expression RPAREN
           | expression OPER_PLUS expression
@@ -183,13 +217,13 @@ expression: LPAREN expression RPAREN
           | expression OPER_POWER
           | expression AT_THE_RATE expression
           | expression OPER_OR expression
-          | OPER_NOT expression
           | expression COMP_GT expression
           | expression COMP_LT expression
+          | OPER_NOT expression
           | expression OPER_HASH
+          | OPER_MINUS expression
+          | OPER_PLUS expression
           | INT_CONST
-          | OPER_MINUS expression %prec PSEUDO_HIGH
-          | OPER_PLUS expression %prec PSEUDO_HIGH
           | FLOAT_CONST
           | BOOL_CONST
           | CHAR_CONST
@@ -197,186 +231,129 @@ expression: LPAREN expression RPAREN
           | call
           ;
 
-
-set_values: LBRACE set_value_list RBRACE
-          ;
-
-set_value_list: /* empty */
-              | set_value
-              | set_value_list COMMA set_value
-              ;
-
-set_value: expression
-         | regex
-         ;
-
-expression_assignment : pseudo_ID OPER_ASN expression SEMICOLON {printlog("expression assignment");}
-                      | pseudo_ID OPER_ASN_SIMPLE expression SEMICOLON {printlog("expression assignment");;}
-                      | pseudo_ID OPER_ASN_SIMPLE regex SEMICOLON {printlog("expression assignment(regex)");}
-                      | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON {printlog("expression assignment(string)");}
-                      | pseudo_ID OPER_ASN_SIMPLE set_values SEMICOLON {printlog("expression assignment(set)");}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE cfg_fsm_symb_list RBRACE SEMICOLON {printlog("expression assignment(automata)");}
-                      | pseudo_ID OPER_ASN_SIMPLE LBRACE prod_transition_list RBRACE SEMICOLON {printlog("expression assignment(automata)");}
-                      ;
-
-cfg_fsm_symb_list: cfg_fsm_symb
-                 | cfg_fsm_symb_list COMMA cfg_fsm_symb
-                 ;
-
-cfg_fsm_symb: ID COLON STRING_CONST
-            ;
-
-prod_transition_list: prod_transition
-                    | prod_transition_list COMMA prod_transition
-                    ;
-
-prod_transition: pseudo_ID arrow_lhs ARROW arrow_rhs
-               | pseudo_ID ARROW cfg_rhs_rule
-               ;
-
-arrow_lhs: SEMICOLON id_lhs
-         | SEMICOLON regex
-         | SEMICOLON set_values_vars
-         | SEMICOLON id_lhs COMMA id_lhs
-         | SEMICOLON set_values_pda
-         ;
-
-arrow_rhs: pseudo_ID DOLLAR
-         | set_values DOLLAR
-         | set_values_pda_rhs DOLLAR
-         | EPSILON DOLLAR
-         ;
-
-id_lhs : DOLLAR LBRACE ID RBRACE
-       | EPSILON
-       ;
-
-set_values_vars: LBRACE set_value_list_vars RBRACE
-               ;
-
-set_value_list_vars: set_value_vars
-                   | set_value_list_vars COMMA set_value_vars
-                   ;
-
-set_value_vars: DOLLAR LBRACE ID RBRACE
-              ;
-
-set_values_pda: LBRACE set_value_list_pda RBRACE
-              ;
-
-set_values_pda_rhs: LBRACE set_value_list_pda_rhs RBRACE
-                  | ID COMMA DOLLAR LBRACE ID RBRACE
-                  | ID COMMA EPSILON
-                  ;
-
-set_value_list_pda_rhs: set_value_pda_rhs
-                      | set_value_list_pda_rhs COMMA set_value_pda_rhs
-                      ;
-
-set_value_pda_rhs: LPAREN ID COMMA DOLLAR LBRACE ID RBRACE RPAREN
-                 | LPAREN ID COMMA EPSILON RPAREN
-                 ;
-
-set_value_list_pda: set_value_pda
-                  | set_value_list_pda COMMA set_value_pda
-                  ;
-
-set_value_pda: LPAREN DOLLAR LBRACE ID RBRACE COMMA DOLLAR LBRACE ID RBRACE RPAREN
-             | LPAREN EPSILON COMMA DOLLAR LBRACE ID RBRACE RPAREN
-             | LPAREN DOLLAR LBRACE ID RBRACE COMMA EPSILON RPAREN
-             | LPAREN EPSILON COMMA EPSILON RPAREN
-             ;
-
-cfg_rhs_rule: LBRACE cfg_rhs_rule_list RBRACE
-            | cfg_rhs_rule_item
-            ;
-
-cfg_rhs_rule_list: cfg_rhs_rule_item
-                 | cfg_rhs_rule_list COMMA cfg_rhs_rule_item
-                 ;
-
-cfg_rhs_rule_item : DOLLAR LBRACE ID RBRACE cfg_rhs_rule
-                  | DOLLAR LBRACE ID RBRACE DOLLAR
-                  | ID cfg_rhs_rule
-                  | ID DOLLAR
-                  | EPSILON DOLLAR
-                 ;
-
-control_statement: if_statement
-                 | while_statement
-                 | return_statement
-                 | continue_statement
-                 | break_statement
-                 ;
-
-
-if_statement: IF_KW LPAREN expression RPAREN {printlog("IF");} LBRACE instruction_list RBRACE elif_statement else_statement
-            ;
-
-elif_statement: elif_statement ELIF_KW LPAREN expression RPAREN {printlog("ELIF");} LBRACE instruction_list RBRACE
-              | /* empty */
-              ;
-
-
-else_statement: ELSE_KW {printlog("ELSE");} LBRACE instruction_list RBRACE
-              | /* empty */
-              ;
-
-
-while_statement: WHILE_KW LPAREN expression RPAREN {in_loop++; printlog("while");} LBRACE instruction_list RBRACE {in_loop--;}
-               ;
-
-return_statement: RETURN_KW expression SEMICOLON {printlog("return"); if(in_function == 0) yyerror("Not in function, return statement");} 
-                | RETURN_KW SEMICOLON {printlog("return"); if(in_function == 0) yyerror("Not in function, return statement");}
-                ;
-
-continue_statement: CONTINUE_KW SEMICOLON {printlog("continue"); if(in_loop <= 0) yyerror("Not in loop, continue statement");}
-                  ;
-
-break_statement: BREAK_KW SEMICOLON {printlog("break"); if(in_loop <= 0) yyerror("Not in loop, break statement");}
-                ;
-
-call : ID LPAREN argument_list RPAREN {printlog("call");}
+call : ID LPAREN argument_list RPAREN
      ;
 
-call_statement: call SEMICOLON {printlog("call");}
-              ;
-
-argument_list: /* empty */
-                | argument_list COMMA expression
-                | expression
+argument_list: 
+             | expression
+             | argument_list COMMA expression
              ;
 
-struct_declaration: STRUCT_KW ID {printlog("struct");} LBRACE struct_body RBRACE SEMICOLON 
-                  ;
+rhs_automata: LBRACE alphabet_list RBRACE
+            | LBRACE rules_list RBRACE
+            ;
 
-struct_body: struct_variable_declaration
-           | struct_body struct_variable_declaration
+alphabet_list: alphabet
+           | alphabet_list COMMA alphabet
            ;
 
+alphabet : ID COLON STRING_CONST
+         ;
 
-struct_variable_declaration: dtype id_lists SEMICOLON {printlog("struct variable");}
-                            | ID id_lists SEMICOLON {printlog("struct variable");}
-                           ;
+rules_list : rule
+           | rules_list COMMA rule
+           ;
 
-function_declaration: function_header {if(in_function == 1) yyerror("In function, function declaration"); in_function = 1;} LBRACE instruction_list RBRACE {in_function = 0;}
-                    ;
+rule :LPAREN pseudo_ID lhs_arrow ARROW rhs_arrow RPAREN
+     ;
 
-function_header: dtype ID LPAREN parameter_list RPAREN {printlog("function");}
-                | ID ID LPAREN parameter_list RPAREN {printlog("function");}
+lhs_arrow : COMMA ID
+          | COMMA element_PDA
+          | COMMA EPSILON
+          | COMMA REGEX_R REGEX_LIT
+          | COMMA LBRACE elements_PDA RBRACE
+          | COMMA LBRACE elements_others RBRACE
+          ;
+
+elements_PDA : element_PDA
+             | elements_PDA COMMA element_PDA
+             ;
+
+element_PDA : LPAREN ID COMMA ID RPAREN
+            | LPAREN ID COMMA EPSILON RPAREN
+            ;
+
+elements_others : ID
+                | elements_others COMMA ID
+                ;
+
+rhs_arrow : pseudo_ID
+          | LBRACE elements_others RBRACE
+          | element_PDA
+          | LBRACE elements_PDA RBRACE
+          ;
+
+cfg_rhs : cfg_rhs_ele
+        | cfg_rhs_list
+        ;
+
+cfg_rhs_ele : cfg_rhs_ele ID
+            | cfg_rhs_ele DOLLAR LBRACE ID RBRACE
+            | cfg_rhs_ele EPSILON
+            | ID
+            | EPSILON
+            | DOLLAR LBRACE ID RBRACE
+
+cfg_rhs_list : LBRACE cfg_rhs_ele_list RBRACE
+             ;
+
+cfg_rhs_ele_list : cfg_rhs_ele
+                 | cfg_rhs_ele_list COMMA cfg_rhs_ele
+                 ;
+
+control_body : statements
+             | SEMICOLON
+             | statements control_body
+             ;
+
+if_statement : ifexp LBRACE control_body RBRACE elif_statement else_statement
+             ;
+
+ifexp : IF_KW LPAREN expression RPAREN {printlog("If");}
+      ;
+
+elif_statement : elif LBRACE control_body RBRACE
+               |
                ;
 
-parameter_list: /* empty */
-              | parameter_list COMMA parameter
-              | parameter 
-              ;
+elif : ELIF_KW LPAREN expression RPAREN {printlog("Elif");}
+     ;
 
-parameter: dtype ID
-        | ID ID
+else_statement : ELSE_KW {printlog("Else");} LBRACE control_body RBRACE
+               |
+               ;
+
+while_statement : whileexp LBRACE {in_loop++;} control_body RBRACE {in_loop--;}
+                ;
+
+whileexp : WHILE_KW LPAREN expression RPAREN {printlog("While");}
+         ;
+
+call_statement : call SEMICOLON
+               ;
+
+return_statement : RETURN_KW expression SEMICOLON
+                 | RETURN_KW SEMICOLON
+                 ;
+
+break_statement : BREAK_KW SEMICOLON {if(!in_loop) yyerror("Break statement outside loop");}
+                ;
+
+continue_statement : CONTINUE_KW SEMICOLON {if(!in_loop) yyerror("Continue statement outside loop");}
+                   ;
+
+dtype : TYPE_PRIMITIVE
+      | TYPE_SET COMP_LT set_type COMP_GT
+      | TYPE_AUTOMATA
+      | TYPE_STRING
+      | TYPE_REG
+      ;
+
+set_type : dtype
+         | ID
          ;
 
 %%
-
 void yyerror(const char *s) {
 
     fprintf(parse_log, "Parser error: %d\n", yylineno);
@@ -385,11 +362,10 @@ void yyerror(const char *s) {
 
 }
 
-/* #ifdef YYDEBUG
-int yydebug = 1;
-#endif */
-
 int main(int argc, char **argv) {
+    // #ifdef YYDEBUG
+    //      yydebug = 1;
+    // #endif
     initST();
     yyin = fopen(argv[1],"r");
     char *filename = (char*)malloc(sizeof(char)*strlen(argv[1]));

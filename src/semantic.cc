@@ -1,14 +1,13 @@
 #include "../includes/semantic.hh"
 
-void initST(){
+void initST()
+{
     vstl = new VarSymbolTableList();
-    sstl = new StructSymbolTableList();
     fst = new FunctionSymbolTable();
     global_vst = new VarSymbolTable();
-    global_sst = new StructSymbolTable();
+    sst = new StructSymbolTable();
 
     vstl->insert(global_vst);
-    sstl->insert(global_sst);
 }
 
 VTYPE_PRIMITIVE getPrimitiveType(char *type)
