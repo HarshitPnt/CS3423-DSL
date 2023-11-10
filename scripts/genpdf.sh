@@ -10,6 +10,14 @@ cd ../../
 cd ./docs/project_logs
 rm -rf ./pdf
 mkdir ./pdf
-pdflatex project_log.tex
+cd ./November
+pdflatex ./project_log.tex
 rm project_log.aux project_log.log project_log.out
-mv project_log.pdf ./pdf/group-6-project-log.pdf
+mv project_log.pdf ../pdf/group-6-project-log-nov.pdf
+
+cd ../October
+pdflatex ./project_log.tex
+rm project_log.aux project_log.log project_log.out
+mv project_log.pdf ../pdf/group-6-project-log-oct.pdf
+
+
