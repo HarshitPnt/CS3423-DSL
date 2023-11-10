@@ -264,13 +264,13 @@ A production rule is represented as:
 
 ```c
 cfg a;
-a.T = {a:"a", demo:"b"};
-a.N = {A, B};
-a.S = A;
-a.P = {
-    A -> ${a}B$,
-    B -> ${demo}A$,
-    A -> {${a}A$, \e$}
+a.T := {a:"a", demo:"b"};
+a.N := {A, B};
+a.S := A;
+a.P := {
+    A -> ${a}B,
+    B -> ${demo}A,
+    A -> {${a}A, \e}
 };
 ```
 
@@ -305,16 +305,16 @@ $\delta$ is either a set of such transitions or it can be represented as a matri
 
 ```c
 dfa a;
-a.Q = {q0, q1, q2};
-a.Sigma = {a:"0",b:"1",c:"2"};
-a.delta = {
-    q0; ${a} -> q1$,
-    a.Q[0] ; ${b} -> a.Q[1]$,
-    q1 ; r'[${a}${c}]' -> q2$,
-    q2; { ${a} , ${c} } -> q1$
+a.Q := {q0, q1, q2};
+a.Sigma := {a:"0",b:"1",c:"2"};
+a.delta := {
+    (q0, a -> q1),
+    (a.Q[0] , b -> a.Q[1]),
+    (q1 , r'[ac]' -> q2),
+    (q2, { a , c } -> q1)
 };
-a.q0 = q0;
-a.F = {q1,q2};
+a.q0 := q0;
+a.F := {q1,q2};
 ```
 
 #### NFAs:
@@ -343,17 +343,17 @@ Here input_symbols can include $\epsilon$ which is represented by '\\e'.
 
 ```c
 nfa a;
-a.Q = {q0, q1, q2};
-a.Sigma = {a:"0",b:"1",c:"2"};
-a.delta = {
-    q0; ${a} -> {q1, q2}$,
-    a.Q[0] ; ${b} -> a.Q[1]$,
-    q1 ; r$'[${a}${b}]' -> q2$,
-    q2; {${a},${c}} -> q1$,
-    q2; \e -> q0$
+a.Q := {q0, q1, q2};
+a.Sigma := {a:"0",b:"1",c:"2"};
+a.delta := {
+    (q0, a -> {q1, q2}),
+    (a.Q[0] , b -> a.Q[1]),
+    (q1 , r'[ab]' -> q2),
+    (q2, {a,c} -> q1),
+    (q2, \e -> q0)
 };
-a.q0 = q0;
-a.F = {q1,q2};
+a.q0 := q0;
+a.F := {q1,q2};
 ```
 
 #### PDAs:
@@ -380,18 +380,18 @@ A transition can be represented as:
 
 ```c
 pda a;
-a.Q = {A, B, C};
-a.S = {a:"a", b:"b", c:"c"};
-a.G = {a:"a", b:"b", d:"d"};
+a.Q := {A, B, C};
+a.S := {a:"a", b:"b", c:"c"};
+a.G := {a:"a", b:"b", d:"d"};
 a.delta = {
-    A; ${a}, ${a} -> A, ${a}$,
-    A; {(${b}, ${a}),(${b}, ${c})} -> {(B, ${a}), (A, ${d})}$,
-    B; {(${b}, ${a}), (${b}, ${c})} -> B, ${a}$,
-    B; ${c}, ${a} -> C, \e$,
-    C; ${c}, ${a} -> {(C, \e), (C, ${a})}$
+    (A, (a, a) -> (A, a)),
+    (A, {(b, a),(b, c)} -> {(B, a), (A, d)}),
+    (B, {(b, a), (b, c)} -> (B, a)),
+    (B, (c, a) -> (C, \e)),
+    (C, (c, a) -> {(C, \e), (C, a))}
 };
-a.q0 = A;
-a.F = {C};
+a.q0 := A;
+a.F := {C};
 ```
 
 ### Comments
