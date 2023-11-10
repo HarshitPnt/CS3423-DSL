@@ -67,7 +67,6 @@ VTYPE_SET getSetType(char *type)
 bool checkRegex(std::string reg)
 {
     regex_t regex;
-    // std::cout<< reg << std::endl;
     int reti = regcomp(&regex, reg.c_str(), 0);
     if (reti != 0)
         return false;
@@ -84,13 +83,10 @@ bool checkRegex(std::string reg)
                     return false;
                 var += reg[j];
                 j++;
-                // std::cout << var << std::endl;
             }
             char *c = (char *)var.c_str();
             if (checkValidID(c) == false)
                 return false;
-            // if (var_st_list.lookup(var) == NULL)
-            //     return false;
             i = j;
         }
     }
@@ -120,13 +116,13 @@ bool checkValidID(char *id)
     return false;
 }
 
-VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, std::string dimension, std::string value)
+VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, int num_dim, std::vector<uint64_t> &dimensions)
 {
     this->name = name;
     this->type = type;
     this->inner_type = inner_type;
-    this->dimension = dimension;
-    this->value = value;
+    this->num_dim = num_dim;
+    this->dimensions = dimensions;
 }
 
 int VarSymbolTable::insert(VarSymbolTableEntry *vste)
@@ -165,7 +161,7 @@ StructSymbolTableEntry::StructSymbolTableEntry(std::string name, VarSymbolTable 
     this->name = name;
     this->fields = fields;
 }
-int StructSymbolTable::insert(StructSymbolTableEntry *sste)
+bool StructSymbolTable::insert(StructSymbolTableEntry *sste)
 {
     if (this->entries.find(sste->name) != this->entries.end())
         return 1;
@@ -180,30 +176,15 @@ StructSymbolTableEntry *StructSymbolTable::lookup(std::string name)
     return this->entries[name];
 }
 
-int StructSymbolTableList::insert(StructSymbolTable *sst)
-{
-    this->entries.push_front(sst);
-    return 0;
-}
-
-StructSymbolTable *StructSymbolTableList::lookup(std::string name)
-{
-    for (auto it = this->entries.begin(); it != this->entries.end(); it++)
-    {
-        if ((*it)->lookup(name) != NULL)
-            return *it;
-    }
-    return NULL;
-}
-
-FunctionSymbolTableEntry::FunctionSymbolTableEntry(std::string name, VarSymbolTable *params, std::string return_type)
+FunctionSymbolTableEntry::FunctionSymbolTableEntry(std::string name, int num_params, VarSymbolTable *params, std::string return_type)
 {
     this->name = name;
+    this->num_params = num_params;
     this->params = params;
     this->return_type = return_type;
 }
 
-int FunctionSymbolTable::insert(FunctionSymbolTableEntry *fste)
+bool FunctionSymbolTable::insert(FunctionSymbolTableEntry *fste)
 {
     if (this->entries.find(fste->name) != this->entries.end())
         return 1;

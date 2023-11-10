@@ -1,30 +1,31 @@
 #ifndef ST_HH
 #define ST_HH
 #include <string>
-#include <map>
+#include <unordered_map>
+#include <vector>
 #include <list>
 
 /*
 Symbol Table:
 
 VarSymbolTableList: List of VarSymbolTables.
-VarSymbolTable: Map of VarSymbolTableEntries.
+VarSymbolTable: unordered_map of VarSymbolTableEntries.
 VarSymbolTableEntry: name, type, inner_type, dimension, value.
 name: name of variable.
 type: int, float, char, struct, void, set, user-defined type(struct).
 inner_type: int, float, char, struct, void, set, user-defined type(struct).
-dimension: Number of dimensions of the variable. 0 if not an array.
-value: Value of dimension. 0 if not an array.
+num_dim: Number of dimensions of the variable. 0 if not an array.
+dimensions: Value of dimension. 0 if not an array.
 
-StructSymbolTable: Map of StructSymbolTableEntries.
-StructSymbolTableEntry: name, map of VarSymbolTableEntries.
+StructSymbolTable: unordered_map of StructSymbolTableEntries.
+StructSymbolTableEntry: name, unordered_map of VarSymbolTableEntries.
 name: name of struct.
-map of VarSymbolTableEntries: contains all the fields of the struct.
+unordered_map of VarSymbolTableEntries: contains all the fields of the struct.
 
-FunctionSymbolTable: Map of FunctionSymbolTableEntries.
+FunctionSymbolTable: unordered_map of FunctionSymbolTableEntries.
 FunctionSymbolTableEntry: name, VarSymbolTable, return_type.
 name: name of function.
-VarSymbolTable: Map of VarSymbolTableEntries.
+VarSymbolTable: unordered_map of VarSymbolTableEntries.
 return_type: int, float, char, struct, void, set, user-defined type(struct).
 
 */
@@ -35,17 +36,18 @@ public:
     std::string name;
     std::string type;
     std::string inner_type;
-    std::string dimension;
-    std::string value;
-    VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, std::string dimension, std::string value);
+    int num_dim;
+    std::vector<uint64_t> dimensions;
+    VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, int num_dim, std::vector<uint64_t> &dimensions);
 };
 
 class VarSymbolTable
 {
 public:
-    std::map<std::string, VarSymbolTableEntry *> entries;
+    std::unordered_map<std::string, VarSymbolTableEntry *> entries;
     int insert(VarSymbolTableEntry *vste);
     VarSymbolTableEntry *lookup(std::string name);
+    bool isPresent(std::string name);
 };
 
 class VarSymbolTableList
@@ -54,6 +56,7 @@ public:
     std::list<VarSymbolTable *> entries;
     int insert(VarSymbolTable *vst);
     VarSymbolTable *lookup(std::string name);
+    bool remove(VarSymbolTable *vst);
 };
 
 class StructSymbolTableEntry
@@ -67,33 +70,28 @@ public:
 class StructSymbolTable
 {
 public:
-    std::map<std::string, StructSymbolTableEntry *> entries;
-    int insert(StructSymbolTableEntry *sste);
+    std::unordered_map<std::string, StructSymbolTableEntry *> entries;
+    bool insert(StructSymbolTableEntry *sste);
+    bool isPresent(std::string name);
     StructSymbolTableEntry *lookup(std::string name);
-};
-
-class StructSymbolTableList
-{
-public:
-    std::list<StructSymbolTable *> entries;
-    int insert(StructSymbolTable *sst);
-    StructSymbolTable *lookup(std::string name);
 };
 
 class FunctionSymbolTableEntry
 {
 public:
     std::string name;
+    int num_params;
     VarSymbolTable *params;
     std::string return_type;
-    FunctionSymbolTableEntry(std::string name, VarSymbolTable *params, std::string return_type);
+    FunctionSymbolTableEntry(std::string name, int num_params, VarSymbolTable *params, std::string return_type);
 };
 
 class FunctionSymbolTable
 {
 public:
-    std::map<std::string, FunctionSymbolTableEntry *> entries;
-    int insert(FunctionSymbolTableEntry *fste);
+    std::unordered_map<std::string, FunctionSymbolTableEntry *> entries;
+    bool insert(FunctionSymbolTableEntry *fste);
+    bool isPresent(std::string name);
     FunctionSymbolTableEntry *lookup(std::string name);
 };
 #endif
