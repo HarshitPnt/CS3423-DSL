@@ -6,8 +6,8 @@ OBJS := lexer.o parser.o semantic.o
 CSRC := $(patsubst %,${SRC}/%,$(_CSRC))
 COMPILER := g++
 
-parser: ${SRC}/parser_copy.y
-	bison ${YACCDEFINE}=tokens.hh ${YACCFLAGS} parser.cc ${SRC}/parser_copy.y
+parser: ${SRC}/parser.y
+	bison ${YACCDEFINE}=tokens.hh ${YACCFLAGS} parser.cc ${SRC}/parser.y
 	${COMPILER} -c parser.cc
 
 lexer: ${SRC}/lexer.l
