@@ -256,6 +256,7 @@ expression: LPAREN expression RPAREN {
           }
           | expression OPER_MINUS expression
           {
+                // Set difference
                 if($1.indicator==1 && $3.indicator==1)
                 {
                     $$.indicator = 1;
@@ -277,15 +278,23 @@ expression: LPAREN expression RPAREN {
           | expression OPER_MUL expression
           {
                 //Kleene star and intersection
-                if($1.indicator !=1 || $3.indicator !=1)
-                    yyerror("Invalid operation: Division can only be done between 'primitive' types");
-                $$.indicator = 1;
-                if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
-                    $$.vtp = TYPE_FLOAT_64;
-                else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
-                    $$.vtp = TYPE_FLOAT_32;
+                if($1.indicator ==1 && $3.indicator ==1)
+                {
+                    $$.indicator = 1;
+                    if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
+                        $$.vtp = TYPE_FLOAT_64;
+                    else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
+                        $$.vtp = TYPE_FLOAT_32;
+                    else
+                        $$.vtp = TYPE_INT_64;
+                }
+                else if($1.indicator ==2 && $3.indicator ==2)
+                {
+                    $$.indicator = 2;
+                    $$.vts = TYPE_OSET;
+                }
                 else
-                    $$.vtp = TYPE_INT_64;
+                    yyerror("Invalid operation: Multiplication can only be done between 'primitive' and 'set' types"
           }
           | expression OPER_DIV expression
           {
@@ -376,8 +385,10 @@ expression: LPAREN expression RPAREN {
             $$.indicator = 1;
             $$.vtp = TYPE_BOOL;
           }
-          | OPER_NOT expression { // PDAs and CFGs are not closed under complementation $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;}
-          | expression OPER_HASH { $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;}
+          | OPER_NOT expression { // PDAs and CFGs are not closed under complementation $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;
+          }
+          | expression OPER_HASH { // kleene star $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;
+          }
           | OPER_MINUS expression { $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;}
           | OPER_PLUS expression { $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;}
           | INT_CONST { $$.indicator = 1; $$.vtp = TYPE_INT_64; }
