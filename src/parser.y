@@ -29,6 +29,7 @@ FunctionSymbolTable *fst;
 VarSymbolTable *global_vst;
 
 #define printlog(a) fprintf(parse_log,"%s declaration at line no: %d\n",a,yylineno)
+#define getVTA(a) (a==TYPE_NFA?"NFA":(a==TYPE_DFA?"DFA":(a==TYPE_PDA?"PDA":(a==TYPE_CFG?"CFG":""))))
 %}
 %code requires {
     #include "../includes/semantic.hh"
@@ -46,6 +47,21 @@ VarSymbolTable *global_vst;
     } constant;
 
     // Data types
+    struct {
+        VTYPE_PRIMITIVE vtp;
+        VTYPE_AUTOMATA vta;
+        VTYPE_SET vts;
+        int indicator;
+    } expression_attr;
+
+    struct {
+        char* identifier;
+        VTYPE_PRIMITIVE vtp;
+        VTYPE_AUTOMATA vta;
+        VTYPE_SET vts;
+        std::string val;
+        int indicator;
+    } id_attr;
     VTYPE_PRIMITIVE dtype_primitive;
     VTYPE_AUTOMATA dtype_automata;
     VTYPE_SET dtype_set;
@@ -60,31 +76,23 @@ VarSymbolTable *global_vst;
 %left TYPE_STRING TYPE_REG
 %left <dtype_set> TYPE_SET
 %left <dtype_automata> TYPE_AUTOMATA
-
 %token <cint> INT_CONST <cfloat> FLOAT_CONST <cstring> STRING_CONST <cchar> CHAR_CONST <cbool> BOOL_CONST
 %left REGEX_R REGEX_LIT
 %left <identifier> ID
-
 %token IF_KW ELIF_KW ELSE_KW WHILE_KW BREAK_KW STRUCT_KW RETURN_KW CONTINUE_KW
-
 %token ARROW COLON
 %left COMMA DOT SEMICOLON DOLLAR
-
 %left OPER_AND OPER_OR
 %left OPER_COMP COMP_GT COMP_LT
 %left OPER_PLUS OPER_MINUS OPER_MUL OPER_DIV OPER_MOD
 %left AT_THE_RATE OPER_POWER
 %left OPER_NOT OPER_HASH
 %token OPER_ASN OPER_ASN_SIMPLE
-
 %left LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE
-
 %token EPSILON
 
-%precedence PSEUDO_HIGH
-
-
-
+%nterm<expression_attr> expression
+%nterm pseudo_ID
 %start program
 %%
 
@@ -206,28 +214,177 @@ rhs: expression
    | REGEX_R REGEX_LIT
    ;
 
-expression: LPAREN expression RPAREN
-          | expression OPER_PLUS expression
+expression: LPAREN expression RPAREN {
+                                      $$.indicator = $2.indicator;
+                                      $$.vtp = $2.vtp;
+                                      $$.vta = $2.vta;
+                                      $$.vts = $2.vts;
+                                     }
+          | expression OPER_PLUS expression 
+          {
+                if($1.indicator ==1 || $3.indicator==1)
+                {
+                    $$.indicator = 1;
+                    if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
+                    $$.vtp = TYPE_FLOAT_64;
+                    else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
+                        $$.vtp = TYPE_FLOAT_32;
+                    else
+                        $$.vtp = TYPE_INT_64;
+                }
+                else if($1.indicator ==2 || $3.indicator==2)
+                {
+                    $$.indicator = 2;
+                    $$.vts = TYPE_OSET;
+                }
+                else if($1.indicator ==3 || $3.indicator==3)
+                {
+                    if(($1.vta == TYPE_NFA && $3.vta == TYPE_DFA) || ($3.vta == TYPE_NFA && $1.vta == TYPE_DFA) || ($1.vta == TYPE_NFA && $3.vta == TYPE_NFA))
+                        $$.vta = TYPE_NFA;
+                    else if($1.vta == TYPE_DFA && $3.vta == TYPE_DFA)
+                        $$.vta = TYPE_DFA;
+                    else if($1.vta == TYPE_PDA && $3.vta == TYPE_PDA)
+                        $$.vta = TYPE_PDA;
+                    else if($1.vta == TYPE_CFG && $3.vta == TYPE_CFG)
+                        $$.vta = TYPE_CFG;
+                    else 
+                        yyerror("Invalid operation: %s union %s not defined",getVTA($1.vta),getVTA($3.vta));
+                }
+                else
+                    yyerror("Invalid operation: Addition can only be done between 'primitive' types");
+                
+          }
           | expression OPER_MINUS expression
+          {
+                if($1.indicator==1 && $3.indicator==1)
+                {
+                    $$.indicator = 1;
+                    if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
+                        $$.vtp = TYPE_FLOAT_64;
+                    else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
+                        $$.vtp = TYPE_FLOAT_32;
+                    else
+                        $$.vtp = TYPE_INT_64;
+                }
+                else if($1.indicator==2 && $3.indicator==2)
+                {
+                    $$.indicator = 2;
+                    $$.vts = TYPE_OSET;
+                }
+                else
+                    yyerror("Invalid operation: Subtrction can only be done between 'primitive' and 'set' types");
+          }
           | expression OPER_MUL expression
+          {
+                //Kleene star and intersection
+                if($1.indicator !=1 || $3.indicator !=1)
+                    yyerror("Invalid operation: Division can only be done between 'primitive' types");
+                $$.indicator = 1;
+                if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
+                    $$.vtp = TYPE_FLOAT_64;
+                else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
+                    $$.vtp = TYPE_FLOAT_32;
+                else
+                    $$.vtp = TYPE_INT_64;
+          }
           | expression OPER_DIV expression
+          {
+            if($1.indicator !=1 || $3.indicator !=1)
+                yyerror("Invalid operation: Division can only be done between 'primitive' types");
+            //check for division by zero (to be done)
+            $$.indicator = 1;
+            if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
+                $$.vtp = TYPE_FLOAT_64;
+            else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
+                $$.vtp = TYPE_FLOAT_32;
+            else
+                $$.vtp = TYPE_INT_64;
+          }
           | expression OPER_MOD expression
+          {
+            if($1.indicator !=1 || $3.indicator !=1)
+                yyerror("Invalid operation: Modulo can only be done between 'integer' types");
+            if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64 || $1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
+                yyerror("Invalid operation: Modulo can only be done between 'integer' types");
+            $$.indicator = 1;
+            $$.vtp = TYPE_INT_64;
+          }
           | expression OPER_COMP expression
-          | expression OPER_AND expression
+          {
+            if($1.indicator !=1 || $3.indicator !=1)
+                yyerror("Invalid comparison: Comparison can only be done between primitive types");
+            $$.indicator = 1;
+            $$.vtp = TYPE_BOOL;
+          }
           | expression OPER_POWER
-          | expression AT_THE_RATE expression
+          {
+            if($1.indicator !=2 || $3.indicator !=2)
+                yyerror("Invalid operation: Power set can only be computed for a set");
+            $$.indicator = 2;
+            $$.vts = TYPE_OSET;
+          }
+          | expression AT_THE_RATE expression 
+          {
+            // What about regex? (to be done) cfg + pdas (to be done)
+            if($1.indicator !=2 || $3.indicator != 2)
+                yyerror("Invalid operation: Automata can only be concatenated with Automata");
+            $$.indicator = 2;
+            if(($1.vta == TYPE_NFA && $3.vta == TYPE_DFA) || ($3.vta == TYPE_NFA && $1.vta == TYPE_DFA) || ($1.vta == TYPE_NFA && $3.vta == TYPE_NFA))
+                $$.vta = TYPE_NFA;
+            else if($1.vta == TYPE_DFA && $3.vta == TYPE_DFA)
+                $$.vta = TYPE_DFA;
+            else if($1.vta == TYPE_PDA && $3.vta == TYPE_PDA)
+                $$.vta = TYPE_PDA;
+            else if($1.vta == TYPE_CFG && $3.vta == TYPE_CFG)
+                $$.vta = TYPE_CFG;
+            else
+                yyerror("Invalid operation: Automata can only be concatenated with Automata");
+          }
           | expression OPER_OR expression
+          {
+            if($1.indicator ==3 || $3.indicator == 3)
+                yyerror("Invalid comparison: Set cannot be compared");
+            if($1.indicator == 2 || $3.indicator == 2)
+                yyerror("Invalid comparison: Automata cannot be compared");
+            $$.indicator = 1;
+            $$.vtp = TYPE_BOOL;
+          }
+          | expression OPER_AND expression
+          {
+            if($1.indicator ==3 || $3.indicator == 3)
+                yyerror("Invalid comparison: Set cannot be compared");
+            if($1.indicator == 2 || $3.indicator == 2)
+                yyerror("Invalid comparison: Automata cannot be compared");
+            $$.indicator = 1;
+            $$.vtp = TYPE_BOOL;
+          }
           | expression COMP_GT expression
-          | expression COMP_LT expression
-          | OPER_NOT expression
-          | expression OPER_HASH
-          | OPER_MINUS expression
-          | OPER_PLUS expression
-          | INT_CONST
-          | FLOAT_CONST
-          | BOOL_CONST
-          | CHAR_CONST
-          | pseudo_ID
+          {
+            if($1.indicator ==3 || $3.indicator == 3)
+                yyerror("Invalid comparison: Set cannot be compared");
+            if($1.indicator == 2 || $3.indicator == 2)
+                yyerror("Invalid comparison: Automata cannot be compared");
+            $$.indicator = 1;
+            $$.vtp = TYPE_BOOL;
+          }
+          | expression COMP_LT expression 
+          {
+            if($1.indicator ==3 || $3.indicator == 3)
+                yyerror("Invalid comparison: Set cannot be compared");
+            if($1.indicator == 2 || $3.indicator == 2)
+                yyerror("Invalid comparison: Automata cannot be compared");
+            $$.indicator = 1;
+            $$.vtp = TYPE_BOOL;
+          }
+          | OPER_NOT expression { // PDAs and CFGs are not closed under complementation $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;}
+          | expression OPER_HASH { $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;}
+          | OPER_MINUS expression { $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;}
+          | OPER_PLUS expression { $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;}
+          | INT_CONST { $$.indicator = 1; $$.vtp = TYPE_INT_64; }
+          | FLOAT_CONST { $$.indicator = 1; $$.vtp = TYPE_FLOAT_64; }
+          | BOOL_CONST { $$.indicator = 1; $$.vtp = TYPE_BOOL; }
+          | CHAR_CONST { $$.indicator = 1; $$.vtp = TYPE_CHAR; }
+          | pseudo_ID { $$.indicator = $1.indicator; $$.vtp = $1.vtp; $$.vta = $1.vta; $$.vts = $1.vts; }
           | call
           ;
 
