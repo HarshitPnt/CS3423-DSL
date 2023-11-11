@@ -59,7 +59,7 @@ VarSymbolTable *global_vst;
         VTYPE_PRIMITIVE vtp;
         VTYPE_AUTOMATA vta;
         VTYPE_SET vts;
-        std::string val;
+        char* val;
         int indicator;
     } id_attr;
     VTYPE_PRIMITIVE dtype_primitive;
@@ -92,7 +92,7 @@ VarSymbolTable *global_vst;
 %token EPSILON
 
 %nterm<expression_attr> expression
-%nterm pseudo_ID
+%nterm<id_attr> pseudo_ID
 %start program
 %%
 
@@ -167,7 +167,7 @@ statements: variable_declaration {printlog("Variable declaration");}
           | break_statement {printlog("Break");}
           | continue_statement {printlog("Continue");}
           | call_statement {printlog("Function call");}
-          | LBRACE statements RBRACE {printlog("Block");}
+          | LBRACE control_body RBRACE {printlog("Block");}
           ;
 
 variable_declaration: dtype id_list SEMICOLON
@@ -182,7 +182,9 @@ id_list: ID
 
 pseudo_ID: pseudo_ID LBRACK expression RBRACK
          | pseudo_ID DOT pseudo_ID
-         | ID
+         | ID {
+                $$.identifier = $1;
+              }
          ;
 
 assignment: pseudo_ID OPER_ASN rhs SEMICOLON
@@ -248,7 +250,11 @@ expression: LPAREN expression RPAREN {
                     else if($1.vta == TYPE_CFG && $3.vta == TYPE_CFG)
                         $$.vta = TYPE_CFG;
                     else 
-                        yyerror("Invalid operation: %s union %s not defined",getVTA($1.vta),getVTA($3.vta));
+                        {
+                            std::string error = std::string("Invalid operation:")+std::string(getVTA($1.vta))+std::string(", ")+std::string(getVTA($3.vta))+std::string(" union  not defined");
+                            
+                            yyerror(error.c_str());
+                        }
                 }
                 else
                     yyerror("Invalid operation: Addition can only be done between 'primitive' types");
@@ -294,7 +300,7 @@ expression: LPAREN expression RPAREN {
                     $$.vts = TYPE_OSET;
                 }
                 else
-                    yyerror("Invalid operation: Multiplication can only be done between 'primitive' and 'set' types"
+                    yyerror("Invalid operation: Multiplication can only be done between 'primitive' and 'set' types");
           }
           | expression OPER_DIV expression
           {
@@ -327,7 +333,7 @@ expression: LPAREN expression RPAREN {
           }
           | expression OPER_POWER
           {
-            if($1.indicator !=2 || $3.indicator !=2)
+            if($1.indicator !=2)
                 yyerror("Invalid operation: Power set can only be computed for a set");
             $$.indicator = 2;
             $$.vts = TYPE_OSET;
@@ -396,7 +402,7 @@ expression: LPAREN expression RPAREN {
           | BOOL_CONST { $$.indicator = 1; $$.vtp = TYPE_BOOL; }
           | CHAR_CONST { $$.indicator = 1; $$.vtp = TYPE_CHAR; }
           | pseudo_ID { $$.indicator = $1.indicator; $$.vtp = $1.vtp; $$.vta = $1.vta; $$.vts = $1.vts; }
-          | call
+          | call {$$.indicator = 1;}
           ;
 
 call : ID LPAREN argument_list RPAREN
