@@ -1,4 +1,6 @@
 // Types of Constants
+#ifndef TYPES_HH
+#define TYPES_HH
 typedef enum ConstTYPE
 {
     CINT,
@@ -41,3 +43,4 @@ typedef enum VariableTYPE_Set
 VTYPE_PRIMITIVE getPrimitiveType(char *type);
 VTYPE_AUTOMATA getAutomataType(char *type);
 VTYPE_SET getSetType(char *type);
+#endif

@@ -15,7 +15,6 @@ $$\Large{\text{Group 6}} $$
 
 $$ \large{\text{Authors}} $$
 $$ \text{Vishal Vijay Devadiga (CS21BTECH11061)} $$
-$$ \text{Satpute Aniket Tukaram (CS21BTECH11056)} $$
 $$ \text{Mahin Bansal (CS21BTECH11034)} $$
 $$ \text{Harshit Pant (CS21BTECH11021)} $$
 

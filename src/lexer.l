@@ -16,6 +16,7 @@
 #define RESET() system("07")
 #define printtoken(a) seq_token<<a<<": "<<yytext<<std::endl
 
+
 // Defining files
 std::fstream seq_token;
 std::string comment; 
