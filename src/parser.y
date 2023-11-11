@@ -7,6 +7,11 @@
 #include <iostream>
 #include "../includes/st.hh"
 
+
+#define RED "\033[1;31m"
+#define GREEN "\033[1;32m"
+#define RESET "\033[0m"
+
 extern int yylex();
 void yyerror(char const* str);
 extern FILE* yyin;
@@ -33,6 +38,7 @@ VarSymbolTable *global_vst;
 %}
 %code requires {
     #include "../includes/semantic.hh"
+    #include "../includes/attr.hh"
 }
 %union {
     // Constants
@@ -41,10 +47,6 @@ VarSymbolTable *global_vst;
     char cchar;
     char* cstring;
     bool cbool;
-    struct {
-        void* val;
-        CTYPE type;
-    } constant;
 
     // Data types
     struct {
@@ -52,6 +54,7 @@ VarSymbolTable *global_vst;
         VTYPE_AUTOMATA vta;
         VTYPE_SET vts;
         int indicator;
+        constant *val;
     } expression_attr;
 
     struct {
@@ -307,6 +310,8 @@ expression: LPAREN expression RPAREN {
             if($1.indicator !=1 || $3.indicator !=1)
                 yyerror("Invalid operation: Division can only be done between 'primitive' types");
             //check for division by zero (to be done)
+            if($3.val && (($3.val->type == CINT && *(int*)$3.val->val == 0) || ($3.val->type == CFLOAT && *(float*)$3.val->val == 0.0) || ($3.val->type == CBOOL && *(bool*)$3.val->val == false)||( $3.val->type == CCHAR && *(char*)$3.val->val == '\0')))
+                yyerror("Invalid operation: Division by zero")
             $$.indicator = 1;
             if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
                 $$.vtp = TYPE_FLOAT_64;
@@ -391,18 +396,74 @@ expression: LPAREN expression RPAREN {
             $$.indicator = 1;
             $$.vtp = TYPE_BOOL;
           }
-          | OPER_NOT expression { // PDAs and CFGs are not closed under complementation $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;
+          | OPER_NOT expression { 
+            if($2.indicator ==2)
+                yyerror("Invalid operator: Negation of Set not defined");
+            if($2.indicator ==3 && ($2.vta == TYPE_CFG || $2.vta == TYPE_PDA))
+                yyerror("Invalid operator: CFG/NDPDA not closed under complement");
+            $$.indicator = $2.indicator;
+            if($2.indicator == 1)
+                $$.vtp = TYPE_BOOL;
+            else if($2.indicator == 3)
+                $$.vta = $2.vta;
+
           }
-          | expression OPER_HASH { // kleene star $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;
+          | expression OPER_HASH { 
+            if($1.indicator !=3)
+                yyerror("Invalid operator: Kleene Star can only be applied to Automata");
+            $$.indicator = 3;
+            $$.vta = $1.vta;
           }
-          | OPER_MINUS expression { $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;}
-          | OPER_PLUS expression { $$.indicator = $2.indicator; $$.vtp = $2.vtp; $$.vta = $2.vta; $$.vts = $2.vts;}
-          | INT_CONST { $$.indicator = 1; $$.vtp = TYPE_INT_64; }
-          | FLOAT_CONST { $$.indicator = 1; $$.vtp = TYPE_FLOAT_64; }
-          | BOOL_CONST { $$.indicator = 1; $$.vtp = TYPE_BOOL; }
-          | CHAR_CONST { $$.indicator = 1; $$.vtp = TYPE_CHAR; }
-          | pseudo_ID { $$.indicator = $1.indicator; $$.vtp = $1.vtp; $$.vta = $1.vta; $$.vts = $1.vts; }
-          | call {$$.indicator = 1;}
+          | OPER_MINUS expression { 
+                                    $$.indicator = $2.indicator; 
+                                    $$.vtp = $2.vtp; 
+                                    $$.vta = $2.vta; 
+                                    $$.vts = $2.vts;
+                                }
+          | OPER_PLUS expression { 
+                                  $$.indicator = $2.indicator;
+                                  $$.vtp = $2.vtp; 
+                                  $$.vta = $2.vta; 
+                                  $$.vts = $2.vts;
+                                 }
+          | INT_CONST { 
+                        $$.indicator = 1; 
+                        $$.vtp = TYPE_INT_64; 
+                        $$.val = new constant();
+                        $$.val->cint = $1.cint;
+                        $$.val->type = CINT;
+                      }
+          | FLOAT_CONST { 
+                          $$.indicator = 1; 
+                          $$.vtp = TYPE_FLOAT_64; 
+                          $$.val = new constant();
+                          $$.val->cfloat = $1.cfloat;
+                          $$.val->type = CFLOAT;
+                        }
+          | BOOL_CONST { 
+                         $$.indicator = 1; 
+                         $$.vtp = TYPE_BOOL; 
+                         $$.val = new constant();
+                         $$.val->cbool = $1.cbool;
+                         $$.val->type = CBOOL;
+                       }
+          | CHAR_CONST { 
+                        $$.indicator = 1; 
+                        $$.vtp = TYPE_CHAR;
+                        $$.val = new constant();
+                        $$.val->cchar = $1.cchar;
+                        $$.val->type = CBOOL; 
+                       }
+          | pseudo_ID { 
+                        $$.indicator = $1.indicator; 
+                        $$.vtp = $1.vtp; 
+                        $$.vta = $1.vta; 
+                        $$.vts = $1.vts; 
+                      }
+          | call {
+                    // To be handled (to be done)
+                    $$.indicator = 1;
+                 }
           ;
 
 call : ID LPAREN argument_list RPAREN
@@ -531,7 +592,8 @@ set_type : dtype
 void yyerror(const char *s) {
 
     fprintf(parse_log, "Parser error: %d\n", yylineno);
-    fprintf(stderr, "Parser error: %s\n", s);
+    std::cout<<RED<<"Parser error: "<<yylineno<<RESET;
+    std::cout<<" :"<<s<<std::endl;
     terminate();
 
 }
