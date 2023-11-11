@@ -38,6 +38,8 @@ public:
     std::string inner_type;
     int num_dim;
     std::vector<uint64_t> dimensions;
+    void print();
+    VarSymbolTableEntry(std::string name);
     VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, int num_dim, std::vector<uint64_t> &dimensions);
 };
 
@@ -48,6 +50,7 @@ public:
     int insert(VarSymbolTableEntry *vste);
     VarSymbolTableEntry *lookup(std::string name);
     bool isPresent(std::string name);
+    void print();
 };
 
 class VarSymbolTableList
@@ -57,6 +60,7 @@ public:
     int insert(VarSymbolTable *vst);
     VarSymbolTable *lookup(std::string name);
     bool remove(VarSymbolTable *vst);
+    void print();
 };
 
 class StructSymbolTableEntry

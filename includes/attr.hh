@@ -38,7 +38,7 @@ public:
 class id_list_attr
 {
 public:
-    std::vector<std::pair<VarSymbolTable *, type_attr>> lst;
+    std::vector<std::pair<VarSymbolTableEntry *, type_attr>> lst;
     id_list_attr()
     {
         lst.clear();

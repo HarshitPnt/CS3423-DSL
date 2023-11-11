@@ -1,12 +1,17 @@
 #include "../includes/semantic.hh"
 
+VarSymbolTableList *vstl;
+FunctionSymbolTable *fst;
+VarSymbolTable *global_vst;
+StructSymbolTable *sst;
+VarSymbolTable *current_vst;
 void initST()
 {
     vstl = new VarSymbolTableList();
     fst = new FunctionSymbolTable();
     global_vst = new VarSymbolTable();
     sst = new StructSymbolTable();
-
+    current_vst = global_vst;
     vstl->insert(global_vst);
 }
 
@@ -125,6 +130,15 @@ VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, std
     this->dimensions = dimensions;
 }
 
+VarSymbolTableEntry::VarSymbolTableEntry(std::string name)
+{
+    this->name = name;
+    this->type = "";
+    this->inner_type = "";
+    this->num_dim = 0;
+    this->dimensions.clear();
+}
+
 int VarSymbolTable::insert(VarSymbolTableEntry *vste)
 {
     if (this->entries.find(vste->name) != this->entries.end())
@@ -197,4 +211,32 @@ FunctionSymbolTableEntry *FunctionSymbolTable::lookup(std::string name)
     if (this->entries.find(name) == this->entries.end())
         return NULL;
     return this->entries[name];
+}
+
+bool isInteger(VTYPE_PRIMITIVE vtp)
+{
+    if (vtp == TYPE_INT_64 || vtp == TYPE_INT_32 || vtp == TYPE_INT_16 || vtp == TYPE_INT_8 || vtp == TYPE_UINT_8 || vtp == TYPE_UINT_16 || vtp == TYPE_UINT_32 || vtp == TYPE_UINT_64)
+        return true;
+    return false;
+}
+
+void VarSymbolTableEntry::print()
+{
+    std::cout << this->name << " " << this->type << " " << this->inner_type << " " << this->num_dim << " " << std::endl;
+}
+
+void VarSymbolTable::print()
+{
+    for (auto it = this->entries.begin(); it != this->entries.end(); it++)
+    {
+        (*it).second->print();
+    }
+}
+
+void VarSymbolTableList::print()
+{
+    for (auto it = this->entries.begin(); it != this->entries.end(); it++)
+    {
+        (*it)->print();
+    }
 }

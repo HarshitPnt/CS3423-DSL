@@ -28,18 +28,14 @@ void terminate()
 int in_function = 0;
 int in_loop = 0;
 
-VarSymbolTableList *vstl;
-
-StructSymbolTable *sst;
-FunctionSymbolTable *fst;
-VarSymbolTable *global_vst;
-
 #define printlog(a) fprintf(parse_log,"%s declaration at line no: %d\n",a,yylineno)
 #define getVTA(a) (a==TYPE_NFA?"NFA":(a==TYPE_DFA?"DFA":(a==TYPE_PDA?"PDA":(a==TYPE_CFG?"CFG":""))))
+
 %}
 %code requires {
     #include "../includes/semantic.hh"
     #include "../includes/attr.hh"
+    #include "../includes/helper.hh"
 }
 %union {
     // Constants
@@ -180,9 +176,22 @@ variable_declaration: dtype id_list SEMICOLON
 
 id_list: ID {
                 $$ = new id_list_attr();
-                in
+                //insert this ID in the symbol table (backpatch later)
+                if(vstl->lookup(std::string($1)))
+                {
+                    std::string error = "Variable redeclaration: "+std::string($1);
+                    yyerror(error.c_str());
+                }
+                VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($1));
+                current_vst->insert(entry);
+                type_attr *type = new type_attr();
+                type->indicator = 0;
+                $$->lst.push_back(std::make_pair(entry,*type));
             }
        | ID OPER_ASN_SIMPLE rhs
+       {
+            
+       }
        | id_list COMMA ID
        | id_list COMMA ID OPER_ASN_SIMPLE rhs
        ;
@@ -190,6 +199,11 @@ id_list: ID {
 pseudo_ID: pseudo_ID LBRACK expression RBRACK
          {
             //accessing the set member
+            if($3.indicator != 1)
+                yyerror("Invalid operation: Set can only be accessed using integer index");
+            if(!isInteger($3.vtp))
+                yyerror("Invalid operation: Set can only be accessed using integer/unsigned integer index");
+            //check dims (to be done)
          }
          | pseudo_ID DOT pseudo_ID
          {
@@ -622,6 +636,7 @@ set_type : dtype
          ;
 
 %%
+
 void yyerror(const char *s) {
 
     fprintf(parse_log, "Parser error: %d\n", yylineno);
@@ -636,6 +651,7 @@ int main(int argc, char **argv) {
     //      yydebug = 1;
     // #endif
     initST();
+
     yyin = fopen(argv[1],"r");
     char *filename = (char*)malloc(sizeof(char)*strlen(argv[1]));
      //position of last '.' in file name
