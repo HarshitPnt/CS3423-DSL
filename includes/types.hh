@@ -8,13 +8,6 @@ typedef enum ConstTYPE
     CBOOL,
 } CTYPE;
 
-typedef enum VariableTYPE
-{
-    TYPE_PRIMITIVE,
-    TYPE_AUTOMATA,
-    TYPE_SET,
-} VTYPE;
-
 typedef enum VariableTYPE_Primitive
 {
     TYPE_INT_8,
