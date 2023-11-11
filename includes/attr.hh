@@ -3,6 +3,8 @@
 #include <vector>
 #include "st.hh"
 #include <utility>
+#ifndef __attr_hh__
+#define __attr_hh__
 struct constant
 {
     int ccint;
@@ -18,6 +20,7 @@ struct id_attr
     VTYPE_AUTOMATA vta;
     VTYPE_PRIMITIVE vtp;
     VTYPE_SET vts;
+    VTYPE_SR vtsr;
     int indicator;
     constant *val;
     id_attr()
@@ -32,15 +35,17 @@ public:
     VTYPE_AUTOMATA vta;
     VTYPE_PRIMITIVE vtp;
     VTYPE_SET vts;
+    VTYPE_SR vtsr;
     int indicator;
 };
 
 class id_list_attr
 {
 public:
-    std::vector<std::pair<VarSymbolTableEntry *, type_attr>> lst;
+    std::vector<std::pair<VarSymbolTableEntry *, type_attr *>> lst;
     id_list_attr()
     {
         lst.clear();
     }
 };
+#endif

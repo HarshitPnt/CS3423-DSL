@@ -69,6 +69,16 @@ VTYPE_SET getSetType(char *type)
     exit(1);
 }
 
+VTYPE_SR getSRType(char *type)
+{
+    std::string s = std::string(type);
+    if (s.compare("string") == 0)
+        return TYPE_STR;
+    else if (s.compare("regex") == 0)
+        return TYPE_REGEX;
+    exit(1);
+}
+
 bool checkRegex(std::string reg)
 {
     regex_t regex;
@@ -121,7 +131,7 @@ bool checkValidID(char *id)
     return false;
 }
 
-VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, int num_dim, std::vector<uint64_t> &dimensions)
+VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, int num_dim, std::vector<unsigned long long> &dimensions)
 {
     this->name = name;
     this->type = type;
@@ -239,4 +249,79 @@ void VarSymbolTableList::print()
     {
         (*it)->print();
     }
+}
+
+std::string getType(type_attr *t_attr)
+{
+    if (t_attr->indicator == 1)
+    {
+        switch (t_attr->vtp)
+        {
+        case TYPE_INT_8:
+            return std::string("int_8");
+        case TYPE_INT_16:
+            return std::string("int_16");
+        case TYPE_INT_32:
+            return std::string("int_32");
+        case TYPE_INT_64:
+            return std::string("int_64");
+        case TYPE_UINT_8:
+            return std::string("uint_8");
+        case TYPE_UINT_16:
+            return std::string("uint_16");
+        case TYPE_UINT_32:
+            return std::string("uint_32");
+        case TYPE_UINT_64:
+            return std::string("uint_64");
+        case TYPE_FLOAT_32:
+            return std::string("float_32");
+        case TYPE_FLOAT_64:
+            return std::string("float_64");
+        case TYPE_CHAR:
+            return std::string("char");
+        case TYPE_BOOL:
+            return std::string("bool");
+        }
+    }
+    if (t_attr->indicator == 2)
+    {
+        switch (t_attr->vts)
+        {
+        case TYPE_USET:
+            return std::string("u_set");
+        case TYPE_OSET:
+            return std::string("o_set");
+        }
+    }
+    if (t_attr->indicator == 3)
+    {
+        switch (t_attr->vta)
+        {
+        case TYPE_DFA:
+            return std::string("dfa");
+        case TYPE_NFA:
+            return std::string("nfa");
+        case TYPE_PDA:
+            return std::string("pda");
+        case TYPE_CFG:
+            return std::string("cfg");
+        }
+    }
+    if (t_attr->indicator == 4)
+    {
+        switch (t_attr->vtsr)
+        {
+            {
+            case TYPE_STR:
+                return std::string("string");
+            case TYPE_REGEX:
+                return std::string("regex");
+            }
+        }
+    }
+    if (t_attr->indicator == 5)
+    {
+        return std::string("struct");
+    }
+    return std::string("sets");
 }

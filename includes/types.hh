@@ -40,7 +40,14 @@ typedef enum VariableTYPE_Set
     TYPE_OSET
 } VTYPE_SET;
 
+typedef enum VariableTYPE_SR
+{
+    TYPE_STR,
+    TYPE_REGEX
+} VTYPE_SR;
+
 VTYPE_PRIMITIVE getPrimitiveType(char *type);
 VTYPE_AUTOMATA getAutomataType(char *type);
 VTYPE_SET getSetType(char *type);
+VTYPE_SR getSRType(char *type);
 #endif

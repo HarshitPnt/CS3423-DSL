@@ -158,7 +158,11 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
     return TYPE_SET;
 }
 
-{type_regex} {printtoken("datatype"); return TYPE_REG;}
+{type_regex} {
+    printtoken("datatype"); 
+    yylval.dtype_SR = getSRType(yytext);
+    return TYPE_REG;
+}
 
 {type_automata} {
     printtoken("datatype");
@@ -166,7 +170,11 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
     return TYPE_AUTOMATA;
 }
 
-{type_string} {printtoken("datatype"); return TYPE_STRING;}
+{type_string} {
+    printtoken("datatype");
+    yylval.dtype_SR = getSRType(yytext); 
+    return TYPE_STRING;
+}
 
 "/" {printtoken("operator"); return OPER_DIV;}
 "%" {printtoken("operator"); return OPER_MOD;}

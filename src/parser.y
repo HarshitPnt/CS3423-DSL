@@ -60,15 +60,14 @@ int in_loop = 0;
     VTYPE_PRIMITIVE dtype_primitive;
     VTYPE_AUTOMATA dtype_automata;
     VTYPE_SET dtype_set;
+    VTYPE_SR dtype_SR;
 
     // Variables
     char* identifier;
-
-    
 }
 %left PSEUDO_LOW
 %left <dtype_primitive> TYPE_PRIMITIVE
-%left TYPE_STRING TYPE_REG
+%left <dtype_SR> TYPE_STRING TYPE_REG
 %left <dtype_set> TYPE_SET
 %left <dtype_automata> TYPE_AUTOMATA
 %token <cint> INT_CONST <cfloat> FLOAT_CONST <cstring> STRING_CONST <cchar> CHAR_CONST <cbool> BOOL_CONST
@@ -88,7 +87,7 @@ int in_loop = 0;
 
 %nterm<expression_attr> expression
 %nterm<id> pseudo_ID
-%nterm<type> rhs
+%nterm<type> rhs dtype
 %nterm<id_lst> id_list
 %start program
 %%
@@ -169,7 +168,18 @@ statements: variable_declaration {printlog("Variable declaration");}
 
 variable_declaration: dtype id_list SEMICOLON
                     {
-                        
+                        // backpatch id_list with dtype
+                        for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
+                        {
+                            if(it->second->indicator)
+                            {
+                                if(it->second->indicator!=1 && $1->indicator==1) //Primitive DTYPE
+                                {
+                                    std::cout<<"Error: Invalid type conversion from "<<getType(it->second)<<" to "<<getType($1)<<std::endl;
+                                    yyerror("Invalid type conversion");
+                                }
+                            }
+                        }
                     }
                     | ID id_list SEMICOLON
                     ;
@@ -186,14 +196,63 @@ id_list: ID {
                 current_vst->insert(entry);
                 type_attr *type = new type_attr();
                 type->indicator = 0;
-                $$->lst.push_back(std::make_pair(entry,*type));
+                $$->lst.push_back(std::make_pair(entry,type));
             }
        | ID OPER_ASN_SIMPLE rhs
        {
-            
+            $$ = new id_list_attr();
+            //insert this ID in the symbol table (backpatch later)
+            if(vstl->lookup(std::string($1)))
+            {
+                std::string error = "Variable redeclaration: "+std::string($1);
+                yyerror(error.c_str());
+            }
+            VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($1));
+            current_vst->insert(entry);
+            type_attr *type = new type_attr();
+            type->indicator = $3->indicator;
+            type->vtp = $3->vtp;
+            type->vta = $3->vta;
+            type->vts = $3->vts;
+            $$->lst.push_back(std::make_pair(entry,type));
        }
        | id_list COMMA ID
+       {
+            $$ = new id_list_attr();
+            //insert this ID in the symbol table (backpatch later)
+            if(vstl->lookup(std::string($3)))
+            {
+                std::string error = "Variable redeclaration: "+std::string($3);
+                yyerror(error.c_str());
+            }
+            VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($3));
+            current_vst->insert(entry);
+            type_attr *type = new type_attr();
+            type->indicator = 0;
+            //append to list
+            $$->lst = $1->lst;
+            $$->lst.push_back(std::make_pair(entry,type));
+       }
        | id_list COMMA ID OPER_ASN_SIMPLE rhs
+       {
+            $$ = new id_list_attr();
+            //insert this ID in the symbol table (backpatch later)
+            if(vstl->lookup(std::string($3)))
+            {
+                std::string error = "Variable redeclaration: "+std::string($3);
+                yyerror(error.c_str());
+            }
+            VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($3));
+            current_vst->insert(entry);
+            type_attr *type = new type_attr();
+            type->indicator = $5->indicator;
+            type->vtp = $5->vtp;
+            type->vta = $5->vta;
+            type->vts = $5->vts;
+            //append to list
+            $$->lst = $1->lst;
+            $$->lst.push_back(std::make_pair(entry,type));
+       }
        ;
 
 pseudo_ID: pseudo_ID LBRACK expression RBRACK
@@ -253,11 +312,12 @@ rhs: expression
         indicator = 1 arithmetic expressions
         indicator = 2 set expressions
         indicator = 3 automata expressions
-        indicator = 4 dynamic set initialization
+        indicator = 4 string initialization
         indicator = 5 regex initialization
+        indicator = 6 dynamic set initialization
      */
      $$ = new type_attr();
-     $$->indicator = 4;
+     $$->indicator = 6;
    }
    | REGEX_R REGEX_LIT
    {
@@ -624,11 +684,31 @@ break_statement : BREAK_KW SEMICOLON {if(!in_loop) yyerror("Break statement outs
 continue_statement : CONTINUE_KW SEMICOLON {if(!in_loop) yyerror("Continue statement outside loop");}
                    ;
 
-dtype : TYPE_PRIMITIVE
-      | TYPE_SET COMP_LT set_type COMP_GT
-      | TYPE_AUTOMATA
-      | TYPE_STRING
-      | TYPE_REG
+dtype : TYPE_PRIMITIVE { 
+                        $$ = new type_attr();
+                        $$->indicator = 1;
+                        $$->vtp = $1;
+                      }
+      | TYPE_SET COMP_LT set_type COMP_GT {
+                                            $$ = new type_attr();
+                                            $$->indicator = 2;
+                                            $$->vts = $1;   
+                                          }
+      | TYPE_AUTOMATA {
+                        $$ = new type_attr();
+                        $$->indicator = 3;
+                        $$->vta = $1;
+                      }
+      | TYPE_STRING {
+                        $$ = new type_attr();
+                        $$->indicator = 4;
+                        $$->vtsr = $1;
+                    }
+      | TYPE_REG {
+                        $$ = new type_attr();
+                        $$->indicator = 5;
+                        $$->vtsr = $1;
+                 }
       ;
 
 set_type : dtype

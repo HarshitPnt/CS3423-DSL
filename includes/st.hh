@@ -37,10 +37,10 @@ public:
     std::string type;
     std::string inner_type;
     int num_dim;
-    std::vector<uint64_t> dimensions;
+    std::vector<unsigned long long> dimensions;
     void print();
     VarSymbolTableEntry(std::string name);
-    VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, int num_dim, std::vector<uint64_t> &dimensions);
+    VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, int num_dim, std::vector<unsigned long long> &dimensions);
 };
 
 class VarSymbolTable
