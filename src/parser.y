@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <fstream>
+#include <list>
 #include <iostream>
 #include "../includes/st.hh"
 
@@ -57,14 +58,9 @@ VarSymbolTable *global_vst;
         constant *val;
     } expression_attr;
 
-    struct {
-        char* identifier;
-        VTYPE_PRIMITIVE vtp;
-        VTYPE_AUTOMATA vta;
-        VTYPE_SET vts;
-        char* val;
-        int indicator;
-    } id_attr;
+    id_attr *id;
+    type_attr *type;
+    id_list_attr *id_lst;
     VTYPE_PRIMITIVE dtype_primitive;
     VTYPE_AUTOMATA dtype_automata;
     VTYPE_SET dtype_set;
@@ -95,7 +91,9 @@ VarSymbolTable *global_vst;
 %token EPSILON
 
 %nterm<expression_attr> expression
-%nterm<id_attr> pseudo_ID
+%nterm<id> pseudo_ID
+%nterm<type> rhs
+%nterm<id_lst> id_list
 %start program
 %%
 
@@ -174,19 +172,32 @@ statements: variable_declaration {printlog("Variable declaration");}
           ;
 
 variable_declaration: dtype id_list SEMICOLON
+                    {
+                        
+                    }
                     | ID id_list SEMICOLON
                     ;
 
-id_list: ID
+id_list: ID {
+                $$ = new id_list_attr();
+                in
+            }
        | ID OPER_ASN_SIMPLE rhs
        | id_list COMMA ID
        | id_list COMMA ID OPER_ASN_SIMPLE rhs
        ;
 
 pseudo_ID: pseudo_ID LBRACK expression RBRACK
+         {
+            //accessing the set member
+         }
          | pseudo_ID DOT pseudo_ID
+         {
+            //accessing the inner member
+         }
          | ID {
-                $$.identifier = $1;
+                $$ = new id_attr();
+                $$->name = $1;
               }
          ;
 
@@ -215,8 +226,30 @@ cfg_rule : pseudo_ID ARROW cfg_rhs
          ;
 
 rhs: expression
+    {
+        $$ = new type_attr();
+        $$->vtp = $1.vtp;
+        $$->vta = $1.vta;
+        $$->vts = $1.vts;
+        $$->indicator = $1.indicator;
+    }
    | LBRACE expression_list RBRACE
+   {
+     /*
+        indicator = 1 arithmetic expressions
+        indicator = 2 set expressions
+        indicator = 3 automata expressions
+        indicator = 4 dynamic set initialization
+        indicator = 5 regex initialization
+     */
+     $$ = new type_attr();
+     $$->indicator = 4;
+   }
    | REGEX_R REGEX_LIT
+   {
+    $$ = new type_attr();
+    $$->indicator = 5;
+   }
    ;
 
 expression: LPAREN expression RPAREN {
@@ -310,8 +343,8 @@ expression: LPAREN expression RPAREN {
             if($1.indicator !=1 || $3.indicator !=1)
                 yyerror("Invalid operation: Division can only be done between 'primitive' types");
             //check for division by zero (to be done)
-            if($3.val && (($3.val->type == CINT && *(int*)$3.val->val == 0) || ($3.val->type == CFLOAT && *(float*)$3.val->val == 0.0) || ($3.val->type == CBOOL && *(bool*)$3.val->val == false)||( $3.val->type == CCHAR && *(char*)$3.val->val == '\0')))
-                yyerror("Invalid operation: Division by zero")
+            if($3.val && (($3.val->type == CINT && $3.val->ccint == 0) || ($3.val->type == CFLOAT && $3.val->ccfloat == 0.0) || ($3.val->type == CBOOL && $3.val->ccbool == false)||( $3.val->type == CCHAR && $3.val->ccchar == '\0')))
+                yyerror("Invalid operation: Division by zero");
             $$.indicator = 1;
             if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
                 $$.vtp = TYPE_FLOAT_64;
@@ -430,35 +463,35 @@ expression: LPAREN expression RPAREN {
                         $$.indicator = 1; 
                         $$.vtp = TYPE_INT_64; 
                         $$.val = new constant();
-                        $$.val->cint = $1.cint;
+                        $$.val->ccint = $1;
                         $$.val->type = CINT;
                       }
           | FLOAT_CONST { 
                           $$.indicator = 1; 
                           $$.vtp = TYPE_FLOAT_64; 
                           $$.val = new constant();
-                          $$.val->cfloat = $1.cfloat;
+                          $$.val->ccfloat = $1;
                           $$.val->type = CFLOAT;
                         }
           | BOOL_CONST { 
                          $$.indicator = 1; 
                          $$.vtp = TYPE_BOOL; 
                          $$.val = new constant();
-                         $$.val->cbool = $1.cbool;
+                         $$.val->ccbool = $1;
                          $$.val->type = CBOOL;
                        }
           | CHAR_CONST { 
                         $$.indicator = 1; 
                         $$.vtp = TYPE_CHAR;
                         $$.val = new constant();
-                        $$.val->cchar = $1.cchar;
+                        $$.val->ccchar = $1;
                         $$.val->type = CBOOL; 
                        }
           | pseudo_ID { 
-                        $$.indicator = $1.indicator; 
-                        $$.vtp = $1.vtp; 
-                        $$.vta = $1.vta; 
-                        $$.vts = $1.vts; 
+                        $$.indicator = $1->indicator; 
+                        $$.vtp = $1->vtp; 
+                        $$.vta = $1->vta; 
+                        $$.vts = $1->vts; 
                       }
           | call {
                     // To be handled (to be done)
