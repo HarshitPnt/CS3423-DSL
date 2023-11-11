@@ -37,6 +37,7 @@ public:
     VTYPE_SET vts;
     VTYPE_SR vtsr;
     int indicator;
+    inner_type *inner = NULL;
 };
 
 class id_list_attr

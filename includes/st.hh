@@ -14,6 +14,7 @@ VarSymbolTableEntry: name, type, inner_type, dimension, value.
 name: name of variable.
 type: int, float, char, struct, void, set, user-defined type(struct).
 inner_type: int, float, char, struct, void, set, user-defined type(struct).
+inner_type is pointer
 num_dim: Number of dimensions of the variable. 0 if not an array.
 dimensions: Value of dimension. 0 if not an array.
 
@@ -29,18 +30,24 @@ VarSymbolTable: unordered_map of VarSymbolTableEntries.
 return_type: int, float, char, struct, void, set, user-defined type(struct).
 
 */
+// reursiverly store the inner type in the symbol table
+class inner_type
+{
+public:
+    inner_type *inner;
+    std::string type;
+    inner_type(inner_type *inner, std::string type);
+};
 
 class VarSymbolTableEntry
 {
 public:
     std::string name;
     std::string type;
-    std::string inner_type;
-    int num_dim;
-    std::vector<unsigned long long> dimensions;
+    inner_type *inner;
     void print();
     VarSymbolTableEntry(std::string name);
-    VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, int num_dim, std::vector<unsigned long long> &dimensions);
+    VarSymbolTableEntry(std::string name, std::string type, inner_type *inner);
 };
 
 class VarSymbolTable

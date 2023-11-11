@@ -131,22 +131,18 @@ bool checkValidID(char *id)
     return false;
 }
 
-VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, std::string inner_type, int num_dim, std::vector<unsigned long long> &dimensions)
+VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, inner_type *inner)
 {
     this->name = name;
     this->type = type;
-    this->inner_type = inner_type;
-    this->num_dim = num_dim;
-    this->dimensions = dimensions;
+    this->inner = inner;
 }
 
 VarSymbolTableEntry::VarSymbolTableEntry(std::string name)
 {
     this->name = name;
     this->type = "";
-    this->inner_type = "";
-    this->num_dim = 0;
-    this->dimensions.clear();
+    this->inner = NULL;
 }
 
 int VarSymbolTable::insert(VarSymbolTableEntry *vste)
@@ -232,7 +228,7 @@ bool isInteger(VTYPE_PRIMITIVE vtp)
 
 void VarSymbolTableEntry::print()
 {
-    std::cout << this->name << " " << this->type << " " << this->inner_type << " " << this->num_dim << " " << std::endl;
+    std::cout << this->name << " " << this->type << " " << std::endl;
 }
 
 void VarSymbolTable::print()

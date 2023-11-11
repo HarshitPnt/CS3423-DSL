@@ -175,10 +175,36 @@ variable_declaration: dtype id_list SEMICOLON
                             {
                                 if(it->second->indicator!=1 && $1->indicator==1) //Primitive DTYPE
                                 {
-                                    std::cout<<"Error: Invalid type conversion from "<<getType(it->second)<<" to "<<getType($1)<<std::endl;
-                                    yyerror("Invalid type conversion");
+                                    std::string str = std::string("Error: Invalid type conversion from ")+getType(it->second)+std::string(" to ")+getType($1);
+                                    yyerror(str.c_str());
+                                }
+                                // for dynamic set initialization also need to check inner type (to be done)
+                                if($1->indicator==2 && (it->second->indicator!=2 && it->second->indicator!=6)) //Set DTYPE
+                                {
+                                    std::string str = std::string("Error: Invalid type conversion from ")+getType(it->second)+std::string(" to ")+getType($1);
+                                    yyerror(str.c_str());
+                                }
+                                if($1->indicator==3 && it->second->indicator!=3)
+                                {
+                                    std::string str = std::string("Error: Invalid type conversion from ")+getType(it->second)+std::string(" to ")+getType($1);
+                                    yyerror(str.c_str());
+                                }
+                                if($1->indicator==4 && it->second->indicator!=4)
+                                {
+                                    std::string str = std::string("Error: Invalid type conversion from ")+getType(it->second)+std::string(" to ")+getType($1);
+                                    yyerror(str.c_str());
+                                }
+                                if($1->indicator==5 && it->second->indicator!=5)
+                                {
+                                    std::string str = std::string("Error: Invalid type conversion from ")+getType(it->second)+std::string(" to ")+getType($1);
+                                    yyerror(str.c_str());
                                 }
                             }
+                        }
+                        // safe to backpatch
+                        for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
+                        {
+                            current_vst->backpatch(it->first,$1);
                         }
                     }
                     | ID id_list SEMICOLON
@@ -688,11 +714,14 @@ dtype : TYPE_PRIMITIVE {
                         $$ = new type_attr();
                         $$->indicator = 1;
                         $$->vtp = $1;
+                        
                       }
       | TYPE_SET COMP_LT set_type COMP_GT {
                                             $$ = new type_attr();
                                             $$->indicator = 2;
-                                            $$->vts = $1;   
+                                            $$->vts = $1; 
+                                            // start from here 
+                                            $$->inner = new inner_type($2->inner,);
                                           }
       | TYPE_AUTOMATA {
                         $$ = new type_attr();
@@ -712,7 +741,7 @@ dtype : TYPE_PRIMITIVE {
       ;
 
 set_type : dtype
-         | ID
+         | ID 
          ;
 
 %%
