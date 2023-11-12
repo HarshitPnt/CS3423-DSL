@@ -139,11 +139,30 @@ struct_member: dtype id_list_decl SEMICOLON
                 //backpatching here
                 for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                 {
-                    if(current_vst->backpatch(it->first,getType($1),$1->inner))
+                    if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL))
                     {
                         yyerror("Internal Error");
                     }
                 }
+            }
+            | ID id_list_decl SEMICOLON
+            {
+                //check if struct exists
+                if(!sst->lookup(std::string($1)))
+                {
+                    std::string str = std::string("Error: Struct ")+std::string($1)+std::string(" not defined");
+                    yyerror(str.c_str());
+                }
+                //backpatching here
+                VarSymbolTable *struct_vst = sst->lookup(std::string($1))->fields;
+                for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
+                {
+                    if(current_vst->backpatch(it->first,std::string("struct"),NULL,struct_vst))
+                    {
+                        yyerror("Internal Error");
+                    }
+                }
+
             }
             ;
 
@@ -269,7 +288,7 @@ variable_declaration: dtype id_list SEMICOLON
                         // safe to backpatch
                         for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                         {
-                            if(current_vst->backpatch(it->first,getType($1),$1->inner))
+                            if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL))
                             {
                                 yyerror("Internal Error");
                             }
@@ -284,6 +303,7 @@ variable_declaration: dtype id_list SEMICOLON
                             std::string str = std::string("Error: Struct ")+std::string($1)+std::string(" not defined");
                             yyerror(str.c_str());
                         }
+                        // before backpatching check if rhs are variables of same struct type (to be done)
                     }
                     ;
 

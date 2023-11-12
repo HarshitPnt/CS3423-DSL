@@ -176,12 +176,13 @@ VarSymbolTable *VarSymbolTableList::lookup(std::string name)
     return NULL;
 }
 
-bool VarSymbolTable::backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner)
+bool VarSymbolTable::backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner, VarSymbolTable *struct_vst)
 {
     if (this->entries.find(vste->name) == this->entries.end())
         return 1;
     vste->type = type;
     vste->inner = inner;
+    vste->struct_vst = struct_vst;
     return 0;
 }
 

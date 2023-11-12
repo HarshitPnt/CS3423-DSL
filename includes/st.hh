@@ -31,6 +31,8 @@ return_type: int, float, char, struct, void, set, user-defined type(struct).
 
 */
 // reursiverly store the inner type in the symbol table
+class VarSymbolTable;
+
 class inner_type
 {
 public:
@@ -46,6 +48,7 @@ public:
     std::string name;
     std::string type;
     inner_type *inner;
+    VarSymbolTable *struct_vst;
     void print();
     VarSymbolTableEntry(std::string name);
     VarSymbolTableEntry(std::string name, std::string type, inner_type *inner);
@@ -57,7 +60,7 @@ public:
     std::unordered_map<std::string, VarSymbolTableEntry *> entries;
     int insert(VarSymbolTableEntry *vste);
     VarSymbolTableEntry *lookup(std::string name);
-    bool backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner);
+    bool backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner, VarSymbolTable *struct_vst);
     void print();
 };
 
