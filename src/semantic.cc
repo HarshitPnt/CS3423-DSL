@@ -176,6 +176,15 @@ VarSymbolTable *VarSymbolTableList::lookup(std::string name)
     return NULL;
 }
 
+bool VarSymbolTable::backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner)
+{
+    if (this->entries.find(vste->name) == this->entries.end())
+        return 1;
+    vste->type = type;
+    vste->inner = inner;
+    return 0;
+}
+
 StructSymbolTableEntry::StructSymbolTableEntry(std::string name, VarSymbolTable *fields)
 {
     this->name = name;
@@ -228,7 +237,9 @@ bool isInteger(VTYPE_PRIMITIVE vtp)
 
 void VarSymbolTableEntry::print()
 {
-    std::cout << this->name << " " << this->type << " " << std::endl;
+    std::cout << this->name << " " << this->type << " ";
+    this->inner->print();
+    std::cout << std::endl;
 }
 
 void VarSymbolTable::print()
@@ -320,4 +331,20 @@ std::string getType(type_attr *t_attr)
         return std::string("struct");
     }
     return std::string("sets");
+}
+
+inner_type::inner_type(inner_type *inner, std::string type)
+{
+    this->inner = inner;
+    this->type = type;
+}
+
+void inner_type::print()
+{
+    inner_type *current = this;
+    while (current)
+    {
+        std::cout << current->type << " ";
+        current = current->inner;
+    }
 }

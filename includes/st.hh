@@ -37,6 +37,7 @@ public:
     inner_type *inner;
     std::string type;
     inner_type(inner_type *inner, std::string type);
+    void print();
 };
 
 class VarSymbolTableEntry
@@ -57,6 +58,7 @@ public:
     int insert(VarSymbolTableEntry *vste);
     VarSymbolTableEntry *lookup(std::string name);
     bool isPresent(std::string name);
+    bool backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner);
     void print();
 };
 

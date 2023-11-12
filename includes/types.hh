@@ -43,7 +43,8 @@ typedef enum VariableTYPE_Set
 typedef enum VariableTYPE_SR
 {
     TYPE_STR,
-    TYPE_REGEX
+    TYPE_REGEX,
+    TYPE_STRU
 } VTYPE_SR;
 
 VTYPE_PRIMITIVE getPrimitiveType(char *type);

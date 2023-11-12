@@ -87,7 +87,7 @@ int in_loop = 0;
 
 %nterm<expression_attr> expression
 %nterm<id> pseudo_ID
-%nterm<type> rhs dtype
+%nterm<type> rhs dtype set_type
 %nterm<id_lst> id_list
 %start program
 %%
@@ -204,10 +204,17 @@ variable_declaration: dtype id_list SEMICOLON
                         // safe to backpatch
                         for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                         {
-                            current_vst->backpatch(it->first,$1);
+                            if(current_vst->backpatch(it->first,getType($1),$1->inner))
+                            {
+                                yyerror("Internal Error");
+                            }
                         }
+                        vstl->print();
                     }
                     | ID id_list SEMICOLON
+                    {
+                        //struct handling (to be done)
+                    }
                     ;
 
 id_list: ID {
@@ -714,14 +721,15 @@ dtype : TYPE_PRIMITIVE {
                         $$ = new type_attr();
                         $$->indicator = 1;
                         $$->vtp = $1;
-                        
                       }
       | TYPE_SET COMP_LT set_type COMP_GT {
                                             $$ = new type_attr();
                                             $$->indicator = 2;
                                             $$->vts = $1; 
                                             // start from here 
-                                            $$->inner = new inner_type($2->inner,);
+                                            $$->inner = $3->inner;
+                                            $$->inner->print();
+                                            std::cout<<std::endl;
                                           }
       | TYPE_AUTOMATA {
                         $$ = new type_attr();
@@ -740,8 +748,16 @@ dtype : TYPE_PRIMITIVE {
                  }
       ;
 
-set_type : dtype
-         | ID 
+set_type : dtype {
+                    $$ = new type_attr();
+                    $$->inner = new inner_type($1->inner,getType($1));
+                    $$->inner->print();
+                    std::cout<<std::endl;
+                 }
+         | ID {
+                $$ = new type_attr();
+                $$->inner = new inner_type(NULL,std::string("struct"));
+              }
          ;
 
 %%
