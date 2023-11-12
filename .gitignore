@@ -10,7 +10,6 @@ logs/
 **/parser.c
 **/lexer.c
 **/tokens.h
-**/test.fsm
 
 # Executables
 *.exe

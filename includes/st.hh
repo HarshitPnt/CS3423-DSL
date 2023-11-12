@@ -98,6 +98,7 @@ public:
     std::string name;
     int num_params;
     VarSymbolTable *params;
+    std::vector<std::string> id_list;
     std::string return_type;
     FunctionSymbolTableEntry(std::string name, int num_params, VarSymbolTable *params, std::string return_type);
 };

@@ -1,0 +1,4 @@
+void test_function(int_8 a, int_8 b)
+{
+    ;
+}

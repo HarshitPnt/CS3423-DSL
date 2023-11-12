@@ -27,6 +27,7 @@ void terminate()
 
 int in_function = 0;
 int in_loop = 0;
+int num_params = 0;
 
 #define printlog(a) fprintf(parse_log,"%s declaration at line no: %d\n",a,yylineno)
 #define getVTA(a) (a==TYPE_NFA?"NFA":(a==TYPE_DFA?"DFA":(a==TYPE_PDA?"PDA":(a==TYPE_CFG?"CFG":""))))
@@ -57,7 +58,9 @@ int in_loop = 0;
 
     id_attr *id;
     type_attr *type;
+    func_attr *func;
     id_list_attr *id_lst;
+    param_list_attr *para;
     VTYPE_PRIMITIVE dtype_primitive;
     VTYPE_AUTOMATA dtype_automata;
     VTYPE_SET dtype_set;
@@ -87,9 +90,10 @@ int in_loop = 0;
 %token EPSILON
 
 %nterm<expression_attr> expression
-%nterm<id> pseudo_ID
+%nterm<id> pseudo_ID param
 %nterm<type> rhs dtype set_type
 %nterm<id_lst> id_list id_list_decl
+%nterm<para> param_list next_param
 %start program
 %%
 
@@ -205,33 +209,145 @@ expression_list: expression
                | expression_list COMMA expression
                ;
 
-function_declaration: function_header LBRACE function_body RBRACE {in_function = 0;}
+function_declaration: function_header
+                    {
+                        vstl->remove(); //remove the parameter scope
+                        current_vst = vstl->getTop();
+                    } 
+                    LBRACE
+                    {
+                        //create a function scope
+                        VarSymbolTable *new_st = new VarSymbolTable();
+                        vstl->insert(new_st);
+                        current_vst = new_st;
+                    }    
+                    function_body RBRACE 
+                    {
+                        in_function = 0;
+                        //remove function scope
+                        if(vstl->remove())
+                            yyerror("Internal Error");
+                        current_vst = vstl->getTop();
+                    }
                     ;
 
 function_header: dtype ID LPAREN param_list RPAREN {
+                        //check if function exists
+                        if(fst->lookup(std::string($2)))
+                        {
+                            std::string error = "Function redeclaration: "+std::string($2);
+                            yyerror(error.c_str());
+                        }
                         printlog("Function");
                         if(in_function)
                             yyerror("Nested function declaration");
                         in_function = 1;
+                        //handling param_list
+                        //push new function to function table
+                        FunctionSymbolTableEntry *entry = new FunctionSymbolTableEntry(std::string($2),num_params,current_vst,getType($1));
+                        //insert function into function table
+                        for(auto it = $4->lst.begin();it!=$4->lst.end();it++)
+                        {
+                            entry->id_list.push_back(*it);
+                        }
+                        fst->insert(entry);
                     }
                 | ID ID LPAREN param_list RPAREN {
+                        //check if function exists
+                        if(fst->lookup(std::string($2)))
+                        {
+                            std::string error = "Function redeclaration: "+std::string($2);
+                            yyerror(error.c_str());
+                        }
                         printlog("Function");
                         if(in_function)
                             yyerror("Nested function declaration");
                         in_function = 1;
+                        //check if struct exists
+                        if(std::string($1)!=std::string("void"))
+                        {
+                            if(!sst->lookup(std::string($1)))
+                            {
+                                std::string str = std::string("Error: Struct ")+std::string($1)+std::string(" not defined");
+                                yyerror(str.c_str());
+                            }
+                        }
+                        
+                        //push new function to function table
+                        FunctionSymbolTableEntry *entry = new FunctionSymbolTableEntry(std::string($2),num_params,current_vst,std::string($1));
+                        //insert function into function table
+                        for(auto it = $4->lst.begin();it!=$4->lst.end();it++)
+                        {
+                            entry->id_list.push_back(*it);
+                        }
+                        fst->insert(entry);
                     }
                 ;
 
 param_list: 
+            {
+                //no params
+                $$ = new param_list_attr();
+                $$->num = 0;
+            }
           | param next_param
+          {
+            $$ = new param_list_attr();
+            $$->num = num_params;
+            $$->lst = $2->lst;
+            $$->lst.push_back($1->name);
+          }
           ;
 
 param: dtype ID
+     {
+        $$ = new id_attr();
+        $$->name = std::string($2);
+        //check if ID already present
+        if(current_vst->lookup(std::string($2)))
+        {
+            std::string error = "Variable redeclaration: "+std::string($2);
+            yyerror(error.c_str());
+        }
+        VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($2));
+        current_vst->insert(entry);
+        ++num_params;
+     }
      | ID ID
+     {
+        $$ = new id_attr();
+        $$->name = std::string($2);
+        //check if ID already present
+        if(current_vst->lookup(std::string($2)))
+        {
+            std::string error = "Variable redeclaration: "+std::string($2);
+            yyerror(error.c_str());
+        }
+        //check if struct exists
+        if(!sst->lookup(std::string($1)))
+        {
+            std::string str = std::string("Error: Struct ")+std::string($1)+std::string(" not defined");
+            yyerror(str.c_str());
+        }
+        VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($2));
+        current_vst->insert(entry);
+        ++num_params;
+     }
      ;
 
 next_param : 
+            {
+                //end of params
+                $$ = new param_list_attr();
+                $$->num = num_params;
+            }
            | COMMA param next_param
+           {
+                $$ = new param_list_attr();
+                $$->num = num_params;
+                $$->lst = $3->lst;
+                $$->lst.push_back($2->name);
+           }
            ;
 
 function_body: function_body statements

@@ -49,4 +49,19 @@ public:
         lst.clear();
     }
 };
+
+class func_attr
+{
+public:
+    std::string name;
+    std::string return_type;
+    int num;
+};
+
+class param_list_attr
+{
+public:
+    std::vector<std::string> lst;
+    int num;
+};
 #endif

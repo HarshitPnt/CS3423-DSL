@@ -1,0 +1,10 @@
+struct A{
+    int_8 a;
+};
+
+struct b{
+    int_8 b;
+    A a;
+};
+
+b a;
