@@ -57,7 +57,6 @@ public:
     std::unordered_map<std::string, VarSymbolTableEntry *> entries;
     int insert(VarSymbolTableEntry *vste);
     VarSymbolTableEntry *lookup(std::string name);
-    bool isPresent(std::string name);
     bool backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner);
     void print();
 };
@@ -68,7 +67,8 @@ public:
     std::list<VarSymbolTable *> entries;
     int insert(VarSymbolTable *vst);
     VarSymbolTable *lookup(std::string name);
-    bool remove(VarSymbolTable *vst);
+    bool remove();
+    VarSymbolTable *getTop();
     void print();
 };
 
@@ -85,8 +85,8 @@ class StructSymbolTable
 public:
     std::unordered_map<std::string, StructSymbolTableEntry *> entries;
     bool insert(StructSymbolTableEntry *sste);
-    bool isPresent(std::string name);
     StructSymbolTableEntry *lookup(std::string name);
+    void print();
 };
 
 class FunctionSymbolTableEntry
@@ -104,7 +104,6 @@ class FunctionSymbolTable
 public:
     std::unordered_map<std::string, FunctionSymbolTableEntry *> entries;
     bool insert(FunctionSymbolTableEntry *fste);
-    bool isPresent(std::string name);
     FunctionSymbolTableEntry *lookup(std::string name);
 };
 #endif

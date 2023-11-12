@@ -52,6 +52,7 @@ int in_loop = 0;
         VTYPE_SET vts;
         int indicator;
         constant *val;
+        type_attr *type;
     } expression_attr;
 
     id_attr *id;
@@ -88,7 +89,7 @@ int in_loop = 0;
 %nterm<expression_attr> expression
 %nterm<id> pseudo_ID
 %nterm<type> rhs dtype set_type
-%nterm<id_lst> id_list
+%nterm<id_lst> id_list id_list_decl
 %start program
 %%
 
@@ -100,10 +101,33 @@ instruction_list: instruction_list struct_declaration
                 |
                 ;
 
-struct_declaration: STRUCT_KW ID LBRACE struct_body RBRACE SEMICOLON
-                {
-                    printlog("Struct");
-                }
+struct_declaration: STRUCT_KW ID
+                                {
+                                    //check if struct already exists
+                                    sst->print();
+                                    if(sst->lookup(std::string($2)))
+                                    {
+                                        std::string error = "Struct redeclaration: "+std::string($2);
+                                        yyerror(error.c_str());
+                                    }
+                                } 
+                    LBRACE {
+                                //create a new symbol table
+                                VarSymbolTable *new_st = new VarSymbolTable();
+                                current_vst = new_st;
+                                vstl->insert(new_st);
+                            } 
+                    struct_body RBRACE SEMICOLON
+                    {
+                        //first get the symbol table for this struct and put it into the members column of the struct symbol table
+                        StructSymbolTableEntry *entry = new StructSymbolTableEntry(std::string($2),current_vst);
+                        sst->insert(entry);
+                        printlog("Struct");
+                        //remove struct scope from the varSymbolTableList
+                        if(vstl->remove())
+                            yyerror("Internal Error");
+                        current_vst = vstl->getTop();
+                    }
                 ;
 
 struct_body: struct_body struct_member
@@ -111,10 +135,51 @@ struct_body: struct_body struct_member
             ;
 
 struct_member: dtype id_list_decl SEMICOLON
+            {
+                //backpatching here
+                for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
+                {
+                    if(current_vst->backpatch(it->first,getType($1),$1->inner))
+                    {
+                        yyerror("Internal Error");
+                    }
+                }
+            }
             ;
 
 id_list_decl: ID
+            {
+                //create a new symbol table entry
+                $$ = new id_list_attr();
+                //insert this ID in the symbol table (backpatch later)
+                if(current_vst->lookup(std::string($1)))
+                {
+                    std::string error = "Variable redeclaration in struct: "+std::string($1);
+                    yyerror(error.c_str());
+                }
+                VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($1));
+                current_vst->insert(entry);
+                type_attr *type = new type_attr();
+                type->indicator = 0;
+                $$->lst.push_back(std::make_pair(entry,type));
+            }
             | id_list_decl COMMA ID
+            {
+                //create a new symbol table entry
+                $$ = new id_list_attr();
+                //insert this ID in the symbol table (backpatch later)
+                if(current_vst->lookup(std::string($3)))
+                {
+                    std::string error = "Variable redeclaration in struct: "+std::string($3);
+                    yyerror(error.c_str());
+                }
+                VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($3));
+                current_vst->insert(entry);
+                type_attr *type = new type_attr();
+                type->indicator = 0;
+                $$->lst = $1->lst;
+                $$->lst.push_back(std::make_pair(entry,type));
+            }
             ;
 
 expression_list: expression
@@ -209,18 +274,23 @@ variable_declaration: dtype id_list SEMICOLON
                                 yyerror("Internal Error");
                             }
                         }
-                        vstl->print();
+                        // vstl->print();
                     }
                     | ID id_list SEMICOLON
                     {
-                        //struct handling (to be done)
+                        //check if struct exists
+                        if(!sst->lookup(std::string($1)))
+                        {
+                            std::string str = std::string("Error: Struct ")+std::string($1)+std::string(" not defined");
+                            yyerror(str.c_str());
+                        }
                     }
                     ;
 
 id_list: ID {
                 $$ = new id_list_attr();
                 //insert this ID in the symbol table (backpatch later)
-                if(vstl->lookup(std::string($1)))
+                if(current_vst->lookup(std::string($1)))
                 {
                     std::string error = "Variable redeclaration: "+std::string($1);
                     yyerror(error.c_str());
@@ -235,7 +305,7 @@ id_list: ID {
        {
             $$ = new id_list_attr();
             //insert this ID in the symbol table (backpatch later)
-            if(vstl->lookup(std::string($1)))
+            if(current_vst->lookup(std::string($1)))
             {
                 std::string error = "Variable redeclaration: "+std::string($1);
                 yyerror(error.c_str());
@@ -253,7 +323,7 @@ id_list: ID {
        {
             $$ = new id_list_attr();
             //insert this ID in the symbol table (backpatch later)
-            if(vstl->lookup(std::string($3)))
+            if(current_vst->lookup(std::string($3)))
             {
                 std::string error = "Variable redeclaration: "+std::string($3);
                 yyerror(error.c_str());
@@ -270,7 +340,7 @@ id_list: ID {
        {
             $$ = new id_list_attr();
             //insert this ID in the symbol table (backpatch later)
-            if(vstl->lookup(std::string($3)))
+            if(current_vst->lookup(std::string($3)))
             {
                 std::string error = "Variable redeclaration: "+std::string($3);
                 yyerror(error.c_str());
@@ -598,7 +668,7 @@ expression: LPAREN expression RPAREN {
                         $$.indicator = $1->indicator; 
                         $$.vtp = $1->vtp; 
                         $$.vta = $1->vta; 
-                        $$.vts = $1->vts; 
+                        $$.vts = $1->vts;
                       }
           | call {
                     // To be handled (to be done)
@@ -728,8 +798,6 @@ dtype : TYPE_PRIMITIVE {
                                             $$->vts = $1; 
                                             // start from here 
                                             $$->inner = $3->inner;
-                                            $$->inner->print();
-                                            std::cout<<std::endl;
                                           }
       | TYPE_AUTOMATA {
                         $$ = new type_attr();
@@ -751,8 +819,6 @@ dtype : TYPE_PRIMITIVE {
 set_type : dtype {
                     $$ = new type_attr();
                     $$->inner = new inner_type($1->inner,getType($1));
-                    $$->inner->print();
-                    std::cout<<std::endl;
                  }
          | ID {
                 $$ = new type_attr();

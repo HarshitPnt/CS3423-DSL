@@ -348,3 +348,27 @@ void inner_type::print()
         current = current->inner;
     }
 }
+
+bool VarSymbolTableList::remove()
+{
+    if (this->entries.size() == 0)
+        return 1;
+    this->entries.pop_front();
+    return 0;
+}
+
+VarSymbolTable *VarSymbolTableList::getTop()
+{
+    if (this->entries.size() == 0)
+        return NULL;
+    return this->entries.front();
+}
+
+void StructSymbolTable::print()
+{
+    for (auto it = this->entries.begin(); it != this->entries.end(); it++)
+    {
+        std::cout << (*it).first << " ";
+        (*it).second->fields->print();
+    }
+}
