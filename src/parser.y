@@ -28,9 +28,12 @@ void terminate()
 int in_function = 0;
 int in_loop = 0;
 int num_params = 0;
+FunctionSymbolTableEntry *current_function;
 
 #define printlog(a) fprintf(parse_log,"%s declaration at line no: %d\n",a,yylineno)
 #define getVTA(a) (a==TYPE_NFA?"NFA":(a==TYPE_DFA?"DFA":(a==TYPE_PDA?"PDA":(a==TYPE_CFG?"CFG":""))))
+#define getConst(a) (a.val->type==CINT?a.val->ccint:(a.val->type==CFLOAT?a.val->ccfloat:(a.val->type==CBOOL?a.val->ccbool:a.val->ccchar)))
+#define getCTYPE(a) ((a.vtp==TYPE_INT_64 || a.vtp==TYPE_INT_32 || a.vtp==TYPE_INT_16 || a.vtp==TYPE_INT_8)?CINT:((a.vtp==TYPE_FLOAT_64 || a.vtp==TYPE_FLOAT_32)?CFLOAT:((a.vtp==TYPE_BOOL)?CBOOL:CCHAR)))
 
 %}
 %code requires {
@@ -54,6 +57,9 @@ int num_params = 0;
         int indicator;
         constant *val;
         type_attr *type;
+        int isConst;
+        int isVar;
+        id_attr *id;
     } expression_attr;
 
     id_attr *id;
@@ -68,6 +74,7 @@ int num_params = 0;
 
     // Variables
     char* identifier;
+    char* comp;
 }
 %left PSEUDO_LOW
 %left <dtype_primitive> TYPE_PRIMITIVE
@@ -81,7 +88,7 @@ int num_params = 0;
 %token ARROW COLON
 %left COMMA DOT SEMICOLON DOLLAR
 %left OPER_AND OPER_OR
-%left OPER_COMP COMP_GT COMP_LT
+%left<comp> OPER_COMP COMP_GT COMP_LT
 %left OPER_PLUS OPER_MINUS OPER_MUL OPER_DIV OPER_MOD
 %left AT_THE_RATE OPER_POWER
 %left OPER_NOT OPER_HASH
@@ -91,7 +98,7 @@ int num_params = 0;
 
 %nterm<expression_attr> expression
 %nterm<id> pseudo_ID param
-%nterm<type> rhs dtype set_type
+%nterm<type> rhs dtype set_type return_statement
 %nterm<id_lst> id_list id_list_decl
 %nterm<para> param_list next_param
 %start program
@@ -228,6 +235,7 @@ function_declaration: function_header
                         if(vstl->remove())
                             yyerror("Internal Error");
                         current_vst = vstl->getTop();
+                        current_function = NULL;
                     }
                     ;
 
@@ -245,6 +253,7 @@ function_header: dtype ID LPAREN param_list RPAREN {
                         //handling param_list
                         //push new function to function table
                         FunctionSymbolTableEntry *entry = new FunctionSymbolTableEntry(std::string($2),num_params,current_vst,getType($1));
+                        current_function = entry;
                         //insert function into function table
                         for(auto it = $4->lst.begin();it!=$4->lst.end();it++)
                         {
@@ -501,13 +510,18 @@ pseudo_ID: pseudo_ID LBRACK expression RBRACK
                 yyerror("Invalid operation: Set can only be accessed using integer index");
             if(!isInteger($3.vtp))
                 yyerror("Invalid operation: Set can only be accessed using integer/unsigned integer index");
-            //check dims (to be done)
+            //idea is to build the entire pseudo_ID and check whenever it is used somewhere
+            $$ = new id_attr();
+            // $$->name = std::string($1->name)+std::string("[")+std::string($3.val->ccint)+std::string("]");
          }
          | pseudo_ID DOT pseudo_ID
          {
             //accessing the inner member
+            $$ = new id_attr();
+            $$->name = std::string($1->name)+std::string(".")+std::string($3->name);
          }
          | ID {
+                //check if ID exists
                 $$ = new id_attr();
                 $$->name = $1;
               }
@@ -570,6 +584,12 @@ expression: LPAREN expression RPAREN {
                                       $$.vtp = $2.vtp;
                                       $$.vta = $2.vta;
                                       $$.vts = $2.vts;
+                                      $$.isConst = false;
+                                      if($2.isConst)
+                                      {
+                                        $$.isConst = true;
+                                        $$.val = $2.val;
+                                      }
                                      }
           | expression OPER_PLUS expression 
           {
@@ -582,6 +602,21 @@ expression: LPAREN expression RPAREN {
                         $$.vtp = TYPE_FLOAT_32;
                     else
                         $$.vtp = TYPE_INT_64;
+                    $$.isConst = false;
+                    if($1.isConst && $3.isConst)
+                    {
+                        $$.isConst = true;
+                        $$.val = new constant();
+                        $$.val->type = getCTYPE($$);
+                        if($$.val->type==CINT)
+                            $$.val->ccint = getConst($1)+getConst($3);
+                        else if($$.val->type==CFLOAT)
+                            $$.val->ccfloat = getConst($1)+getConst($3);
+                        else if($$.val->type==CBOOL)
+                            $$.val->ccbool = getConst($1)+getConst($3);
+                        else if($$.val->type==CCHAR)
+                            $$.val->ccchar = getConst($1)+getConst($3);
+                    }
                 }
                 else if($1.indicator ==2 || $3.indicator==2)
                 {
@@ -601,7 +636,6 @@ expression: LPAREN expression RPAREN {
                     else 
                         {
                             std::string error = std::string("Invalid operation:")+std::string(getVTA($1.vta))+std::string(", ")+std::string(getVTA($3.vta))+std::string(" union  not defined");
-                            
                             yyerror(error.c_str());
                         }
                 }
@@ -615,12 +649,27 @@ expression: LPAREN expression RPAREN {
                 if($1.indicator==1 && $3.indicator==1)
                 {
                     $$.indicator = 1;
+                    $$.isConst = false;
                     if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
                         $$.vtp = TYPE_FLOAT_64;
                     else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
                         $$.vtp = TYPE_FLOAT_32;
                     else
                         $$.vtp = TYPE_INT_64;
+                    if($1.isConst && $3.isConst)
+                    {
+                        $$.isConst = true;
+                        $$.val = new constant();
+                        $$.val->type = getCTYPE($$);
+                        if($$.val->type==CINT)
+                            $$.val->ccint = getConst($1)-getConst($3);
+                        else if($$.val->type==CFLOAT)
+                            $$.val->ccfloat = getConst($1)-getConst($3);
+                        else if($$.val->type==CBOOL)
+                            $$.val->ccbool = getConst($1)-getConst($3);
+                        else if($$.val->type==CCHAR)
+                            $$.val->ccchar = getConst($1)-getConst($3);
+                    }
                 }
                 else if($1.indicator==2 && $3.indicator==2)
                 {
@@ -633,6 +682,7 @@ expression: LPAREN expression RPAREN {
           | expression OPER_MUL expression
           {
                 //Kleene star and intersection
+                $$.isConst = false;
                 if($1.indicator ==1 && $3.indicator ==1)
                 {
                     $$.indicator = 1;
@@ -642,6 +692,20 @@ expression: LPAREN expression RPAREN {
                         $$.vtp = TYPE_FLOAT_32;
                     else
                         $$.vtp = TYPE_INT_64;
+                    if($1.isConst && $3.isConst)
+                    {
+                        $$.isConst = true;
+                        $$.val = new constant();
+                        $$.val->type = getCTYPE($$);
+                        if($$.val->type==CINT)
+                            $$.val->ccint = getConst($1)*getConst($3);
+                        else if($$.val->type==CFLOAT)
+                            $$.val->ccfloat = getConst($1)*getConst($3);
+                        else if($$.val->type==CBOOL)
+                            $$.val->ccbool = getConst($1)*getConst($3);
+                        else if($$.val->type==CCHAR)
+                            $$.val->ccchar = getConst($1)*getConst($3);
+                    }
                 }
                 else if($1.indicator ==2 && $3.indicator ==2)
                 {
@@ -659,12 +723,27 @@ expression: LPAREN expression RPAREN {
             if($3.val && (($3.val->type == CINT && $3.val->ccint == 0) || ($3.val->type == CFLOAT && $3.val->ccfloat == 0.0) || ($3.val->type == CBOOL && $3.val->ccbool == false)||( $3.val->type == CCHAR && $3.val->ccchar == '\0')))
                 yyerror("Invalid operation: Division by zero");
             $$.indicator = 1;
+            $$.isConst = false;
             if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
                 $$.vtp = TYPE_FLOAT_64;
             else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
                 $$.vtp = TYPE_FLOAT_32;
             else
                 $$.vtp = TYPE_INT_64;
+            if($1.isConst && $3.isConst)
+            {
+                $$.isConst = true;
+                $$.val = new constant();
+                $$.val->type = getCTYPE($$);
+                if($$.val->type==CINT)
+                    $$.val->ccint = getConst($1)/getConst($3);
+                else if($$.val->type==CFLOAT)
+                    $$.val->ccfloat = getConst($1)/getConst($3);
+                else if($$.val->type==CBOOL)
+                    $$.val->ccbool = getConst($1)/getConst($3);
+                else if($$.val->type==CCHAR)
+                    $$.val->ccchar = getConst($1)/getConst($3);
+            }
           }
           | expression OPER_MOD expression
           {
@@ -673,7 +752,16 @@ expression: LPAREN expression RPAREN {
             if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64 || $1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
                 yyerror("Invalid operation: Modulo can only be done between 'integer' types");
             $$.indicator = 1;
+            $$.isConst = false;
             $$.vtp = TYPE_INT_64;
+            if($1.isConst && $3.isConst)
+            {
+                $$.isConst = true;
+                $$.val = new constant();
+                $$.val->type = getCTYPE($$);
+                if($$.val->type==CINT)
+                    $$.val->ccint = $1.val->ccint % $3.val->ccint;
+            }
           }
           | expression OPER_COMP expression
           {
@@ -681,6 +769,48 @@ expression: LPAREN expression RPAREN {
                 yyerror("Invalid comparison: Comparison can only be done between primitive types");
             $$.indicator = 1;
             $$.vtp = TYPE_BOOL;
+            std::string comp($2); //"<=",">=","==","!="
+            $$.isConst = false;
+            if(comp=="<=")
+            {
+                if($1.isConst && $3.isConst)
+                {
+                    $$.isConst = true;
+                    $$.val = new constant();
+                    $$.val->type = CBOOL;
+                    $$.val->ccbool = getConst($1)<=getConst($3);
+                }
+            }
+            if(comp==">=")
+            {
+                if($1.isConst && $3.isConst)
+                {
+                    $$.isConst = true;
+                    $$.val = new constant();
+                    $$.val->type = CBOOL;
+                    $$.val->ccbool = getConst($1)>=getConst($3);
+                }
+            }
+            if(comp=="==")
+            {
+                if($1.isConst && $3.isConst)
+                {
+                    $$.isConst = true;
+                    $$.val = new constant();
+                    $$.val->type = CBOOL;
+                    $$.val->ccbool = getConst($1)==getConst($3);
+                }
+            }
+            if(comp=="!=")
+            {
+                if($1.isConst && $3.isConst)
+                {
+                    $$.isConst = true;
+                    $$.val = new constant();
+                    $$.val->type = CBOOL;
+                    $$.val->ccbool = getConst($1)!=getConst($3);
+                }
+            }
           }
           | expression OPER_POWER
           {
@@ -688,6 +818,7 @@ expression: LPAREN expression RPAREN {
                 yyerror("Invalid operation: Power set can only be computed for a set");
             $$.indicator = 2;
             $$.vts = TYPE_OSET;
+            $$.isConst = false;
           }
           | expression AT_THE_RATE expression 
           {
@@ -705,6 +836,7 @@ expression: LPAREN expression RPAREN {
                 $$.vta = TYPE_CFG;
             else
                 yyerror("Invalid operation: Automata can only be concatenated with Automata");
+            $$.isConst = false;
           }
           | expression OPER_OR expression
           {
@@ -714,6 +846,34 @@ expression: LPAREN expression RPAREN {
                 yyerror("Invalid comparison: Automata cannot be compared");
             $$.indicator = 1;
             $$.vtp = TYPE_BOOL;
+            $$.isConst = false;
+            if($1.isConst && $3.isConst)
+            {
+                $$.isConst = true;
+                $$.val = new constant();
+                $$.val->type = CBOOL;
+                $$.val->ccbool = getConst($1) || getConst($3);
+            }
+            else if($1.isConst)
+            {
+                if(($1.val->type==CINT && $1.val->ccint!=0) || ($1.val->type==CFLOAT && $1.val->ccfloat!=0.0) || ($1.val->type==CBOOL && $1.val->ccbool!=false) || ($1.val->type==CCHAR && $1.val->ccchar!='\0'))
+                {
+                    $$.isConst = true;
+                    $$.val = new constant();
+                    $$.val->type = CBOOL;
+                    $$.val->ccbool = true;
+                }
+            }
+            else if($3.isConst)
+            {
+                if(($3.val->type==CINT && $3.val->ccint!=0) || ($3.val->type==CFLOAT && $3.val->ccfloat!=0.0) || ($3.val->type==CBOOL && $3.val->ccbool!=false) || ($3.val->type==CCHAR && $3.val->ccchar!='\0'))
+                {
+                    $$.isConst = true;
+                    $$.val = new constant();
+                    $$.val->type = CBOOL;
+                    $$.val->ccbool = true;
+                }
+            }
           }
           | expression OPER_AND expression
           {
@@ -723,6 +883,32 @@ expression: LPAREN expression RPAREN {
                 yyerror("Invalid comparison: Automata cannot be compared");
             $$.indicator = 1;
             $$.vtp = TYPE_BOOL;
+            $$.isConst = false;
+            if($1.isConst && $3.isConst)
+            {
+                $$.val->type = CBOOL;
+                $$.val->ccbool = getConst($1) && getConst($3);
+            }
+            else if($1.isConst)
+            {
+                if(($1.val->type==CINT && $1.val->ccint==0) || ($1.val->type==CFLOAT && $1.val->ccfloat==0.0) || ($1.val->type==CBOOL && $1.val->ccbool==false) || ($1.val->type==CCHAR && $1.val->ccchar=='\0'))
+                {
+                    $$.isConst = true;
+                    $$.val = new constant();
+                    $$.val->type = CBOOL;
+                    $$.val->ccbool = false;
+                }
+            }
+            else if($3.isConst)
+            {
+                if(($3.val->type==CINT && $3.val->ccint==0) || ($3.val->type==CFLOAT && $3.val->ccfloat==0.0) || ($3.val->type==CBOOL && $3.val->ccbool==false) || ($3.val->type==CCHAR && $3.val->ccchar=='\0'))
+                {
+                    $$.isConst = true;
+                    $$.val = new constant();
+                    $$.val->type = CBOOL;
+                    $$.val->ccbool = false;
+                }
+            }
           }
           | expression COMP_GT expression
           {
@@ -732,6 +918,15 @@ expression: LPAREN expression RPAREN {
                 yyerror("Invalid comparison: Automata cannot be compared");
             $$.indicator = 1;
             $$.vtp = TYPE_BOOL;
+            $$.isConst = false;
+            //constant check
+            if($1.isConst && $3.isConst)
+            {
+                $$.isConst = true;
+                $$.val = new constant();
+                $$.val->type = CBOOL;
+                $$.val->ccbool = getConst($1)>getConst($3);
+            }
           }
           | expression COMP_LT expression 
           {
@@ -741,6 +936,15 @@ expression: LPAREN expression RPAREN {
                 yyerror("Invalid comparison: Automata cannot be compared");
             $$.indicator = 1;
             $$.vtp = TYPE_BOOL;
+            $$.isConst = false;
+            //constant check
+            if($1.isConst && $3.isConst)
+            {
+                $$.isConst = true;
+                $$.val = new constant();
+                $$.val->type = CBOOL;
+                $$.val->ccbool = getConst($1)<getConst($3);
+            }
           }
           | OPER_NOT expression { 
             if($2.indicator ==2)
@@ -748,10 +952,29 @@ expression: LPAREN expression RPAREN {
             if($2.indicator ==3 && ($2.vta == TYPE_CFG || $2.vta == TYPE_PDA))
                 yyerror("Invalid operator: CFG/NDPDA not closed under complement");
             $$.indicator = $2.indicator;
+            $$.isConst = false;
             if($2.indicator == 1)
+            {
+                if($2.isConst)
+                {
+                    $$.isConst = true;
+                    $$.val = new constant();
+                    $$.val->type = CBOOL;
+                    if($2.val->type == CINT)
+                        $$.val->ccbool = !($2.val->ccint);
+                    else if($2.val->type == CFLOAT)
+                        $$.val->ccbool = !($2.val->ccfloat);
+                    else if($2.val->type == CBOOL)
+                        $$.val->ccbool = !($2.val->ccbool);
+                    else if($2.val->type == CCHAR)
+                        $$.val->ccbool = !($2.val->ccchar);
+                }
+                else
+                    $$.isConst = false;
                 $$.vtp = TYPE_BOOL;
+            }
             else if($2.indicator == 3)
-                $$.vta = $2.vta;
+                {$$.vta = $2.vta; $$.isConst = false;}
 
           }
           | expression OPER_HASH { 
@@ -759,18 +982,38 @@ expression: LPAREN expression RPAREN {
                 yyerror("Invalid operator: Kleene Star can only be applied to Automata");
             $$.indicator = 3;
             $$.vta = $1.vta;
+            $$.isConst = false;
           }
           | OPER_MINUS expression { 
                                     $$.indicator = $2.indicator; 
                                     $$.vtp = $2.vtp; 
                                     $$.vta = $2.vta; 
                                     $$.vts = $2.vts;
+                                    $$.isConst = $2.isConst;
+                                    $$.val = $2.val;
+                                    switch($$.val->type)
+                                    {
+                                        case CINT:
+                                                $$.val->ccint = -($$.val->ccint);
+                                                break;
+                                        case CFLOAT:
+                                                $$.val->ccfloat = -($$.val->ccfloat);
+                                                break;
+                                        case CBOOL:
+                                                $$.val->ccbool = !($$.val->ccbool);
+                                                break;
+                                        case CCHAR:
+                                                $$.val->ccchar = -($$.val->ccchar);
+                                                break;
+                                    }
                                 }
           | OPER_PLUS expression { 
                                   $$.indicator = $2.indicator;
                                   $$.vtp = $2.vtp; 
                                   $$.vta = $2.vta; 
                                   $$.vts = $2.vts;
+                                  $$.isConst = $2.isConst;
+                                  $$.val = $2.val;
                                  }
           | INT_CONST { 
                         $$.indicator = 1; 
@@ -778,6 +1021,7 @@ expression: LPAREN expression RPAREN {
                         $$.val = new constant();
                         $$.val->ccint = $1;
                         $$.val->type = CINT;
+                        $$.isConst = true;
                       }
           | FLOAT_CONST { 
                           $$.indicator = 1; 
@@ -785,6 +1029,7 @@ expression: LPAREN expression RPAREN {
                           $$.val = new constant();
                           $$.val->ccfloat = $1;
                           $$.val->type = CFLOAT;
+                          $$.isConst = true;
                         }
           | BOOL_CONST { 
                          $$.indicator = 1; 
@@ -792,13 +1037,15 @@ expression: LPAREN expression RPAREN {
                          $$.val = new constant();
                          $$.val->ccbool = $1;
                          $$.val->type = CBOOL;
+                         $$.isConst = true;
                        }
           | CHAR_CONST { 
                         $$.indicator = 1; 
                         $$.vtp = TYPE_CHAR;
                         $$.val = new constant();
                         $$.val->ccchar = $1;
-                        $$.val->type = CBOOL; 
+                        $$.val->type = CBOOL;
+                        $$.isConst = true;
                        }
           | pseudo_ID { 
                         $$.indicator = $1->indicator; 
@@ -813,6 +1060,16 @@ expression: LPAREN expression RPAREN {
           ;
 
 call : ID LPAREN argument_list RPAREN
+     {
+        //check if function exists
+        if(!fst->lookup(std::string($1)))
+        {
+            std::string error = "Function "+std::string($1)+std::string(" not defined");
+            yyerror(error.c_str());
+        }
+        //check if argument type matches (to be done)
+        //create type of call
+     }
      ;
 
 argument_list: 
@@ -914,7 +1171,31 @@ call_statement : call SEMICOLON
                ;
 
 return_statement : RETURN_KW expression SEMICOLON
+                 {
+                    type_attr *type = new type_attr();
+                    type->indicator = $2.indicator;
+                    type->vtp = $2.vtp;
+                    type->vta = $2.vta;
+                    type->vts = $2.vts;
+                    if(current_function->return_type == std::string("void"))
+                        yyerror("Return type mismatch/ function returns void");
+                    if(!isCoherent(current_function->return_type,getType(type)))
+                        yyerror("Return type mismatch");
+                    //struct handling (to be done)
+                    $$->indicator = $2.indicator;
+                    $$->vtp = $2.vtp;
+                    $$->vta = $2.vta;
+                    $$->vts = $2.vts;
+                 }
                  | RETURN_KW SEMICOLON
+                 {
+                    if(current_function->return_type != "void")
+                    {
+                        std::string error = "Return type mismatch/ function returns "+current_function->return_type;
+                        yyerror(error.c_str());
+                    }
+                    $$->indicator = 0;
+                 }
                  ;
 
 break_statement : BREAK_KW SEMICOLON {if(!in_loop) yyerror("Break statement outside loop");}

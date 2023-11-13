@@ -5,4 +5,5 @@
 bool isInteger(VTYPE_PRIMITIVE vtp);
 bool isFloat(VTYPE_PRIMITIVE vtp);
 std::string getType(type_attr *t_attr);
+bool isCoherent(std::string type1, std::string type2);
 #endif

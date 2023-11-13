@@ -193,7 +193,12 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 
 "=" {printtoken("operator"); return OPER_ASN_SIMPLE;}
 
-{oper_comp} {printtoken("operator"); return OPER_COMP;}
+{oper_comp} {
+    printtoken("operator"); 
+    yylval.comp = (char*)malloc(sizeof(char)*strlen(yytext));
+    strcpy(yylval.comp,yytext);
+    return OPER_COMP;
+    }
 {oper_asn} {printtoken("operator"); return OPER_ASN;}
 
 "#" {printtoken("operator"); return OPER_HASH;}

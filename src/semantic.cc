@@ -373,3 +373,58 @@ void StructSymbolTable::print()
         (*it).second->fields->print();
     }
 }
+
+bool isCoherent(std::string type1, std::string type2)
+{
+    if (type1.compare(type2) == 0)
+        return true;
+    if (type1 == "int_8" || type1 == "int_16" || type1 == "int_32" || type1 == "int_64" || type1 == "uint_8" || type1 == "uint_16" || type1 == "uint_32" || type1 == "uint_64")
+    {
+        if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
+            return true;
+        if (type2 == "float_32" || type2 == "float_64")
+            return true;
+        if (type2 == "char")
+            return true;
+        if (type2 == "bool")
+            return true;
+        return false;
+    }
+    if (type1 == "float_32" || type1 == "float_64")
+    {
+        if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
+            return true;
+        if (type2 == "float_32" || type2 == "float_64")
+            return true;
+        if (type2 == "char")
+            return true;
+        if (type2 == "bool")
+            return true;
+        return false;
+    }
+    if (type1 == "char")
+    {
+        if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
+            return true;
+        if (type2 == "float_32" || type2 == "float_64")
+            return true;
+        if (type2 == "char")
+            return true;
+        if (type2 == "bool")
+            return true;
+        return false;
+    }
+    if (type1 == "bool")
+    {
+        if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
+            return true;
+        if (type2 == "float_32" || type2 == "float_64")
+            return true;
+        if (type2 == "char")
+            return true;
+        if (type2 == "bool")
+            return true;
+        return false;
+    }
+    return false;
+}
