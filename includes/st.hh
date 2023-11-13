@@ -39,7 +39,7 @@ public:
     inner_type *inner;
     std::string type;
     inner_type(inner_type *inner, std::string type);
-    void print();
+    std::string print();
 };
 
 class VarSymbolTableEntry

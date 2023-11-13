@@ -54,6 +54,7 @@ FunctionSymbolTableEntry *current_function;
         VTYPE_PRIMITIVE vtp;
         VTYPE_AUTOMATA vta;
         VTYPE_SET vts;
+        VTYPE_SR vtsr;
         int indicator;
         constant *val;
         type_attr *type;
@@ -115,7 +116,7 @@ instruction_list: instruction_list struct_declaration
 struct_declaration: STRUCT_KW ID
                                 {
                                     //check if struct already exists
-                                    sst->print();
+                                    // sst->print();
                                     if(sst->lookup(std::string($2)))
                                     {
                                         std::string error = "Struct redeclaration: "+std::string($2);
@@ -132,6 +133,7 @@ struct_declaration: STRUCT_KW ID
                     {
                         //first get the symbol table for this struct and put it into the members column of the struct symbol table
                         StructSymbolTableEntry *entry = new StructSymbolTableEntry(std::string($2),current_vst);
+                        // entry->fields->print();
                         sst->insert(entry);
                         printlog("Struct");
                         //remove struct scope from the varSymbolTableList
@@ -168,7 +170,7 @@ struct_member: dtype id_list_decl SEMICOLON
                 VarSymbolTable *struct_vst = sst->lookup(std::string($1))->fields;
                 for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                 {
-                    if(current_vst->backpatch(it->first,std::string("struct"),NULL,struct_vst))
+                    if(current_vst->backpatch(it->first,std::string($1),NULL,struct_vst))
                     {
                         yyerror("Internal Error");
                     }
@@ -319,6 +321,7 @@ param: dtype ID
             yyerror(error.c_str());
         }
         VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($2));
+        entry->type = getType($1);
         current_vst->insert(entry);
         ++num_params;
      }
@@ -339,6 +342,7 @@ param: dtype ID
             yyerror(str.c_str());
         }
         VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($2));
+        entry->type = std::string($1);
         current_vst->insert(entry);
         ++num_params;
      }
@@ -428,6 +432,14 @@ variable_declaration: dtype id_list SEMICOLON
                             std::string str = std::string("Error: Struct ")+std::string($1)+std::string(" not defined");
                             yyerror(str.c_str());
                         }
+                        VarSymbolTable *struct_fields = sst->lookup(std::string($1))->fields;
+                        for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
+                        {
+                            if(current_vst->backpatch(it->first,std::string($1),NULL,struct_fields))
+                            {
+                                yyerror("Internal Error");
+                            }
+                        }
                         // before backpatching check if rhs are variables of same struct type (to be done)
                     }
                     ;
@@ -512,7 +524,10 @@ pseudo_ID: pseudo_ID LBRACK expression RBRACK
                 yyerror("Invalid operation: Set can only be accessed using integer/unsigned integer index");
             //idea is to build the entire pseudo_ID and check whenever it is used somewhere
             $$ = new id_attr();
-            // $$->name = std::string($1->name)+std::string("[")+std::string($3.val->ccint)+std::string("]");
+            if($3.isConst)
+                $$->name = std::string($1->name)+std::string("[")+std::to_string($3.val->ccint)+std::string("]");
+            else //first need to build expression
+                $$->name = std::string($1->name)+std::string("[")+std::string("_expr_")+std::string("]");
          }
          | pseudo_ID DOT pseudo_ID
          {
@@ -524,11 +539,17 @@ pseudo_ID: pseudo_ID LBRACK expression RBRACK
                 //check if ID exists
                 $$ = new id_attr();
                 $$->name = $1;
+                
               }
          ;
 
-assignment: pseudo_ID OPER_ASN rhs SEMICOLON
-          | pseudo_ID OPER_ASN_SIMPLE rhs SEMICOLON
+assignment: pseudo_ID OPER_ASN rhs SEMICOLON 
+          | pseudo_ID OPER_ASN_SIMPLE rhs SEMICOLON {
+            std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
+            if(!ret.first)
+                yyerror(ret.second.c_str());
+            // std::cout<<$1->name<<std::endl;
+          }
           | pseudo_ID OPER_ASN_SIMPLE REGEX_R REGEX_LIT SEMICOLON
           | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON
           | pseudo_ID COLON OPER_ASN_SIMPLE rhs_automata SEMICOLON
@@ -1052,6 +1073,90 @@ expression: LPAREN expression RPAREN {
                         $$.vtp = $1->vtp; 
                         $$.vta = $1->vta; 
                         $$.vts = $1->vts;
+                        std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
+                        if(!ret.first)
+                            yyerror(ret.second.c_str());
+                        else
+                        {
+                            $$.isConst = false;
+                            std::string type = ret.second.substr(ret.second.find(' ')+1);
+                            if(type=="int_8")
+                            {
+                                $$.indicator = 1;
+                                $$.vtp = TYPE_INT_8;
+                            }
+                            else if(type=="int_16")
+                            {
+                                $$.indicator = 1;
+                                $$.vtp = TYPE_INT_16;
+                            }
+                            else if(type=="int_32")
+                            {
+                                $$.indicator = 1;
+                                $$.vtp = TYPE_INT_32;
+                            }
+                            else if(type=="int_64")
+                            {
+                                $$.indicator = 1;
+                                $$.vtp = TYPE_INT_64;
+                            }
+                            else if(type=="float_32")
+                            {
+                                $$.indicator = 1;
+                                $$.vtp = TYPE_FLOAT_32;
+                            }
+                            else if(type=="float_64")
+                            {
+                                $$.indicator = 1;
+                                $$.vtp = TYPE_FLOAT_64;
+                            }
+                            else if(type=="bool")
+                            {
+                                $$.indicator = 1;
+                                $$.vtp = TYPE_BOOL;
+                            }
+                            else if(type=="char")
+                            {
+                                $$.indicator = 1;
+                                $$.vtp = TYPE_CHAR;
+                            }
+                            else if(type=="string")
+                            {
+                                $$.indicator = 4;
+                                $$.vtsr = TYPE_STR;
+                            }
+                            else if(type=="regex")
+                            {
+                                $$.indicator = 5;
+                                $$.vtsr = TYPE_REGEX;
+                            }
+                            else if(type=="set")
+                            {
+                                $$.indicator = 2;
+                                $$.vts = TYPE_OSET;
+                            }
+                            else if(type=="nfa")
+                            {
+                                $$.indicator = 3;
+                                $$.vta = TYPE_NFA;
+                            }
+                            else if(type=="dfa")
+                            {
+                                $$.indicator = 3;
+                                $$.vta = TYPE_DFA;
+                            }
+                            else if(type=="pda")
+                            {
+                                $$.indicator = 3;
+                                $$.vta = TYPE_PDA;
+                            }
+                            else if(type=="cfg")
+                            {
+                                $$.indicator = 3;
+                                $$.vta = TYPE_CFG;
+                            }
+                            //structs (to be done)
+                        }
                       }
           | call {
                     // To be handled (to be done)

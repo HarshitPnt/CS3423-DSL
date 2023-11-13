@@ -1,1 +1,13 @@
-int_8 a = 8/(-5 + 5);
+struct B{
+    int_16 c;
+};
+
+struct A{
+    int_8 a;
+    B b;
+    o_set<B> c;
+};
+
+A x;
+int_8 i;
+x.c[i] = 5;
