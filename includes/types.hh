@@ -47,8 +47,13 @@ typedef enum VariableTYPE_SR
     TYPE_STRU
 } VTYPE_SR;
 
-VTYPE_PRIMITIVE getPrimitiveType(char *type);
-VTYPE_AUTOMATA getAutomataType(char *type);
-VTYPE_SET getSetType(char *type);
-VTYPE_SR getSRType(char *type);
+VTYPE_PRIMITIVE getPrimitiveType(const char *type);
+VTYPE_AUTOMATA getAutomataType(const char *type);
+VTYPE_SET getSetType(const char *type);
+VTYPE_SR getSRType(const char *type);
+inner_type *genInnerType(std::string inner);
+bool isPrimitive(std::string type);
+bool isAutomata(std::string type);
+bool isSR(std::string type);
+bool isSet(std::string type);
 #endif

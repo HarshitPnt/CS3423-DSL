@@ -32,9 +32,11 @@ FunctionSymbolTableEntry *current_function;
 
 #define printlog(a) fprintf(parse_log,"%s declaration at line no: %d\n",a,yylineno)
 #define getVTA(a) (a==TYPE_NFA?"NFA":(a==TYPE_DFA?"DFA":(a==TYPE_PDA?"PDA":(a==TYPE_CFG?"CFG":""))))
-#define getConst(a) (a.val->type==CINT?a.val->ccint:(a.val->type==CFLOAT?a.val->ccfloat:(a.val->type==CBOOL?a.val->ccbool:a.val->ccchar)))
-#define getCTYPE(a) ((a.vtp==TYPE_INT_64 || a.vtp==TYPE_INT_32 || a.vtp==TYPE_INT_16 || a.vtp==TYPE_INT_8)?CINT:((a.vtp==TYPE_FLOAT_64 || a.vtp==TYPE_FLOAT_32)?CFLOAT:((a.vtp==TYPE_BOOL)?CBOOL:CCHAR)))
-
+#define getConst(a) (a->val->type==CINT?a->val->ccint:(a->val->type==CFLOAT?a->val->ccfloat:(a->val->type==CBOOL?a->val->ccbool:a->val->ccchar)))
+#define getCTYPE(a) ((a->vtp==TYPE_INT_64 || a->vtp==TYPE_INT_32 || a->vtp==TYPE_INT_16 || a->vtp==TYPE_INT_8)?CINT:((a->vtp==TYPE_FLOAT_64 || a->vtp==TYPE_FLOAT_32)?CFLOAT:((a->vtp==TYPE_BOOL)?CBOOL:CCHAR)))
+#define getVTP(a) (a==TYPE_INT_64?"int_64":(a==TYPE_INT_32?"int_32":(a==TYPE_INT_16?"int_16":(a==TYPE_INT_8?"int_8":(a==TYPE_FLOAT_64?"float_64":(a==TYPE_FLOAT_32?"float_32":(a==TYPE_BOOL?"bool":"char")))))))
+#define getVTS(a) (a==TYPE_OSET?"o_set":"u_set")
+#define getVTSR(a) (a==TYPE_STR?"string":(a==TYPE_REGEX?"regex":"struct"))
 %}
 %code requires {
     #include "../includes/semantic.hh"
@@ -50,21 +52,10 @@ FunctionSymbolTableEntry *current_function;
     bool cbool;
 
     // Data types
-    struct {
-        VTYPE_PRIMITIVE vtp;
-        VTYPE_AUTOMATA vta;
-        VTYPE_SET vts;
-        VTYPE_SR vtsr;
-        int indicator;
-        constant *val;
-        type_attr *type;
-        int isConst;
-        int isVar;
-        id_attr *id;
-    } expression_attr;
-
+    expr_attr *expr;
     id_attr *id;
     type_attr *type;
+    arg_list_attr *arg;
     func_attr *func;
     id_list_attr *id_lst;
     param_list_attr *para;
@@ -97,11 +88,12 @@ FunctionSymbolTableEntry *current_function;
 %left LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE
 %token EPSILON
 
-%nterm<expression_attr> expression
+%nterm<expr> expression
 %nterm<id> pseudo_ID param
-%nterm<type> rhs dtype set_type return_statement
+%nterm<type> rhs dtype set_type return_statement call
 %nterm<id_lst> id_list id_list_decl
 %nterm<para> param_list next_param
+%nterm<arg> argument_list arg_list_next
 %start program
 %%
 
@@ -152,7 +144,7 @@ struct_member: dtype id_list_decl SEMICOLON
                 //backpatching here
                 for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                 {
-                    if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL))
+                    if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL,$1->dimensions))
                     {
                         yyerror("Internal Error");
                     }
@@ -167,10 +159,13 @@ struct_member: dtype id_list_decl SEMICOLON
                     yyerror(str.c_str());
                 }
                 //backpatching here
+                //create an empty vector
+                std::list<int> *temp;
+                temp = new std::list<int>();
                 VarSymbolTable *struct_vst = sst->lookup(std::string($1))->fields;
                 for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                 {
-                    if(current_vst->backpatch(it->first,std::string($1),NULL,struct_vst))
+                    if(current_vst->backpatch(it->first,std::string($1),NULL,struct_vst,*temp))
                     {
                         yyerror("Internal Error");
                     }
@@ -255,6 +250,19 @@ function_header: dtype ID LPAREN param_list RPAREN {
                         //handling param_list
                         //push new function to function table
                         FunctionSymbolTableEntry *entry = new FunctionSymbolTableEntry(std::string($2),num_params,current_vst,getType($1));
+                        //handling return type
+                        std::string outer;
+                        if($1->indicator==2)//set
+                        {
+                            outer = getType($1);
+                            outer= outer + std::string(" ") + $1->inner->print();
+                            entry->return_type = outer;
+                        }
+                        else
+                        {
+                            outer = getType($1);
+                            entry->return_type = outer;
+                        }
                         current_function = entry;
                         //insert function into function table
                         for(auto it = $4->lst.begin();it!=$4->lst.end();it++)
@@ -283,9 +291,9 @@ function_header: dtype ID LPAREN param_list RPAREN {
                                 yyerror(str.c_str());
                             }
                         }
-                        
                         //push new function to function table
                         FunctionSymbolTableEntry *entry = new FunctionSymbolTableEntry(std::string($2),num_params,current_vst,std::string($1));
+                        current_function = entry;
                         //insert function into function table
                         for(auto it = $4->lst.begin();it!=$4->lst.end();it++)
                         {
@@ -322,6 +330,7 @@ param: dtype ID
         }
         VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($2));
         entry->type = getType($1);
+        entry->dimensions = $1->dimensions;
         current_vst->insert(entry);
         ++num_params;
      }
@@ -330,6 +339,8 @@ param: dtype ID
         $$ = new id_attr();
         $$->name = std::string($2);
         //check if ID already present
+        std::list<int> *temp;
+        temp = new std::list<int>();
         if(current_vst->lookup(std::string($2)))
         {
             std::string error = "Variable redeclaration: "+std::string($2);
@@ -343,6 +354,7 @@ param: dtype ID
         }
         VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($2));
         entry->type = std::string($1);
+        entry->dimensions = *temp;
         current_vst->insert(entry);
         ++num_params;
      }
@@ -417,7 +429,7 @@ variable_declaration: dtype id_list SEMICOLON
                         // safe to backpatch
                         for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                         {
-                            if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL))
+                            if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL,$1->dimensions))
                             {
                                 yyerror("Internal Error");
                             }
@@ -432,10 +444,12 @@ variable_declaration: dtype id_list SEMICOLON
                             std::string str = std::string("Error: Struct ")+std::string($1)+std::string(" not defined");
                             yyerror(str.c_str());
                         }
+                        std::list<int> *temp;
+                        temp = new std::list<int>();
                         VarSymbolTable *struct_fields = sst->lookup(std::string($1))->fields;
                         for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                         {
-                            if(current_vst->backpatch(it->first,std::string($1),NULL,struct_fields))
+                            if(current_vst->backpatch(it->first,std::string($1),NULL,struct_fields,*temp))
                             {
                                 yyerror("Internal Error");
                             }
@@ -518,14 +532,14 @@ id_list: ID {
 pseudo_ID: pseudo_ID LBRACK expression RBRACK
          {
             //accessing the set member
-            if($3.indicator != 1)
+            if($3->indicator != 1)
                 yyerror("Invalid operation: Set can only be accessed using integer index");
-            if(!isInteger($3.vtp))
+            if(!isInteger($3->vtp))
                 yyerror("Invalid operation: Set can only be accessed using integer/unsigned integer index");
             //idea is to build the entire pseudo_ID and check whenever it is used somewhere
             $$ = new id_attr();
-            if($3.isConst)
-                $$->name = std::string($1->name)+std::string("[")+std::to_string($3.val->ccint)+std::string("]");
+            if($3->isConst)
+                $$->name = std::string($1->name)+std::string("[")+std::to_string($3->val->ccint)+std::string("]");
             else //first need to build expression
                 $$->name = std::string($1->name)+std::string("[")+std::string("_expr_")+std::string("]");
          }
@@ -575,10 +589,10 @@ cfg_rule : pseudo_ID ARROW cfg_rhs
 rhs: expression
     {
         $$ = new type_attr();
-        $$->vtp = $1.vtp;
-        $$->vta = $1.vta;
-        $$->vts = $1.vts;
-        $$->indicator = $1.indicator;
+        $$->vtp = $1->vtp;
+        $$->vta = $1->vta;
+        $$->vts = $1->vts;
+        $$->indicator = $1->indicator;
     }
    | LBRACE expression_list RBRACE
    {
@@ -589,6 +603,7 @@ rhs: expression
         indicator = 4 string initialization
         indicator = 5 regex initialization
         indicator = 6 dynamic set initialization
+        indicator = 7 struct
      */
      $$ = new type_attr();
      $$->indicator = 6;
@@ -601,62 +616,64 @@ rhs: expression
    ;
 
 expression: LPAREN expression RPAREN {
-                                      $$.indicator = $2.indicator;
-                                      $$.vtp = $2.vtp;
-                                      $$.vta = $2.vta;
-                                      $$.vts = $2.vts;
-                                      $$.isConst = false;
-                                      if($2.isConst)
+                                      $$ = new expr_attr();
+                                      $$->indicator = $2->indicator;
+                                      $$->vtp = $2->vtp;
+                                      $$->vta = $2->vta;
+                                      $$->vts = $2->vts;
+                                      $$->isConst = false;
+                                      if($2->isConst)
                                       {
-                                        $$.isConst = true;
-                                        $$.val = $2.val;
+                                        $$->isConst = true;
+                                        $$->val = $2->val;
                                       }
                                      }
           | expression OPER_PLUS expression 
           {
-                if($1.indicator ==1 || $3.indicator==1)
+                $$ = new expr_attr();
+                if($1->indicator ==1 || $3->indicator==1)
                 {
-                    $$.indicator = 1;
-                    if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
-                    $$.vtp = TYPE_FLOAT_64;
-                    else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
-                        $$.vtp = TYPE_FLOAT_32;
+                    $$->indicator = 1;
+                    if($1->vtp==TYPE_FLOAT_64 || $3->vtp==TYPE_FLOAT_64)
+                    $$->vtp = TYPE_FLOAT_64;
+                    else if($1->vtp==TYPE_FLOAT_32 || $3->vtp==TYPE_FLOAT_32)
+                        $$->vtp = TYPE_FLOAT_32;
                     else
-                        $$.vtp = TYPE_INT_64;
-                    $$.isConst = false;
-                    if($1.isConst && $3.isConst)
+                        $$->vtp = TYPE_INT_64;
+                    $$->isConst = false;
+                    if($1->isConst && $3->isConst)
                     {
-                        $$.isConst = true;
-                        $$.val = new constant();
-                        $$.val->type = getCTYPE($$);
-                        if($$.val->type==CINT)
-                            $$.val->ccint = getConst($1)+getConst($3);
-                        else if($$.val->type==CFLOAT)
-                            $$.val->ccfloat = getConst($1)+getConst($3);
-                        else if($$.val->type==CBOOL)
-                            $$.val->ccbool = getConst($1)+getConst($3);
-                        else if($$.val->type==CCHAR)
-                            $$.val->ccchar = getConst($1)+getConst($3);
+                        $$->isConst = true;
+                        $$->val = new constant();
+                        $$->val->type = getCTYPE($$);
+                        if($$->val->type==CINT)
+                            $$->val->ccint = getConst($1)+getConst($3);
+                        else if($$->val->type==CFLOAT)
+                            $$->val->ccfloat = getConst($1)+getConst($3);
+                        else if($$->val->type==CBOOL)
+                            $$->val->ccbool = getConst($1)+getConst($3);
+                        else if($$->val->type==CCHAR)
+                            $$->val->ccchar = getConst($1)+getConst($3);
                     }
                 }
-                else if($1.indicator ==2 || $3.indicator==2)
+                else if($1->indicator ==2 || $3->indicator==2)
                 {
-                    $$.indicator = 2;
-                    $$.vts = TYPE_OSET;
+                    $$->indicator = 2;
+                    $$->vts = TYPE_OSET;
                 }
-                else if($1.indicator ==3 || $3.indicator==3)
+                else if($1->indicator ==3 || $3->indicator==3)
                 {
-                    if(($1.vta == TYPE_NFA && $3.vta == TYPE_DFA) || ($3.vta == TYPE_NFA && $1.vta == TYPE_DFA) || ($1.vta == TYPE_NFA && $3.vta == TYPE_NFA))
-                        $$.vta = TYPE_NFA;
-                    else if($1.vta == TYPE_DFA && $3.vta == TYPE_DFA)
-                        $$.vta = TYPE_DFA;
-                    else if($1.vta == TYPE_PDA && $3.vta == TYPE_PDA)
-                        $$.vta = TYPE_PDA;
-                    else if($1.vta == TYPE_CFG && $3.vta == TYPE_CFG)
-                        $$.vta = TYPE_CFG;
+                    if(($1->vta == TYPE_NFA && $3->vta == TYPE_DFA) || ($3->vta == TYPE_NFA && $1->vta == TYPE_DFA) || ($1->vta == TYPE_NFA && $3->vta == TYPE_NFA))
+                        $$->vta = TYPE_NFA;
+                    else if($1->vta == TYPE_DFA && $3->vta == TYPE_DFA)
+                        $$->vta = TYPE_DFA;
+                    else if($1->vta == TYPE_PDA && $3->vta == TYPE_PDA)
+                        $$->vta = TYPE_PDA;
+                    else if($1->vta == TYPE_CFG && $3->vta == TYPE_CFG)
+                        $$->vta = TYPE_CFG;
                     else 
                         {
-                            std::string error = std::string("Invalid operation:")+std::string(getVTA($1.vta))+std::string(", ")+std::string(getVTA($3.vta))+std::string(" union  not defined");
+                            std::string error = std::string("Invalid operation:")+std::string(getVTA($1->vta))+std::string(", ")+std::string(getVTA($3->vta))+std::string(" union  not defined");
                             yyerror(error.c_str());
                         }
                 }
@@ -667,500 +684,531 @@ expression: LPAREN expression RPAREN {
           | expression OPER_MINUS expression
           {
                 // Set difference
-                if($1.indicator==1 && $3.indicator==1)
+                $$ = new expr_attr();
+                if($1->indicator==1 && $3->indicator==1)
                 {
-                    $$.indicator = 1;
-                    $$.isConst = false;
-                    if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
-                        $$.vtp = TYPE_FLOAT_64;
-                    else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
-                        $$.vtp = TYPE_FLOAT_32;
+                    $$->indicator = 1;
+                    $$->isConst = false;
+                    if($1->vtp==TYPE_FLOAT_64 || $3->vtp==TYPE_FLOAT_64)
+                        $$->vtp = TYPE_FLOAT_64;
+                    else if($1->vtp==TYPE_FLOAT_32 || $3->vtp==TYPE_FLOAT_32)
+                        $$->vtp = TYPE_FLOAT_32;
                     else
-                        $$.vtp = TYPE_INT_64;
-                    if($1.isConst && $3.isConst)
+                        $$->vtp = TYPE_INT_64;
+                    if($1->isConst && $3->isConst)
                     {
-                        $$.isConst = true;
-                        $$.val = new constant();
-                        $$.val->type = getCTYPE($$);
-                        if($$.val->type==CINT)
-                            $$.val->ccint = getConst($1)-getConst($3);
-                        else if($$.val->type==CFLOAT)
-                            $$.val->ccfloat = getConst($1)-getConst($3);
-                        else if($$.val->type==CBOOL)
-                            $$.val->ccbool = getConst($1)-getConst($3);
-                        else if($$.val->type==CCHAR)
-                            $$.val->ccchar = getConst($1)-getConst($3);
+                        $$->isConst = true;
+                        $$->val = new constant();
+                        $$->val->type = getCTYPE($$);
+                        if($$->val->type==CINT)
+                            $$->val->ccint = getConst($1)-getConst($3);
+                        else if($$->val->type==CFLOAT)
+                            $$->val->ccfloat = getConst($1)-getConst($3);
+                        else if($$->val->type==CBOOL)
+                            $$->val->ccbool = getConst($1)-getConst($3);
+                        else if($$->val->type==CCHAR)
+                            $$->val->ccchar = getConst($1)-getConst($3);
                     }
                 }
-                else if($1.indicator==2 && $3.indicator==2)
+                else if($1->indicator==2 && $3->indicator==2)
                 {
-                    $$.indicator = 2;
-                    $$.vts = TYPE_OSET;
+                    $$->indicator = 2;
+                    $$->vts = TYPE_OSET;
                 }
                 else
                     yyerror("Invalid operation: Subtrction can only be done between 'primitive' and 'set' types");
           }
           | expression OPER_MUL expression
           {
+                $$ = new expr_attr();
                 //Kleene star and intersection
-                $$.isConst = false;
-                if($1.indicator ==1 && $3.indicator ==1)
+                $$->isConst = false;
+                if($1->indicator ==1 && $3->indicator ==1)
                 {
-                    $$.indicator = 1;
-                    if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
-                        $$.vtp = TYPE_FLOAT_64;
-                    else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
-                        $$.vtp = TYPE_FLOAT_32;
+                    $$->indicator = 1;
+                    if($1->vtp==TYPE_FLOAT_64 || $3->vtp==TYPE_FLOAT_64)
+                        $$->vtp = TYPE_FLOAT_64;
+                    else if($1->vtp==TYPE_FLOAT_32 || $3->vtp==TYPE_FLOAT_32)
+                        $$->vtp = TYPE_FLOAT_32;
                     else
-                        $$.vtp = TYPE_INT_64;
-                    if($1.isConst && $3.isConst)
+                        $$->vtp = TYPE_INT_64;
+                    if($1->isConst && $3->isConst)
                     {
-                        $$.isConst = true;
-                        $$.val = new constant();
-                        $$.val->type = getCTYPE($$);
-                        if($$.val->type==CINT)
-                            $$.val->ccint = getConst($1)*getConst($3);
-                        else if($$.val->type==CFLOAT)
-                            $$.val->ccfloat = getConst($1)*getConst($3);
-                        else if($$.val->type==CBOOL)
-                            $$.val->ccbool = getConst($1)*getConst($3);
-                        else if($$.val->type==CCHAR)
-                            $$.val->ccchar = getConst($1)*getConst($3);
+                        $$->isConst = true;
+                        $$->val = new constant();
+                        $$->val->type = getCTYPE($$);
+                        if($$->val->type==CINT)
+                            $$->val->ccint = getConst($1)*getConst($3);
+                        else if($$->val->type==CFLOAT)
+                            $$->val->ccfloat = getConst($1)*getConst($3);
+                        else if($$->val->type==CBOOL)
+                            $$->val->ccbool = getConst($1)*getConst($3);
+                        else if($$->val->type==CCHAR)
+                            $$->val->ccchar = getConst($1)*getConst($3);
                     }
                 }
-                else if($1.indicator ==2 && $3.indicator ==2)
+                else if($1->indicator ==2 && $3->indicator ==2)
                 {
-                    $$.indicator = 2;
-                    $$.vts = TYPE_OSET;
+                    $$->indicator = 2;
+                    $$->vts = TYPE_OSET;
                 }
                 else
                     yyerror("Invalid operation: Multiplication can only be done between 'primitive' and 'set' types");
           }
           | expression OPER_DIV expression
           {
-            if($1.indicator !=1 || $3.indicator !=1)
+            $$ = new expr_attr();
+            if($1->indicator !=1 || $3->indicator !=1)
                 yyerror("Invalid operation: Division can only be done between 'primitive' types");
             //check for division by zero (to be done)
-            if($3.val && (($3.val->type == CINT && $3.val->ccint == 0) || ($3.val->type == CFLOAT && $3.val->ccfloat == 0.0) || ($3.val->type == CBOOL && $3.val->ccbool == false)||( $3.val->type == CCHAR && $3.val->ccchar == '\0')))
+            if($3->val && (($3->val->type == CINT && $3->val->ccint == 0) || ($3->val->type == CFLOAT && $3->val->ccfloat == 0.0) || ($3->val->type == CBOOL && $3->val->ccbool == false)||( $3->val->type == CCHAR && $3->val->ccchar == '\0')))
                 yyerror("Invalid operation: Division by zero");
-            $$.indicator = 1;
-            $$.isConst = false;
-            if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64)
-                $$.vtp = TYPE_FLOAT_64;
-            else if($1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
-                $$.vtp = TYPE_FLOAT_32;
+            $$->indicator = 1;
+            $$->isConst = false;
+            if($1->vtp==TYPE_FLOAT_64 || $3->vtp==TYPE_FLOAT_64)
+                $$->vtp = TYPE_FLOAT_64;
+            else if($1->vtp==TYPE_FLOAT_32 || $3->vtp==TYPE_FLOAT_32)
+                $$->vtp = TYPE_FLOAT_32;
             else
-                $$.vtp = TYPE_INT_64;
-            if($1.isConst && $3.isConst)
+                $$->vtp = TYPE_INT_64;
+            if($1->isConst && $3->isConst)
             {
-                $$.isConst = true;
-                $$.val = new constant();
-                $$.val->type = getCTYPE($$);
-                if($$.val->type==CINT)
-                    $$.val->ccint = getConst($1)/getConst($3);
-                else if($$.val->type==CFLOAT)
-                    $$.val->ccfloat = getConst($1)/getConst($3);
-                else if($$.val->type==CBOOL)
-                    $$.val->ccbool = getConst($1)/getConst($3);
-                else if($$.val->type==CCHAR)
-                    $$.val->ccchar = getConst($1)/getConst($3);
+                $$->isConst = true;
+                $$->val = new constant();
+                $$->val->type = getCTYPE($$);
+                if($$->val->type==CINT)
+                    $$->val->ccint = getConst($1)/getConst($3);
+                else if($$->val->type==CFLOAT)
+                    $$->val->ccfloat = getConst($1)/getConst($3);
+                else if($$->val->type==CBOOL)
+                    $$->val->ccbool = getConst($1)/getConst($3);
+                else if($$->val->type==CCHAR)
+                    $$->val->ccchar = getConst($1)/getConst($3);
             }
           }
           | expression OPER_MOD expression
           {
-            if($1.indicator !=1 || $3.indicator !=1)
+            $$ = new expr_attr();
+            if($1->indicator !=1 || $3->indicator !=1)
                 yyerror("Invalid operation: Modulo can only be done between 'integer' types");
-            if($1.vtp==TYPE_FLOAT_64 || $3.vtp==TYPE_FLOAT_64 || $1.vtp==TYPE_FLOAT_32 || $3.vtp==TYPE_FLOAT_32)
+            if($1->vtp==TYPE_FLOAT_64 || $3->vtp==TYPE_FLOAT_64 || $1->vtp==TYPE_FLOAT_32 || $3->vtp==TYPE_FLOAT_32)
                 yyerror("Invalid operation: Modulo can only be done between 'integer' types");
-            $$.indicator = 1;
-            $$.isConst = false;
-            $$.vtp = TYPE_INT_64;
-            if($1.isConst && $3.isConst)
+            $$->indicator = 1;
+            $$->isConst = false;
+            $$->vtp = TYPE_INT_64;
+            if($1->isConst && $3->isConst)
             {
-                $$.isConst = true;
-                $$.val = new constant();
-                $$.val->type = getCTYPE($$);
-                if($$.val->type==CINT)
-                    $$.val->ccint = $1.val->ccint % $3.val->ccint;
+                $$->isConst = true;
+                $$->val = new constant();
+                $$->val->type = getCTYPE($$);
+                if($$->val->type==CINT)
+                    $$->val->ccint = $1->val->ccint % $3->val->ccint;
             }
           }
           | expression OPER_COMP expression
           {
-            if($1.indicator !=1 || $3.indicator !=1)
+            $$ = new expr_attr();
+            if($1->indicator !=1 || $3->indicator !=1)
                 yyerror("Invalid comparison: Comparison can only be done between primitive types");
-            $$.indicator = 1;
-            $$.vtp = TYPE_BOOL;
+            $$->indicator = 1;
+            $$->vtp = TYPE_BOOL;
             std::string comp($2); //"<=",">=","==","!="
-            $$.isConst = false;
+            $$->isConst = false;
             if(comp=="<=")
             {
-                if($1.isConst && $3.isConst)
+                if($1->isConst && $3->isConst)
                 {
-                    $$.isConst = true;
-                    $$.val = new constant();
-                    $$.val->type = CBOOL;
-                    $$.val->ccbool = getConst($1)<=getConst($3);
+                    $$->isConst = true;
+                    $$->val = new constant();
+                    $$->val->type = CBOOL;
+                    $$->val->ccbool = getConst($1)<=getConst($3);
                 }
             }
             if(comp==">=")
             {
-                if($1.isConst && $3.isConst)
+                if($1->isConst && $3->isConst)
                 {
-                    $$.isConst = true;
-                    $$.val = new constant();
-                    $$.val->type = CBOOL;
-                    $$.val->ccbool = getConst($1)>=getConst($3);
+                    $$->isConst = true;
+                    $$->val = new constant();
+                    $$->val->type = CBOOL;
+                    $$->val->ccbool = getConst($1)>=getConst($3);
                 }
             }
             if(comp=="==")
             {
-                if($1.isConst && $3.isConst)
+                if($1->isConst && $3->isConst)
                 {
-                    $$.isConst = true;
-                    $$.val = new constant();
-                    $$.val->type = CBOOL;
-                    $$.val->ccbool = getConst($1)==getConst($3);
+                    $$->isConst = true;
+                    $$->val = new constant();
+                    $$->val->type = CBOOL;
+                    $$->val->ccbool = getConst($1)==getConst($3);
                 }
             }
             if(comp=="!=")
             {
-                if($1.isConst && $3.isConst)
+                if($1->isConst && $3->isConst)
                 {
-                    $$.isConst = true;
-                    $$.val = new constant();
-                    $$.val->type = CBOOL;
-                    $$.val->ccbool = getConst($1)!=getConst($3);
+                    $$->isConst = true;
+                    $$->val = new constant();
+                    $$->val->type = CBOOL;
+                    $$->val->ccbool = getConst($1)!=getConst($3);
                 }
             }
           }
           | expression OPER_POWER
           {
-            if($1.indicator !=2)
+            $$ = new expr_attr();
+            if($1->indicator !=2)
                 yyerror("Invalid operation: Power set can only be computed for a set");
-            $$.indicator = 2;
-            $$.vts = TYPE_OSET;
-            $$.isConst = false;
+            $$->indicator = 2;
+            $$->vts = TYPE_OSET;
+            $$->isConst = false;
           }
           | expression AT_THE_RATE expression 
           {
+            $$ = new expr_attr();
             // What about regex? (to be done) cfg + pdas (to be done)
-            if($1.indicator !=2 || $3.indicator != 2)
+            if($1->indicator !=2 || $3->indicator != 2)
                 yyerror("Invalid operation: Automata can only be concatenated with Automata");
-            $$.indicator = 2;
-            if(($1.vta == TYPE_NFA && $3.vta == TYPE_DFA) || ($3.vta == TYPE_NFA && $1.vta == TYPE_DFA) || ($1.vta == TYPE_NFA && $3.vta == TYPE_NFA))
-                $$.vta = TYPE_NFA;
-            else if($1.vta == TYPE_DFA && $3.vta == TYPE_DFA)
-                $$.vta = TYPE_DFA;
-            else if($1.vta == TYPE_PDA && $3.vta == TYPE_PDA)
-                $$.vta = TYPE_PDA;
-            else if($1.vta == TYPE_CFG && $3.vta == TYPE_CFG)
-                $$.vta = TYPE_CFG;
+            $$->indicator = 2;
+            if(($1->vta == TYPE_NFA && $3->vta == TYPE_DFA) || ($3->vta == TYPE_NFA && $1->vta == TYPE_DFA) || ($1->vta == TYPE_NFA && $3->vta == TYPE_NFA))
+                $$->vta = TYPE_NFA;
+            else if($1->vta == TYPE_DFA && $3->vta == TYPE_DFA)
+                $$->vta = TYPE_DFA;
+            else if($1->vta == TYPE_PDA && $3->vta == TYPE_PDA)
+                $$->vta = TYPE_PDA;
+            else if($1->vta == TYPE_CFG && $3->vta == TYPE_CFG)
+                $$->vta = TYPE_CFG;
             else
                 yyerror("Invalid operation: Automata can only be concatenated with Automata");
-            $$.isConst = false;
+            $$->isConst = false;
           }
           | expression OPER_OR expression
           {
-            if($1.indicator ==3 || $3.indicator == 3)
+            $$ = new expr_attr();
+            if($1->indicator ==3 || $3->indicator == 3)
                 yyerror("Invalid comparison: Set cannot be compared");
-            if($1.indicator == 2 || $3.indicator == 2)
+            if($1->indicator == 2 || $3->indicator == 2)
                 yyerror("Invalid comparison: Automata cannot be compared");
-            $$.indicator = 1;
-            $$.vtp = TYPE_BOOL;
-            $$.isConst = false;
-            if($1.isConst && $3.isConst)
+            $$->indicator = 1;
+            $$->vtp = TYPE_BOOL;
+            $$->isConst = false;
+            if($1->isConst && $3->isConst)
             {
-                $$.isConst = true;
-                $$.val = new constant();
-                $$.val->type = CBOOL;
-                $$.val->ccbool = getConst($1) || getConst($3);
+                $$->isConst = true;
+                $$->val = new constant();
+                $$->val->type = CBOOL;
+                $$->val->ccbool = getConst($1) || getConst($3);
             }
-            else if($1.isConst)
+            else if($1->isConst)
             {
-                if(($1.val->type==CINT && $1.val->ccint!=0) || ($1.val->type==CFLOAT && $1.val->ccfloat!=0.0) || ($1.val->type==CBOOL && $1.val->ccbool!=false) || ($1.val->type==CCHAR && $1.val->ccchar!='\0'))
+                if(($1->val->type==CINT && $1->val->ccint!=0) || ($1->val->type==CFLOAT && $1->val->ccfloat!=0.0) || ($1->val->type==CBOOL && $1->val->ccbool!=false) || ($1->val->type==CCHAR && $1->val->ccchar!='\0'))
                 {
-                    $$.isConst = true;
-                    $$.val = new constant();
-                    $$.val->type = CBOOL;
-                    $$.val->ccbool = true;
+                    $$->isConst = true;
+                    $$->val = new constant();
+                    $$->val->type = CBOOL;
+                    $$->val->ccbool = true;
                 }
             }
-            else if($3.isConst)
+            else if($3->isConst)
             {
-                if(($3.val->type==CINT && $3.val->ccint!=0) || ($3.val->type==CFLOAT && $3.val->ccfloat!=0.0) || ($3.val->type==CBOOL && $3.val->ccbool!=false) || ($3.val->type==CCHAR && $3.val->ccchar!='\0'))
+                if(($3->val->type==CINT && $3->val->ccint!=0) || ($3->val->type==CFLOAT && $3->val->ccfloat!=0.0) || ($3->val->type==CBOOL && $3->val->ccbool!=false) || ($3->val->type==CCHAR && $3->val->ccchar!='\0'))
                 {
-                    $$.isConst = true;
-                    $$.val = new constant();
-                    $$.val->type = CBOOL;
-                    $$.val->ccbool = true;
+                    $$->isConst = true;
+                    $$->val = new constant();
+                    $$->val->type = CBOOL;
+                    $$->val->ccbool = true;
                 }
             }
           }
           | expression OPER_AND expression
           {
-            if($1.indicator ==3 || $3.indicator == 3)
+            $$ = new expr_attr();
+            if($1->indicator ==3 || $3->indicator == 3)
                 yyerror("Invalid comparison: Set cannot be compared");
-            if($1.indicator == 2 || $3.indicator == 2)
+            if($1->indicator == 2 || $3->indicator == 2)
                 yyerror("Invalid comparison: Automata cannot be compared");
-            $$.indicator = 1;
-            $$.vtp = TYPE_BOOL;
-            $$.isConst = false;
-            if($1.isConst && $3.isConst)
+            $$->indicator = 1;
+            $$->vtp = TYPE_BOOL;
+            $$->isConst = false;
+            if($1->isConst && $3->isConst)
             {
-                $$.val->type = CBOOL;
-                $$.val->ccbool = getConst($1) && getConst($3);
+                $$->val->type = CBOOL;
+                $$->val->ccbool = getConst($1) && getConst($3);
             }
-            else if($1.isConst)
+            else if($1->isConst)
             {
-                if(($1.val->type==CINT && $1.val->ccint==0) || ($1.val->type==CFLOAT && $1.val->ccfloat==0.0) || ($1.val->type==CBOOL && $1.val->ccbool==false) || ($1.val->type==CCHAR && $1.val->ccchar=='\0'))
+                if(($1->val->type==CINT && $1->val->ccint==0) || ($1->val->type==CFLOAT && $1->val->ccfloat==0.0) || ($1->val->type==CBOOL && $1->val->ccbool==false) || ($1->val->type==CCHAR && $1->val->ccchar=='\0'))
                 {
-                    $$.isConst = true;
-                    $$.val = new constant();
-                    $$.val->type = CBOOL;
-                    $$.val->ccbool = false;
+                    $$->isConst = true;
+                    $$->val = new constant();
+                    $$->val->type = CBOOL;
+                    $$->val->ccbool = false;
                 }
             }
-            else if($3.isConst)
+            else if($3->isConst)
             {
-                if(($3.val->type==CINT && $3.val->ccint==0) || ($3.val->type==CFLOAT && $3.val->ccfloat==0.0) || ($3.val->type==CBOOL && $3.val->ccbool==false) || ($3.val->type==CCHAR && $3.val->ccchar=='\0'))
+                if(($3->val->type==CINT && $3->val->ccint==0) || ($3->val->type==CFLOAT && $3->val->ccfloat==0.0) || ($3->val->type==CBOOL && $3->val->ccbool==false) || ($3->val->type==CCHAR && $3->val->ccchar=='\0'))
                 {
-                    $$.isConst = true;
-                    $$.val = new constant();
-                    $$.val->type = CBOOL;
-                    $$.val->ccbool = false;
+                    $$->isConst = true;
+                    $$->val = new constant();
+                    $$->val->type = CBOOL;
+                    $$->val->ccbool = false;
                 }
             }
           }
           | expression COMP_GT expression
           {
-            if($1.indicator ==3 || $3.indicator == 3)
+            $$ = new expr_attr();
+            if($1->indicator ==3 || $3->indicator == 3)
                 yyerror("Invalid comparison: Set cannot be compared");
-            if($1.indicator == 2 || $3.indicator == 2)
+            if($1->indicator == 2 || $3->indicator == 2)
                 yyerror("Invalid comparison: Automata cannot be compared");
-            $$.indicator = 1;
-            $$.vtp = TYPE_BOOL;
-            $$.isConst = false;
+            $$->indicator = 1;
+            $$->vtp = TYPE_BOOL;
+            $$->isConst = false;
             //constant check
-            if($1.isConst && $3.isConst)
+            if($1->isConst && $3->isConst)
             {
-                $$.isConst = true;
-                $$.val = new constant();
-                $$.val->type = CBOOL;
-                $$.val->ccbool = getConst($1)>getConst($3);
+                $$->isConst = true;
+                $$->val = new constant();
+                $$->val->type = CBOOL;
+                $$->val->ccbool = getConst($1)>getConst($3);
             }
           }
           | expression COMP_LT expression 
           {
-            if($1.indicator ==3 || $3.indicator == 3)
+            $$ = new expr_attr();
+            if($1->indicator ==3 || $3->indicator == 3)
                 yyerror("Invalid comparison: Set cannot be compared");
-            if($1.indicator == 2 || $3.indicator == 2)
+            if($1->indicator == 2 || $3->indicator == 2)
                 yyerror("Invalid comparison: Automata cannot be compared");
-            $$.indicator = 1;
-            $$.vtp = TYPE_BOOL;
-            $$.isConst = false;
+            $$->indicator = 1;
+            $$->vtp = TYPE_BOOL;
+            $$->isConst = false;
             //constant check
-            if($1.isConst && $3.isConst)
+            if($1->isConst && $3->isConst)
             {
-                $$.isConst = true;
-                $$.val = new constant();
-                $$.val->type = CBOOL;
-                $$.val->ccbool = getConst($1)<getConst($3);
+                $$->isConst = true;
+                $$->val = new constant();
+                $$->val->type = CBOOL;
+                $$->val->ccbool = getConst($1)<getConst($3);
             }
           }
           | OPER_NOT expression { 
-            if($2.indicator ==2)
+            $$ = new expr_attr();
+            if($2->indicator ==2)
                 yyerror("Invalid operator: Negation of Set not defined");
-            if($2.indicator ==3 && ($2.vta == TYPE_CFG || $2.vta == TYPE_PDA))
+            if($2->indicator ==3 && ($2->vta == TYPE_CFG || $2->vta == TYPE_PDA))
                 yyerror("Invalid operator: CFG/NDPDA not closed under complement");
-            $$.indicator = $2.indicator;
-            $$.isConst = false;
-            if($2.indicator == 1)
+            $$->indicator = $2->indicator;
+            $$->isConst = false;
+            if($2->indicator == 1)
             {
-                if($2.isConst)
+                if($2->isConst)
                 {
-                    $$.isConst = true;
-                    $$.val = new constant();
-                    $$.val->type = CBOOL;
-                    if($2.val->type == CINT)
-                        $$.val->ccbool = !($2.val->ccint);
-                    else if($2.val->type == CFLOAT)
-                        $$.val->ccbool = !($2.val->ccfloat);
-                    else if($2.val->type == CBOOL)
-                        $$.val->ccbool = !($2.val->ccbool);
-                    else if($2.val->type == CCHAR)
-                        $$.val->ccbool = !($2.val->ccchar);
+                    $$->isConst = true;
+                    $$->val = new constant();
+                    $$->val->type = CBOOL;
+                    if($2->val->type == CINT)
+                        $$->val->ccbool = !($2->val->ccint);
+                    else if($2->val->type == CFLOAT)
+                        $$->val->ccbool = !($2->val->ccfloat);
+                    else if($2->val->type == CBOOL)
+                        $$->val->ccbool = !($2->val->ccbool);
+                    else if($2->val->type == CCHAR)
+                        $$->val->ccbool = !($2->val->ccchar);
                 }
                 else
-                    $$.isConst = false;
-                $$.vtp = TYPE_BOOL;
+                    $$->isConst = false;
+                $$->vtp = TYPE_BOOL;
             }
-            else if($2.indicator == 3)
-                {$$.vta = $2.vta; $$.isConst = false;}
+            else if($2->indicator == 3)
+                {$$->vta = $2->vta; $$->isConst = false;}
 
           }
           | expression OPER_HASH { 
-            if($1.indicator !=3)
+            $$ = new expr_attr();
+            if($1->indicator !=3)
                 yyerror("Invalid operator: Kleene Star can only be applied to Automata");
-            $$.indicator = 3;
-            $$.vta = $1.vta;
-            $$.isConst = false;
+            $$->indicator = 3;
+            $$->vta = $1->vta;
+            $$->isConst = false;
           }
           | OPER_MINUS expression { 
-                                    $$.indicator = $2.indicator; 
-                                    $$.vtp = $2.vtp; 
-                                    $$.vta = $2.vta; 
-                                    $$.vts = $2.vts;
-                                    $$.isConst = $2.isConst;
-                                    $$.val = $2.val;
-                                    switch($$.val->type)
+                                    $$ = new expr_attr();
+                                    $$->indicator = $2->indicator; 
+                                    $$->vtp = $2->vtp; 
+                                    $$->vta = $2->vta; 
+                                    $$->vts = $2->vts;
+                                    $$->isConst = $2->isConst;
+                                    $$->val = $2->val;
+                                    switch($$->val->type)
                                     {
                                         case CINT:
-                                                $$.val->ccint = -($$.val->ccint);
+                                                $$->val->ccint = -($$->val->ccint);
                                                 break;
                                         case CFLOAT:
-                                                $$.val->ccfloat = -($$.val->ccfloat);
+                                                $$->val->ccfloat = -($$->val->ccfloat);
                                                 break;
                                         case CBOOL:
-                                                $$.val->ccbool = !($$.val->ccbool);
+                                                $$->val->ccbool = !($$->val->ccbool);
                                                 break;
                                         case CCHAR:
-                                                $$.val->ccchar = -($$.val->ccchar);
+                                                $$->val->ccchar = -($$->val->ccchar);
                                                 break;
                                     }
                                 }
           | OPER_PLUS expression { 
-                                  $$.indicator = $2.indicator;
-                                  $$.vtp = $2.vtp; 
-                                  $$.vta = $2.vta; 
-                                  $$.vts = $2.vts;
-                                  $$.isConst = $2.isConst;
-                                  $$.val = $2.val;
+                                  $$ = new expr_attr();
+                                  $$->indicator = $2->indicator;
+                                  $$->vtp = $2->vtp; 
+                                  $$->vta = $2->vta; 
+                                  $$->vts = $2->vts;
+                                  $$->isConst = $2->isConst;
+                                  $$->val = $2->val;
                                  }
           | INT_CONST { 
-                        $$.indicator = 1; 
-                        $$.vtp = TYPE_INT_64; 
-                        $$.val = new constant();
-                        $$.val->ccint = $1;
-                        $$.val->type = CINT;
-                        $$.isConst = true;
+                        $$ = new expr_attr();
+                        $$->indicator = 1; 
+                        $$->vtp = TYPE_INT_64; 
+                        $$->val = new constant();
+                        $$->val->ccint = $1;
+                        $$->val->type = CINT;
+                        $$->isConst = true;
                       }
           | FLOAT_CONST { 
-                          $$.indicator = 1; 
-                          $$.vtp = TYPE_FLOAT_64; 
-                          $$.val = new constant();
-                          $$.val->ccfloat = $1;
-                          $$.val->type = CFLOAT;
-                          $$.isConst = true;
+                          $$ = new expr_attr();
+                          $$->indicator = 1; 
+                          $$->vtp = TYPE_FLOAT_64; 
+                          $$->val = new constant();
+                          $$->val->ccfloat = $1;
+                          $$->val->type = CFLOAT;
+                          $$->isConst = true;
                         }
           | BOOL_CONST { 
-                         $$.indicator = 1; 
-                         $$.vtp = TYPE_BOOL; 
-                         $$.val = new constant();
-                         $$.val->ccbool = $1;
-                         $$.val->type = CBOOL;
-                         $$.isConst = true;
+                         $$ = new expr_attr();
+                         $$->indicator = 1; 
+                         $$->vtp = TYPE_BOOL; 
+                         $$->val = new constant();
+                         $$->val->ccbool = $1;
+                         $$->val->type = CBOOL;
+                         $$->isConst = true;
                        }
           | CHAR_CONST { 
-                        $$.indicator = 1; 
-                        $$.vtp = TYPE_CHAR;
-                        $$.val = new constant();
-                        $$.val->ccchar = $1;
-                        $$.val->type = CBOOL;
-                        $$.isConst = true;
+                        $$ = new expr_attr();
+                        $$->indicator = 1; 
+                        $$->vtp = TYPE_CHAR;
+                        $$->val = new constant();
+                        $$->val->ccchar = $1;
+                        $$->val->type = CBOOL;
+                        $$->isConst = true;
                        }
           | pseudo_ID { 
-                        $$.indicator = $1->indicator; 
-                        $$.vtp = $1->vtp; 
-                        $$.vta = $1->vta; 
-                        $$.vts = $1->vts;
+                        $$ = new expr_attr();
+                        $$->indicator = $1->indicator; 
+                        $$->vtp = $1->vtp; 
+                        $$->vta = $1->vta; 
+                        $$->vts = $1->vts;
                         std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
                         if(!ret.first)
                             yyerror(ret.second.c_str());
                         else
                         {
-                            $$.isConst = false;
+                            $$->isConst = false;
                             std::string type = ret.second.substr(ret.second.find(' ')+1);
                             if(type=="int_8")
                             {
-                                $$.indicator = 1;
-                                $$.vtp = TYPE_INT_8;
+                                $$->indicator = 1;
+                                $$->vtp = TYPE_INT_8;
                             }
                             else if(type=="int_16")
                             {
-                                $$.indicator = 1;
-                                $$.vtp = TYPE_INT_16;
+                                $$->indicator = 1;
+                                $$->vtp = TYPE_INT_16;
                             }
                             else if(type=="int_32")
                             {
-                                $$.indicator = 1;
-                                $$.vtp = TYPE_INT_32;
+                                $$->indicator = 1;
+                                $$->vtp = TYPE_INT_32;
                             }
                             else if(type=="int_64")
                             {
-                                $$.indicator = 1;
-                                $$.vtp = TYPE_INT_64;
+                                $$->indicator = 1;
+                                $$->vtp = TYPE_INT_64;
                             }
                             else if(type=="float_32")
                             {
-                                $$.indicator = 1;
-                                $$.vtp = TYPE_FLOAT_32;
+                                $$->indicator = 1;
+                                $$->vtp = TYPE_FLOAT_32;
                             }
                             else if(type=="float_64")
                             {
-                                $$.indicator = 1;
-                                $$.vtp = TYPE_FLOAT_64;
+                                $$->indicator = 1;
+                                $$->vtp = TYPE_FLOAT_64;
                             }
                             else if(type=="bool")
                             {
-                                $$.indicator = 1;
-                                $$.vtp = TYPE_BOOL;
+                                $$->indicator = 1;
+                                $$->vtp = TYPE_BOOL;
                             }
                             else if(type=="char")
                             {
-                                $$.indicator = 1;
-                                $$.vtp = TYPE_CHAR;
+                                $$->indicator = 1;
+                                $$->vtp = TYPE_CHAR;
                             }
                             else if(type=="string")
                             {
-                                $$.indicator = 4;
-                                $$.vtsr = TYPE_STR;
+                                $$->indicator = 4;
+                                $$->vtsr = TYPE_STR;
                             }
                             else if(type=="regex")
                             {
-                                $$.indicator = 5;
-                                $$.vtsr = TYPE_REGEX;
+                                $$->indicator = 5;
+                                $$->vtsr = TYPE_REGEX;
                             }
                             else if(type=="set")
                             {
-                                $$.indicator = 2;
-                                $$.vts = TYPE_OSET;
+                                $$->indicator = 2;
+                                $$->vts = TYPE_OSET;
+                                size_t first_space = ret.second.find(' ');
+                                size_t second = ret.second.find(' ',first_space+1);
+                                $$->inner = genInnerType(ret.second.substr(second+1));
                             }
                             else if(type=="nfa")
                             {
-                                $$.indicator = 3;
-                                $$.vta = TYPE_NFA;
+                                $$->indicator = 3;
+                                $$->vta = TYPE_NFA;
                             }
                             else if(type=="dfa")
                             {
-                                $$.indicator = 3;
-                                $$.vta = TYPE_DFA;
+                                $$->indicator = 3;
+                                $$->vta = TYPE_DFA;
                             }
                             else if(type=="pda")
                             {
-                                $$.indicator = 3;
-                                $$.vta = TYPE_PDA;
+                                $$->indicator = 3;
+                                $$->vta = TYPE_PDA;
                             }
                             else if(type=="cfg")
                             {
-                                $$.indicator = 3;
-                                $$.vta = TYPE_CFG;
+                                $$->indicator = 3;
+                                $$->vta = TYPE_CFG;
+                            }
+                            else
+                            {
+                                $$->indicator = 7;
+                                $$->vtsr = TYPE_STRU;
+                                $$->ifStruct = type;
                             }
                             //structs (to be done)
                         }
                       }
           | call {
                     // To be handled (to be done)
-                    $$.indicator = 1;
+                    $$ = new expr_attr();
+                    $$->indicator = 1;
+                    
                  }
           ;
 
@@ -1173,14 +1221,130 @@ call : ID LPAREN argument_list RPAREN
             yyerror(error.c_str());
         }
         //check if argument type matches (to be done)
-        //create type of call
+        //create type of call from return type of function
+        FunctionSymbolTableEntry *entry = fst->lookup(std::string($1));
+        // return_type is complete with inner types as well(in case of sets)
+        $$ = new type_attr();
+        //get first word
+        std::string type = entry->return_type;
+        std::string outer_type = type.substr(0,type.find(' '));
+        if(isSet(outer_type)) //set
+        {
+            $$->indicator = 2;
+            $$->vts = getSetType(outer_type.c_str());
+            //recursively generate all inner types
+            type = type.substr(type.find(' ')+1);
+            $$->inner = genInnerType(type);
+            std::cout<<$$->inner->print()<<std::endl;
+        }
+        else if(isPrimitive(outer_type))
+        {
+            $$->indicator = 1;
+            $$->vtp = getPrimitiveType(outer_type.c_str());
+        }
+        else if(isAutomata(outer_type))
+        {
+            $$->indicator = 3;
+            $$->vta = getAutomataType(outer_type.c_str());
+        }
+        else if(isSR(outer_type))
+        {
+            if(outer_type=="string")
+                $$->indicator = 4;
+            else
+                $$->indicator = 5;
+            $$->vtsr = getSRType(outer_type.c_str());
+        }
+        else
+        {
+            $$->indicator = 7;
+            $$->vtsr = TYPE_STRU;
+            $$->ifStruct = outer_type;
+        }
+        // we also need to check argument types
+        std::vector<std::string> arg_pos_list_rev = entry->id_list;
+        VarSymbolTable *params_table = entry->params;
+        auto it_list = arg_pos_list_rev.rbegin();
+        auto it_arg_list = $3->lst.rbegin();
+        //compare types
+        int i=1;
+        while(it_list!=arg_pos_list_rev.rend() && it_arg_list!=$3->lst.rend())
+        {
+            std::string type_expected = params_table->lookup(*it_list)->type;
+            std::string type_actual = *it_arg_list;
+            if(type_expected=="o_set"||type_expected=="u_set")
+            {
+                //concat inner types
+                type_expected+=std::string(" ")+params_table->lookup(*it_list)->inner->print();
+            }
+            if(!isCoherent(type_expected,type_actual))
+            {
+                std::string error = std::string("Argument type mismatch at pos " + std::to_string(i)+ ": Expected ")+type_expected+std::string(" but found ")+type_actual;
+                yyerror(error.c_str());
+            }
+        }
+        if(it_list!=arg_pos_list_rev.rend())
+            yyerror("Too few arguments");
+        else if(it_arg_list!=$3->lst.rend())
+            yyerror("Too many arguments");
      }
      ;
 
 argument_list: 
-             | expression
-             | argument_list COMMA expression
+             {
+                //argument list is empty
+                $$ = new arg_list_attr();
+             }
+             | expression arg_list_next
+             {
+                $$ = new arg_list_attr();
+                $$->lst = $2->lst;
+                std::string type;
+                if($1->indicator==1)
+                    type = getVTP($1->vtp);
+                else if($1->indicator==2)
+                {
+                    type = getVTS($1->vts);
+                    type= type+std::string(" ")+$1->inner->print();
+                }
+                else if($1->indicator==3)
+                    type = getVTA($1->vta);
+                else if($1->indicator==4)
+                    type=std::string("string");
+                else if($1->indicator==5)
+                    type=std::string("regex");
+                else if($1->indicator ==7)
+                    type=std::string($1->ifStruct);
+                $$->lst.push_back(type);
+             }
              ;
+
+arg_list_next:
+             {
+                $$ = new arg_list_attr();
+             }
+             | COMMA expression arg_list_next
+             {
+                $$ = new arg_list_attr();
+                $$->lst = $3->lst;
+                std::string type;
+                if($2->indicator==1)
+                    type = getVTP($2->vtp);
+                else if($2->indicator==2)
+                {
+                    type = getVTS($2->vts);
+                    type= type+std::string(" ")+$2->inner->print();
+                }
+                else if($2->indicator==3)
+                    type = getVTA($2->vta);
+                else if($2->indicator==4)
+                    type=std::string("string");
+                else if($2->indicator==5)
+                    type=std::string("regex");
+                else if($2->indicator ==7)
+                    type=std::string($2->ifStruct);
+                $$->lst.push_back(type);
+             }
 
 rhs_automata: LBRACE alphabet_list RBRACE
             | LBRACE rules_list RBRACE
@@ -1278,19 +1442,21 @@ call_statement : call SEMICOLON
 return_statement : RETURN_KW expression SEMICOLON
                  {
                     type_attr *type = new type_attr();
-                    type->indicator = $2.indicator;
-                    type->vtp = $2.vtp;
-                    type->vta = $2.vta;
-                    type->vts = $2.vts;
+                    type->indicator = $2->indicator;
+                    type->vtp = $2->vtp;
+                    type->vta = $2->vta;
+                    type->vts = $2->vts;
                     if(current_function->return_type == std::string("void"))
                         yyerror("Return type mismatch/ function returns void");
+                    std::cout<<"Here"<<std::endl;
                     if(!isCoherent(current_function->return_type,getType(type)))
                         yyerror("Return type mismatch");
                     //struct handling (to be done)
-                    $$->indicator = $2.indicator;
-                    $$->vtp = $2.vtp;
-                    $$->vta = $2.vta;
-                    $$->vts = $2.vts;
+                    $$ = new type_attr();
+                    $$->indicator = $2->indicator;
+                    $$->vtp = $2->vtp;
+                    $$->vta = $2->vta;
+                    $$->vts = $2->vts;
                  }
                  | RETURN_KW SEMICOLON
                  {
@@ -1299,6 +1465,7 @@ return_statement : RETURN_KW expression SEMICOLON
                         std::string error = "Return type mismatch/ function returns "+current_function->return_type;
                         yyerror(error.c_str());
                     }
+                    $$ = new type_attr();
                     $$->indicator = 0;
                  }
                  ;
@@ -1313,6 +1480,7 @@ dtype : TYPE_PRIMITIVE {
                         $$ = new type_attr();
                         $$->indicator = 1;
                         $$->vtp = $1;
+                        $$->dimensions.push_front(0);
                       }
       | TYPE_SET COMP_LT set_type COMP_GT {
                                             $$ = new type_attr();
@@ -1320,31 +1488,38 @@ dtype : TYPE_PRIMITIVE {
                                             $$->vts = $1; 
                                             // start from here 
                                             $$->inner = $3->inner;
+                                            $$->dimensions = $3->dimensions;
+                                            $$->dimensions.push_front(0);
                                           }
       | TYPE_AUTOMATA {
                         $$ = new type_attr();
                         $$->indicator = 3;
                         $$->vta = $1;
+                        $$->dimensions.push_front(0);
                       }
       | TYPE_STRING {
                         $$ = new type_attr();
                         $$->indicator = 4;
                         $$->vtsr = $1;
+                        $$->dimensions.push_front(0);
                     }
       | TYPE_REG {
                         $$ = new type_attr();
                         $$->indicator = 5;
                         $$->vtsr = $1;
+                        $$->dimensions.push_front(0);
                  }
       ;
 
 set_type : dtype {
                     $$ = new type_attr();
                     $$->inner = new inner_type($1->inner,getType($1));
+                    $$->dimensions = $1->dimensions;
                  }
          | ID {
                 $$ = new type_attr();
-                $$->inner = new inner_type(NULL,std::string("struct"));
+                $$->inner = new inner_type(NULL,std::string($1));
+                $$->dimensions.push_front(0);
               }
          ;
 
@@ -1354,7 +1529,7 @@ void yyerror(const char *s) {
 
     fprintf(parse_log, "Parser error: %d\n", yylineno);
     std::cout<<RED<<"Parser error: "<<yylineno<<RESET;
-    std::cout<<" :"<<s<<std::endl;
+    std::cout<<":"<<s<<std::endl;
     terminate();
 
 }

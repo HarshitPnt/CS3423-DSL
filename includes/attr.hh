@@ -1,6 +1,7 @@
 #include "types.hh"
 #include <iostream>
 #include <vector>
+#include <list>
 #include "st.hh"
 #include <utility>
 #ifndef __attr_hh__
@@ -22,6 +23,8 @@ struct id_attr
     VTYPE_SET vts;
     VTYPE_SR vtsr;
     int indicator;
+    std::string ifStruct;
+    std::string inner;
     constant *val;
     id_attr()
     {
@@ -36,7 +39,9 @@ public:
     VTYPE_PRIMITIVE vtp;
     VTYPE_SET vts;
     VTYPE_SR vtsr;
+    std::string ifStruct;
     int indicator;
+    std::list<int> dimensions;
     inner_type *inner = NULL;
 };
 
@@ -48,6 +53,21 @@ public:
     {
         lst.clear();
     }
+};
+
+class expr_attr
+{
+public:
+    VTYPE_PRIMITIVE vtp;
+    VTYPE_AUTOMATA vta;
+    VTYPE_SET vts;
+    VTYPE_SR vtsr;
+    int indicator;
+    constant *val;
+    std::string ifStruct;
+    int isConst;
+    int isVar;
+    inner_type *inner;
 };
 
 class func_attr
@@ -63,5 +83,11 @@ class param_list_attr
 public:
     std::vector<std::string> lst;
     int num;
+};
+
+class arg_list_attr
+{
+public:
+    std::vector<std::string> lst;
 };
 #endif

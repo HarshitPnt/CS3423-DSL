@@ -1,0 +1,4 @@
+o_set<o_set<int_8>> a;
+
+int_8 x = 5;
+a[x][x] = 10;

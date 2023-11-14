@@ -16,7 +16,7 @@ void initST()
     vstl->insert(global_vst);
 }
 
-VTYPE_PRIMITIVE getPrimitiveType(char *type)
+VTYPE_PRIMITIVE getPrimitiveType(const char *type)
 {
     std::string s = std::string(type);
     if (s.compare("bool") == 0)
@@ -46,7 +46,7 @@ VTYPE_PRIMITIVE getPrimitiveType(char *type)
     exit(1);
 }
 
-VTYPE_AUTOMATA getAutomataType(char *type)
+VTYPE_AUTOMATA getAutomataType(const char *type)
 {
     std::string s = std::string(type);
     if (s.compare("dfa") == 0)
@@ -60,7 +60,7 @@ VTYPE_AUTOMATA getAutomataType(char *type)
     exit(1);
 }
 
-VTYPE_SET getSetType(char *type)
+VTYPE_SET getSetType(const char *type)
 {
     std::string s = std::string(type);
     if (s.compare("u_set") == 0)
@@ -70,13 +70,15 @@ VTYPE_SET getSetType(char *type)
     exit(1);
 }
 
-VTYPE_SR getSRType(char *type)
+VTYPE_SR getSRType(const char *type)
 {
     std::string s = std::string(type);
     if (s.compare("string") == 0)
         return TYPE_STR;
     else if (s.compare("regex") == 0)
         return TYPE_REGEX;
+    else
+        return TYPE_STRU;
     exit(1);
 }
 
@@ -132,11 +134,12 @@ bool checkValidID(char *id)
     return false;
 }
 
-VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, inner_type *inner)
+VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, inner_type *inner, std::list<int> dims)
 {
     this->name = name;
     this->type = type;
     this->inner = inner;
+    this->dimensions = dims;
 }
 
 VarSymbolTableEntry::VarSymbolTableEntry(std::string name)
@@ -177,13 +180,14 @@ VarSymbolTable *VarSymbolTableList::lookup(std::string name)
     return NULL;
 }
 
-bool VarSymbolTable::backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner, VarSymbolTable *struct_vst)
+bool VarSymbolTable::backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner, VarSymbolTable *struct_vst, std::list<int> dims)
 {
     if (this->entries.find(vste->name) == this->entries.end())
         return 1;
     vste->type = type;
     vste->inner = inner;
     vste->struct_vst = struct_vst;
+    vste->dimensions = dims;
     return 0;
 }
 
@@ -335,6 +339,19 @@ std::string getType(type_attr *t_attr)
     return std::string("sets");
 }
 
+inner_type *genInnerType(std::string inner)
+{
+    if (inner.find(" ") == std::string::npos || inner.find(" ") == inner.length() - 1)
+        return new inner_type(NULL, inner);
+    else
+    {
+        size_t space = inner.find(" ");
+        std::string type = inner.substr(0, space);
+        inner_type *inner_inner = genInnerType(inner.substr(space + 1));
+        return new inner_type(inner_inner, type);
+    }
+}
+
 inner_type::inner_type(inner_type *inner, std::string type)
 {
     this->inner = inner;
@@ -377,56 +394,60 @@ void StructSymbolTable::print()
     }
 }
 
-bool isCoherent(std::string type1, std::string type2)
+bool isCoherent(std::string type_1, std::string type_2)
 {
-    if (type1.compare(type2) == 0)
+    if (type_1.compare(type_2) == 0)
         return true;
+    if ((!type_1.length() && type_2.length()) || (type_1.length() && !type_2.length()))
+        return false;
+    std::string type1 = type_1.substr(0, type_1.find(' '));
+    std::string type2 = type_2.substr(0, type_2.find(' '));
     if (type1 == "int_8" || type1 == "int_16" || type1 == "int_32" || type1 == "int_64" || type1 == "uint_8" || type1 == "uint_16" || type1 == "uint_32" || type1 == "uint_64")
     {
         if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "float_32" || type2 == "float_64")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "char")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "bool")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         return false;
     }
     if (type1 == "float_32" || type1 == "float_64")
     {
         if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "float_32" || type2 == "float_64")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "char")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "bool")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         return false;
     }
     if (type1 == "char")
     {
         if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "float_32" || type2 == "float_64")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "char")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "bool")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         return false;
     }
     if (type1 == "bool")
     {
         if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "float_32" || type2 == "float_64")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "char")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         if (type2 == "bool")
-            return true;
+            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         return false;
     }
     return false;
@@ -435,6 +456,34 @@ bool isCoherent(std::string type1, std::string type2)
 bool isStruct(std::string type)
 {
     if (type != "int_8" && type != "int_16" && type != "int_32" && type != "int_64" && type != "uint_8" && type != "uint_16" && type != "uint_32" && type != "uint_64" && type != "float_32" && type != "float_64" && type != "char" && type != "bool" && type != "string" && type != "regex" && type != "u_set" && type != "o_set")
+        return true;
+    return false;
+}
+
+bool isPrimitive(std::string type)
+{
+    if (type == "int_8" || type == "int_16" || type == "int_32" || type == "int_64" || type == "uint_8" || type == "uint_16" || type == "uint_32" || type == "uint_64" || type == "float_32" || type == "float_64" || type == "char" || type == "bool")
+        return true;
+    return false;
+}
+
+bool isSet(std::string type)
+{
+    if (type == "u_set" || type == "o_set")
+        return true;
+    return false;
+}
+
+bool isAutomata(std::string type)
+{
+    if (type == "dfa" || type == "nfa" || type == "pda" || type == "cfg")
+        return true;
+    return false;
+}
+
+bool isSR(std::string type)
+{
+    if (type == "string" || type == "regex")
         return true;
     return false;
 }
@@ -470,7 +519,7 @@ std::pair<bool, std::string> checkInner(std::string inner, std::string &name)
 std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string name, std::string struct_name)
 {
     // find occurrence of first . and []
-    std::cout << name << std::endl;
+    // std::cout << name << std::endl;
     size_t f_dot = name.find(".");
     size_t f_sq = name.find("[");
     size_t l_sq = name.find("]");
@@ -496,27 +545,41 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
     else if (f_dot != std::string::npos && (f_sq == std::string::npos || f_dot < f_sq))
     {
         std::string id1 = name.substr(0, f_dot);
-        std::cout << "HERE DOT" << std::endl;
+        // std::cout << "HERE DOT" << std::endl;
         if (entry == NULL)
         {
-            std::cout << "GLOBAL" << std::endl;
+            // std::cout << "GLOBAL" << std::endl;
             if (vstl->lookup(id1) == NULL)
                 return make_pair(false, id1 + std::string(" : not defined"));
             else
             {
+                // A.a
                 VarSymbolTable *vst_local = vstl->lookup(id1);
-                VarSymbolTableEntry *entry_local = vst_local->lookup(id1);
+                // searching for A
+                VarSymbolTableEntry *entry_local = vst_local->lookup(id1); // found A
                 // entry_local->print();
                 // entry_local->struct_vst->print();
-                if (!isStruct(entry_local->type))
+                if (!isStruct(entry_local->type)) // checking if A is a struct
                     return make_pair(false, id1 + std::string(" : not a struct"));
-                VarSymbolTable *next = entry_local->struct_vst;
+                // std::cout << "OK Struct Verified" << std::endl;
+                VarSymbolTable *next = entry_local->struct_vst; // retrieving the struct_vst for A
+                // extract the member from expression
+                std::string id2;
+                size_t next_f_dot = name.find(".", f_dot + 1);
+                if (next_f_dot == std::string::npos && f_sq == std::string::npos)
+                    id2 = name.substr(f_dot + 1);
+                else if (next_f_dot == std::string::npos)
+                    id2 = name.substr(f_dot + 1, f_sq - f_dot - 1);
+                else
+                    id2 = name.substr(f_dot + 1, std::min(f_sq, next_f_dot) - f_dot - 1);
+                if (next->lookup(id2) == NULL) // check if a is member of A
+                    return make_pair(false, id2 + std::string(" : not a member of struct ") + id1);
                 return checkPseudoID(next, name.substr(f_dot + 1), entry_local->type);
             }
         }
         else
         {
-            std::cout << "Struct" << std::endl;
+            // std::cout << "Struct" << std::endl;
             // check in the struct symbol table
             if (entry->lookup(id1) == NULL)
                 return make_pair(false, id1 + std::string(" : not a member of struct ") + std::string(struct_name));
@@ -540,11 +603,12 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
             }
         }
     }
-    else if ((f_dot == std::string::npos && f_sq != std::string::npos) || (f_sq < f_dot))
+    else if ((f_dot == std::string::npos && f_sq != std::string::npos) || (f_sq != std::string::npos && (f_sq < f_dot)))
     {
         // std::cout << "HERE BRACKS" << std::endl;
         std::string id2 = name.substr(f_sq + 1, l_sq - f_sq - 1);
         std::string id1 = name.substr(0, f_sq);
+        // std::cout << id1 << " " << id2 << std::endl;
         if (id2 != "__expr__") // check dimensions
         {
             // check dims
@@ -553,7 +617,7 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
         {
             if (entry == NULL)
             {
-                // std::cout << "GLOBAL BRACKS" << std::endl;
+                std::cout << "GLOBAL BRACKS" << std::endl;
                 if (vstl->lookup(id1) == NULL)
                     return make_pair(false, id1 + std::string(" : not defined"));
                 else
@@ -583,68 +647,171 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
         else
         {
             // check inner with pseudo_ID
-            std::string inner = entry->lookup(id1)->inner->print();
-            if (name[l_sq + 1] == '.')
+            std::string inner;
+            if (entry == NULL)
             {
-                // check if next inner is struct
-                size_t space = inner.find(" ");
-                std::string next;
-                if (space == std::string::npos)
-                    next = inner;
-                else
-                    next = inner.substr(0, space);
-                if (isStruct(next))
-                {
-                    VarSymbolTable *next_vst = sst->lookup(next)->fields;
-                    return checkPseudoID(next_vst, name.substr(l_sq + 2), next);
-                }
+                if (vstl->lookup(id1) == NULL)
+                    return make_pair(false, id1 + std::string(" : not defined"));
                 else
                 {
-                    return make_pair(false, id1 + std::string(" : multidimensional set"));
+                    if (vstl->lookup(id1)->lookup(id1)->type != "u_set" && vstl->lookup(id1)->lookup(id1)->type != "o_set")
+                        return make_pair(false, id1 + std::string(" : not a set"));
+                    else
+                    {
+                        inner = vstl->lookup(id1)->lookup(id1)->inner->print();
+                        // std::cout << inner << std::endl;
+                        if (name[l_sq + 1] == '.')
+                        {
+                            // check if next inner is struct
+                            size_t space = inner.find(" ");
+                            std::string next;
+                            if (space == std::string::npos)
+                                next = inner;
+                            else
+                                next = inner.substr(0, space);
+                            if (isStruct(next))
+                            {
+                                VarSymbolTable *next_vst = sst->lookup(next)->fields;
+                                return checkPseudoID(next_vst, name.substr(l_sq + 2), next);
+                            }
+                            else
+                            {
+                                return make_pair(false, next + std::string(": is not a 'struct'"));
+                            }
+                        }
+                        else
+                        {
+                            // check inner
+                            // std::cout << "here" << std::endl;
+                            name = name.substr(l_sq + 1);
+                            std::pair<bool, std::string> ret = checkInner(inner, name);
+                            if (ret.first == false)
+                                return ret;
+                            else
+                            {
+                                // now recurse with next A.a[1][2](here).b or A.a[1][2]
+                                f_dot = name.find(".");
+                                f_sq = name.find("[");
+                                if (f_sq == std::string::npos)
+                                    return make_pair(true, std::string("@found ") + ret.second);
+                                else
+                                {
+                                    // check once then recurse
+                                    std::string current_struct;
+                                    if (ret.second[ret.second.length() - 1] == ' ')
+                                        current_struct = ret.second.substr(0, ret.second.length() - 1);
+                                    else
+                                        current_struct = ret.second;
+                                    if (sst->lookup(current_struct) == NULL)
+                                        return make_pair(false, current_struct + std::string(" : not a struct"));
+                                    VarSymbolTable *next_vst = sst->lookup(current_struct)->fields;
+                                    size_t f_sq = name.find("[");
+                                    size_t l_sq = name.find("]");
+                                    size_t f_dot = name.find(".", 1);
+                                    std::string next_name;
+                                    if (f_dot == std::string::npos && f_sq == std::string::npos)
+                                        next_name = name.substr(1);
+                                    else if (f_dot == std::string::npos && f_sq != std::string::npos)
+                                        next_name = name.substr(1, f_sq - 1);
+                                    else if (f_dot != std::string::npos && f_sq == std::string::npos)
+                                        next_name = name.substr(1, f_dot - 1);
+                                    else
+                                    {
+                                        size_t minimum = std::min(f_sq, f_dot);
+                                        next_name = name.substr(1, minimum - 1);
+                                    }
+                                    if (!next_vst->lookup(next_name))
+                                        return make_pair(false, next_name + std::string(" : not a member of struct ") + ret.second);
+                                    else
+                                        return checkPseudoID(next_vst, name.substr(1), ret.second);
+                                }
+                            }
+                            return checkPseudoID(vstl->lookup(id1), name.substr(f_sq + 1), inner);
+                        }
+                    }
                 }
             }
             else
             {
-                // check inner
-                name = name.substr(l_sq + 1);
-                std::pair<bool, std::string> ret = checkInner(inner, name);
-                if (ret.first == false)
-                    return ret;
+                if (entry->lookup(id1) == NULL)
+                    return make_pair(false, id1 + std::string(" : not a member of struct ") + std::string(struct_name));
                 else
                 {
-                    // now recurse with next A.a[1][2](here).b or A.a[1][2]
-                    if (f_sq == std::string::npos)
-                        return make_pair(true, std::string("@found ") + ret.second);
+                    if (entry->lookup(id1)->type != "u_set" && entry->lookup(id1)->type != "o_set")
+                        return make_pair(false, id1 + std::string(" : not a set"));
                     else
                     {
-                        // check once then recurse
-                        std::string current_struct;
-                        if (ret.second[ret.second.length() - 1] == ' ')
-                            current_struct = ret.second.substr(0, ret.second.length() - 1);
-                        else
-                            current_struct = ret.second;
-                        if (sst->lookup(current_struct) == NULL)
-                            return make_pair(false, current_struct + std::string(" : not a struct"));
-                        VarSymbolTable *next_vst = sst->lookup(current_struct)->fields;
-                        size_t f_sq = name.find("[");
-                        size_t l_sq = name.find("]");
-                        size_t f_dot = name.find(".", 1);
-                        std::string next_name;
-                        if (f_dot == std::string::npos && f_sq == std::string::npos)
-                            next_name = name.substr(1);
-                        else if (f_dot == std::string::npos && f_sq != std::string::npos)
-                            next_name = name.substr(1, f_sq - 1);
-                        else if (f_dot != std::string::npos && f_sq == std::string::npos)
-                            next_name = name.substr(1, f_dot - 1);
+                        std::string inner = entry->lookup(id1)->inner->print();
+                        // std::cout << inner << std::endl;
+                        if (name[l_sq + 1] == '.')
+                        {
+                            // check if next inner is struct
+                            size_t space = inner.find(" ");
+                            std::string next;
+                            if (space == std::string::npos)
+                                next = inner;
+                            else
+                                next = inner.substr(0, space);
+                            if (isStruct(next))
+                            {
+                                VarSymbolTable *next_vst = sst->lookup(next)->fields;
+                                return checkPseudoID(next_vst, name.substr(l_sq + 2), next);
+                            }
+                            else
+                            {
+                                return make_pair(false, id1 + std::string(": is not a 'struct'"));
+                            }
+                        }
                         else
                         {
-                            size_t minimum = std::min(f_sq, f_dot);
-                            next_name = name.substr(1, minimum - 1);
+                            // check inner
+                            name = name.substr(l_sq + 1);
+                            std::pair<bool, std::string> ret = checkInner(inner, name);
+                            if (ret.first == false)
+                                return ret;
+                            else
+                            {
+                                // now recurse with next A.a[1][2](here).b or A.a[1][2]
+                                f_dot = name.find(".");
+                                f_sq = name.find("[");
+                                if (f_sq == std::string::npos && f_dot == std::string::npos)
+                                    return make_pair(true, std::string("@found ") + ret.second);
+                                else
+                                {
+                                    // check once then recurse
+                                    // extract the first word from ret.second
+                                    std::string current_struct;
+                                    size_t x = ret.second.find(" ");
+                                    if (x == std::string::npos)
+                                        current_struct = ret.second;
+                                    else
+                                        current_struct = ret.second.substr(0, x);
+                                    if (sst->lookup(current_struct) == NULL)
+                                        return make_pair(false, current_struct + std::string(" : not a struct"));
+                                    VarSymbolTable *next_vst = sst->lookup(current_struct)->fields;
+                                    f_sq = name.find("[");
+                                    l_sq = name.find("]");
+                                    f_dot = name.find(".", 1);
+                                    std::string next_name;
+                                    if (f_dot == std::string::npos && f_sq == std::string::npos)
+                                        next_name = name.substr(1);
+                                    else if (f_dot == std::string::npos && f_sq != std::string::npos)
+                                        next_name = name.substr(1, f_sq - 1);
+                                    else if (f_dot != std::string::npos && f_sq == std::string::npos)
+                                        next_name = name.substr(1, f_dot - 1);
+                                    else
+                                    {
+                                        size_t minimum = std::min(f_sq, f_dot);
+                                        next_name = name.substr(1, minimum - 1);
+                                    }
+                                    if (!next_vst->lookup(next_name))
+                                        return make_pair(false, next_name + std::string(" : not a member of struct ") + ret.second);
+                                    else
+                                        return checkPseudoID(next_vst, name.substr(1), ret.second);
+                                }
+                            }
+                            return checkPseudoID(entry, name.substr(f_sq + 1), inner);
                         }
-                        if (!next_vst->lookup(next_name))
-                            return make_pair(false, next_name + std::string(" : not a member of struct ") + ret.second);
-                        else
-                            return checkPseudoID(next_vst, name.substr(1), ret.second);
                     }
                 }
             }

@@ -1,0 +1,12 @@
+struct A{
+    o_set<int_8> a;
+};
+
+struct B{
+    int_16 b;
+    o_set<o_set<o_set<A>>> c;
+};
+
+B b;
+int_8 i;
+b.c[i][i][i].a[i]=5;

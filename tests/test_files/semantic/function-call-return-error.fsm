@@ -1,0 +1,5 @@
+void foo(int_8 x,float_32 y)
+{
+    int_8 x;
+    return x;
+}

@@ -49,9 +49,10 @@ public:
     std::string type;
     inner_type *inner;
     VarSymbolTable *struct_vst;
+    std::list<int> dimensions;
     void print();
     VarSymbolTableEntry(std::string name);
-    VarSymbolTableEntry(std::string name, std::string type, inner_type *inner);
+    VarSymbolTableEntry(std::string name, std::string type, inner_type *inner, std::list<int> dims);
 };
 
 class VarSymbolTable
@@ -60,7 +61,7 @@ public:
     std::unordered_map<std::string, VarSymbolTableEntry *> entries;
     int insert(VarSymbolTableEntry *vste);
     VarSymbolTableEntry *lookup(std::string name);
-    bool backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner, VarSymbolTable *struct_vst);
+    bool backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner, VarSymbolTable *struct_vst, std::list<int> dims);
     void print();
 };
 
