@@ -148,6 +148,10 @@ struct_member: dtype id_list_decl SEMICOLON
                     {
                         yyerror("Internal Error");
                     }
+                    if($1->indicator==2)//sets (set inner type)
+                    {
+                        it->first->inner = $1->inner;
+                    }
                 }
             }
             | ID id_list_decl SEMICOLON
@@ -250,6 +254,8 @@ function_header: dtype ID LPAREN param_list RPAREN {
                         //handling param_list
                         //push new function to function table
                         FunctionSymbolTableEntry *entry = new FunctionSymbolTableEntry(std::string($2),num_params,current_vst,getType($1));
+                        vstl->insert(entry->params);
+                        current_vst = entry->params;
                         //handling return type
                         std::string outer;
                         if($1->indicator==2)//set
@@ -434,6 +440,7 @@ variable_declaration: dtype id_list SEMICOLON
                                 yyerror("Internal Error");
                             }
                         }
+                        // std::cout<<"print"<<std::endl;
                         // vstl->print();
                     }
                     | ID id_list SEMICOLON
@@ -466,6 +473,15 @@ id_list: ID {
                     std::string error = "Variable redeclaration: "+std::string($1);
                     yyerror(error.c_str());
                 }
+                //check if function params also
+                if(current_function)
+                {
+                    if(current_function->params->lookup(std::string($1)))
+                    {
+                        std::string error = "Variable redeclaration: "+std::string($1);
+                        yyerror(error.c_str());
+                    }
+                }
                 VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($1));
                 current_vst->insert(entry);
                 type_attr *type = new type_attr();
@@ -481,6 +497,15 @@ id_list: ID {
                 std::string error = "Variable redeclaration: "+std::string($1);
                 yyerror(error.c_str());
             }
+            //check if function params also
+            if(current_function)
+            {
+                if(current_function->params->lookup(std::string($1)))
+                {
+                    std::string error = "Variable redeclaration: "+std::string($1);
+                    yyerror(error.c_str());
+                }
+            }
             VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($1));
             current_vst->insert(entry);
             type_attr *type = new type_attr();
@@ -488,6 +513,8 @@ id_list: ID {
             type->vtp = $3->vtp;
             type->vta = $3->vta;
             type->vts = $3->vts;
+            if(!current_function && !$3->isConst)
+                yyerror("Cannot initialize global variable with a non-constant value");
             $$->lst.push_back(std::make_pair(entry,type));
        }
        | id_list COMMA ID
@@ -592,6 +619,7 @@ rhs: expression
         $$->vtp = $1->vtp;
         $$->vta = $1->vta;
         $$->vts = $1->vts;
+        $$->isConst = $1->isConst;
         $$->indicator = $1->indicator;
     }
    | LBRACE expression_list RBRACE
@@ -1117,6 +1145,9 @@ expression: LPAREN expression RPAREN {
                         {
                             $$->isConst = false;
                             std::string type = ret.second.substr(ret.second.find(' ')+1);
+                            if(type.find(" ")!=std::string::npos && type.find(" ")!=type.length()-1)
+                                type = type.substr(0,type.find(' ') );
+                            // std::cout<<ret.second<<std::endl;
                             if(type=="int_8")
                             {
                                 $$->indicator = 1;
@@ -1167,13 +1198,15 @@ expression: LPAREN expression RPAREN {
                                 $$->indicator = 5;
                                 $$->vtsr = TYPE_REGEX;
                             }
-                            else if(type=="set")
+                            else if(type=="o_set" || type=="u_set")
                             {
                                 $$->indicator = 2;
-                                $$->vts = TYPE_OSET;
-                                size_t first_space = ret.second.find(' ');
-                                size_t second = ret.second.find(' ',first_space+1);
+                                $$->vts = getSetType(type.c_str());
+                                // std::cout<<ret.second<<std::endl;
+                                size_t first_space = ret.second.find(" ");
+                                size_t second = ret.second.find(" ",first_space+1);
                                 $$->inner = genInnerType(ret.second.substr(second+1));
+                                // std::cout<<$$->inner->print()<<std::endl;
                             }
                             else if(type=="nfa")
                             {
@@ -1446,11 +1479,19 @@ return_statement : RETURN_KW expression SEMICOLON
                     type->vtp = $2->vtp;
                     type->vta = $2->vta;
                     type->vts = $2->vts;
+                    type->inner = $2->inner;
                     if(current_function->return_type == std::string("void"))
                         yyerror("Return type mismatch/ function returns void");
-                    std::cout<<"Here"<<std::endl;
-                    if(!isCoherent(current_function->return_type,getType(type)))
-                        yyerror("Return type mismatch");
+                    std::string inner = type->inner->print();
+                    if(inner[inner.length()-1]==' ')
+                        inner = inner.substr(0,inner.length()-1);
+                    // std::cout<<getType(type) + std::string(" ")+type->inner->print()<<std::endl;
+                    // std::cout<<current_function->return_type<<std::endl;
+                    if(!isCoherent(current_function->return_type,(getType(type) + std::string(" ")+inner)))
+                    {
+                        std::string str = std::string("Return type mismatch, expecting ")+current_function->return_type;
+                        yyerror(str.c_str());
+                    }
                     //struct handling (to be done)
                     $$ = new type_attr();
                     $$->indicator = $2->indicator;

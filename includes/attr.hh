@@ -39,6 +39,7 @@ public:
     VTYPE_PRIMITIVE vtp;
     VTYPE_SET vts;
     VTYPE_SR vtsr;
+    bool isConst;
     std::string ifStruct;
     int indicator;
     std::list<int> dimensions;

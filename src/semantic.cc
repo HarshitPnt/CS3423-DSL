@@ -396,12 +396,14 @@ void StructSymbolTable::print()
 
 bool isCoherent(std::string type_1, std::string type_2)
 {
+    // std::cout << type_1.length() << " " << type_2.length() << std::endl;
     if (type_1.compare(type_2) == 0)
         return true;
     if ((!type_1.length() && type_2.length()) || (type_1.length() && !type_2.length()))
         return false;
     std::string type1 = type_1.substr(0, type_1.find(' '));
     std::string type2 = type_2.substr(0, type_2.find(' '));
+    // std::cout << type1 << " " << type2 << std::endl;
     if (type1 == "int_8" || type1 == "int_16" || type1 == "int_32" || type1 == "int_64" || type1 == "uint_8" || type1 == "uint_16" || type1 == "uint_32" || type1 == "uint_64")
     {
         if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
@@ -450,6 +452,16 @@ bool isCoherent(std::string type_1, std::string type_2)
             return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
         return false;
     }
+    if (type1 == "o_set" && type2 == "o_set")
+    {
+        return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+    }
+    if (type1 == "u_set" && type2 == "u_set")
+    {
+        return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+    }
+    if (type1 == type2)
+        return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
     return false;
 }
 
@@ -532,18 +544,31 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
             if (vstl->lookup(name) == NULL)
                 return std::make_pair(false, name + std::string(" : not defined"));
             else
-                return std::make_pair(true, std::string("@found ") + vstl->lookup(name)->lookup(name)->type);
+            {
+                std::string type = vstl->lookup(name)->lookup(name)->type;
+                // std::cout << type.length() << std::endl;
+                if (type == "o_set" || type == "u_set")
+                    return std::make_pair(true, std::string("@found ") + type + std::string(" ") + vstl->lookup(name)->lookup(name)->inner->print());
+                else
+                    return std::make_pair(true, std::string("@found ") + type);
+            }
         }
         else
         {
             if (entry->lookup(name) == NULL)
                 return std::make_pair(false, name + std::string(" : not a member of struct ") + std::string(struct_name));
             else
-                return std::make_pair(true, std::string("@found ") + entry->lookup(name)->type);
+            {
+                if (entry->lookup(name)->type == "o_set" || entry->lookup(name)->type == "u_set")
+                    return std::make_pair(true, std::string("@found ") + entry->lookup(name)->type + std::string(" ") + entry->lookup(name)->inner->print());
+                else
+                    return std::make_pair(true, std::string("@found ") + entry->lookup(name)->type);
+            }
         }
     }
     else if (f_dot != std::string::npos && (f_sq == std::string::npos || f_dot < f_sq))
     {
+        // vstl->print();
         std::string id1 = name.substr(0, f_dot);
         // std::cout << "HERE DOT" << std::endl;
         if (entry == NULL)
@@ -625,7 +650,13 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
                     if (vstl->lookup(id1)->lookup(id1)->type != "u_set" && vstl->lookup(id1)->lookup(id1)->type != "o_set")
                         return make_pair(false, id1 + std::string(" : not a set"));
                     else
-                        return make_pair(true, std::string("@found ") + vstl->lookup(id1)->lookup(id1)->type);
+                    {
+                        std::string type = vstl->lookup(id1)->lookup(id1)->type;
+                        if (type == "o_set" || type == "u_set")
+                            return make_pair(true, std::string("@found ") + type + std::string(" ") + vstl->lookup(id1)->lookup(id1)->inner->print());
+                        else
+                            return make_pair(true, std::string("@found ") + type);
+                    }
                 }
             }
             else
