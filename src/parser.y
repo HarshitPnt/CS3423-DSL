@@ -58,6 +58,7 @@ FunctionSymbolTableEntry *current_function;
     arg_list_attr *arg;
     func_attr *func;
     id_list_attr *id_lst;
+    expr_list_attr *expr_lst;
     param_list_attr *para;
     VTYPE_PRIMITIVE dtype_primitive;
     VTYPE_AUTOMATA dtype_automata;
@@ -84,7 +85,7 @@ FunctionSymbolTableEntry *current_function;
 %left OPER_PLUS OPER_MINUS OPER_MUL OPER_DIV OPER_MOD
 %left AT_THE_RATE OPER_POWER
 %left OPER_NOT OPER_HASH
-%token OPER_ASN OPER_ASN_SIMPLE
+%token<identifier> OPER_ASN OPER_ASN_SIMPLE
 %left LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE
 %token EPSILON
 
@@ -94,6 +95,7 @@ FunctionSymbolTableEntry *current_function;
 %nterm<id_lst> id_list id_list_decl
 %nterm<para> param_list next_param
 %nterm<arg> argument_list arg_list_next
+%nterm<expr_lst> expression_list
 %start program
 %%
 
@@ -214,7 +216,20 @@ id_list_decl: ID
             ;
 
 expression_list: expression
+                {
+                    $$ = new expr_list_attr();
+                    $$->inner = getType($1);
+                }
                | expression_list COMMA expression
+               {
+                 if(!isCoherent(getType($3),$1->inner))
+                 {
+                    std::string error = std::string("Error: Invalid type conversion from ")+getType($3)+std::string(" to ")+$1->inner;
+                    yyerror(error.c_str());
+                 }
+                $$ = new expr_list_attr();
+                $$->inner = $1->inner;
+               }
                ;
 
 function_declaration: function_header
@@ -400,6 +415,7 @@ statements: variable_declaration {printlog("Variable declaration");}
 variable_declaration: dtype id_list SEMICOLON
                     {
                         // backpatch id_list with dtype
+                        // std::cout<<getType($1)<<std::endl;
                         for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                         {
                             if(it->second->indicator)
@@ -473,7 +489,7 @@ id_list: ID {
                     std::string error = "Variable redeclaration: "+std::string($1);
                     yyerror(error.c_str());
                 }
-                //check if function params also
+                //check in function params also
                 if(current_function)
                 {
                     if(current_function->params->lookup(std::string($1)))
@@ -584,19 +600,104 @@ pseudo_ID: pseudo_ID LBRACK expression RBRACK
               }
          ;
 
-assignment: pseudo_ID OPER_ASN rhs SEMICOLON 
+assignment: pseudo_ID OPER_ASN rhs SEMICOLON
+            {
+            std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
+            if(!ret.first)
+                yyerror(ret.second.c_str());
+            //we need to match rhs type with type of pseudo_ID
+            std::string type_lhs = ret.second.substr(ret.second.find(" ")+1);
+            std::string type_rhs = getType($3);
+            // std::cout<<type_lhs<<" "<<type_rhs<<std::endl;
+            if(type_rhs[type_rhs.length()-1]==' ')
+                    type_rhs=type_rhs.substr(0,type_rhs.length()-1);
+            if(!isPrimitive(type_rhs) || !isPrimitive(type_lhs))
+            {   
+                //error
+                std::string outer_lhs = type_lhs.find(" ")!=std::string::npos?type_lhs.substr(0,type_lhs.find(" ")):type_lhs;
+                std::string error = std::string("Invalid operation: Cannot use operator ") + std::string($2) + std::string(" on ") +outer_lhs +std::string(" and ")+type_rhs;
+                yyerror(error.c_str());
+            }
+            if(!isCoherent(type_lhs,type_rhs))
+            {
+                std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
+                yyerror(error.c_str());
+            }
+            }
           | pseudo_ID OPER_ASN_SIMPLE rhs SEMICOLON {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
             if(!ret.first)
                 yyerror(ret.second.c_str());
-            // std::cout<<$1->name<<std::endl;
-          }
+            std::string type_lhs = ret.second.substr(ret.second.find(" ")+1);
+            std::string type_rhs = getType($3);
+            // std::cout<<type_lhs<<" "<<type_rhs<<std::endl;
+            if(type_rhs[type_rhs.length()-1]==' ')
+                    type_rhs=type_rhs.substr(0,type_rhs.length()-1);
+            if(type_rhs=="o_set"||type_rhs=="u_set"||type_rhs=="sets")
+            {   
+                type_rhs+=std::string(" ")+$3->inner->print();
+                if(type_rhs[type_rhs.length()-1]==' ')
+                    type_rhs=type_rhs.substr(0,type_rhs.length()-1);
+            }
+            if(!isCoherent(type_lhs,type_rhs))
+            {
+                std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
+                yyerror(error.c_str());
+            }
+            }
           | pseudo_ID OPER_ASN_SIMPLE REGEX_R REGEX_LIT SEMICOLON
+          {
+            std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
+            if(!ret.first)
+                yyerror(ret.second.c_str());
+            // std::cout<<"HERE"<<std::endl;
+            std::string type_lhs = ret.second.substr(ret.second.find(" ")+1);
+            std::string type_rhs("regex");
+            // std::cout<<type_lhs<<" "<<type_rhs<<std::endl;
+            if(!isCoherent(type_lhs,type_rhs))
+            {
+                std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
+                yyerror(error.c_str());
+            }
+          }
           | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON
+          {
+            std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
+            if(!ret.first)
+                yyerror(ret.second.c_str());
+            std::string type_lhs = ret.second.substr(ret.second.find(" ")+1);
+            std::string type_rhs("string");
+            // std::cout<<type_lhs<<" "<<type_rhs<<std::endl;
+            if(!isCoherent(type_lhs,type_rhs))
+            {
+                std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
+                yyerror(error.c_str());
+            }
+          }
           | pseudo_ID COLON OPER_ASN_SIMPLE rhs_automata SEMICOLON
+          {
+            std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
+            if(!ret.first)
+                yyerror(ret.second.c_str());
+          }
           | pseudo_ID COLON OPER_ASN_SIMPLE cfg_rules SEMICOLON
+          {
+            std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
+            if(!ret.first)
+                yyerror(ret.second.c_str());
+          }
           | pseudo_ID COLON OPER_ASN_SIMPLE ID SEMICOLON
+          {
+            std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
+            if(!ret.first)
+                yyerror(ret.second.c_str());
+          }
           | pseudo_ID COLON OPER_ASN_SIMPLE LBRACE states_list RBRACE SEMICOLON
+          {
+            std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
+            if(!ret.first)
+                yyerror(ret.second.c_str());
+          }
           ;
 
 states_list: ID
@@ -619,8 +720,22 @@ rhs: expression
         $$->vtp = $1->vtp;
         $$->vta = $1->vta;
         $$->vts = $1->vts;
+        $$->inner = $1->inner;
         $$->isConst = $1->isConst;
         $$->indicator = $1->indicator;
+        if($$->isConst)
+        {
+            $$->val = new constant();
+            $$->val->type = getCTYPE($$);
+            if($$->val->type==CINT)
+                $$->val->ccint = getConst($1);
+            else if($$->val->type==CFLOAT)
+                $$->val->ccfloat = getConst($1);
+            else if($$->val->type==CBOOL)
+                $$->val->ccbool = getConst($1);
+            else if($$->val->type==CCHAR)
+                $$->val->ccchar = getConst($1);
+        }
     }
    | LBRACE expression_list RBRACE
    {
@@ -635,11 +750,14 @@ rhs: expression
      */
      $$ = new type_attr();
      $$->indicator = 6;
+     //based on the type of the element set inner type
+     $$->inner = genInnerType($2->inner);
    }
    | REGEX_R REGEX_LIT
    {
     $$ = new type_attr();
     $$->indicator = 5;
+    $$->vtsr = TYPE_REGEX;
    }
    ;
 
@@ -1268,7 +1386,7 @@ call : ID LPAREN argument_list RPAREN
             //recursively generate all inner types
             type = type.substr(type.find(' ')+1);
             $$->inner = genInnerType(type);
-            std::cout<<$$->inner->print()<<std::endl;
+            // std::cout<<$$->inner->print()<<std::endl;
         }
         else if(isPrimitive(outer_type))
         {

@@ -1,0 +1,14 @@
+struct B{
+    o_set<int_8> y;
+};
+
+struct A{
+    o_set<B> x;
+};
+
+int_8 a = 5;
+o_set<int_8> foo(int_8 b)
+{
+    A x;
+    return x.x[0];
+}

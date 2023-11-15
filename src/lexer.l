@@ -161,6 +161,7 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 {type_regex} {
     printtoken("datatype"); 
     yylval.dtype_SR = getSRType(yytext);
+    // std::cout<<"Yo "<<getSRType(yytext)<<std::endl;
     return TYPE_REG;
 }
 
@@ -199,7 +200,11 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
     strcpy(yylval.comp,yytext);
     return OPER_COMP;
     }
-{oper_asn} {printtoken("operator"); return OPER_ASN;}
+{oper_asn} {
+    printtoken("operator");
+    yylval.identifier = strdup(yytext);
+    return OPER_ASN;
+    }
 
 "#" {printtoken("operator"); return OPER_HASH;}
 

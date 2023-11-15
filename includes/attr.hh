@@ -40,6 +40,7 @@ public:
     VTYPE_SET vts;
     VTYPE_SR vtsr;
     bool isConst;
+    constant *val;
     std::string ifStruct;
     int indicator;
     std::list<int> dimensions;
@@ -90,5 +91,11 @@ class arg_list_attr
 {
 public:
     std::vector<std::string> lst;
+};
+
+class expr_list_attr
+{
+public:
+    std::string inner;
 };
 #endif

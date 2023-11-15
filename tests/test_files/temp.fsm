@@ -1,0 +1,19 @@
+int_8 x=10;
+float_64 y=9.0,z=1;
+
+x = (y+z)*(y-z>x);
+
+int_8 foo()
+{
+    int_8 xxx;
+    return xxx;
+}
+
+void main()
+{   
+    regex d;
+    d = r'[abc]';
+    o_set<int_8> aa;
+    aa=foo();
+    d+={1,2,3};
+}

@@ -322,17 +322,13 @@ std::string getType(type_attr *t_attr)
     }
     if (t_attr->indicator == 4)
     {
-        switch (t_attr->vtsr)
-        {
-            {
-            case TYPE_STR:
-                return std::string("string");
-            case TYPE_REGEX:
-                return std::string("regex");
-            }
-        }
+        return std::string("string");
     }
     if (t_attr->indicator == 5)
+    {
+        return std::string("regex");
+    }
+    if (t_attr->indicator == 7)
     {
         return std::string("struct");
     }
@@ -401,67 +397,82 @@ bool isCoherent(std::string type_1, std::string type_2)
         return true;
     if ((!type_1.length() && type_2.length()) || (type_1.length() && !type_2.length()))
         return false;
-    std::string type1 = type_1.substr(0, type_1.find(' '));
-    std::string type2 = type_2.substr(0, type_2.find(' '));
+    std::string type1;
+    std::string type2;
+    bool flag1_end = false, flag2_end = false;
+    if (type_1.find(' ') == std::string::npos)
+    {
+        type1 = type_1;
+        flag1_end = true;
+    }
+    else
+        type1 = type_1.substr(0, type_1.find(' '));
+    if (type_2.find(' ') == std::string::npos)
+    {
+        type2 = type_2;
+        flag2_end = true;
+    }
+    else
+        type2 = type_2.substr(0, type_2.find(' '));
     // std::cout << type1 << " " << type2 << std::endl;
     if (type1 == "int_8" || type1 == "int_16" || type1 == "int_32" || type1 == "int_64" || type1 == "uint_8" || type1 == "uint_16" || type1 == "uint_32" || type1 == "uint_64")
     {
         if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "float_32" || type2 == "float_64")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "char")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "bool")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         return false;
     }
     if (type1 == "float_32" || type1 == "float_64")
     {
         if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "float_32" || type2 == "float_64")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "char")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "bool")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         return false;
     }
     if (type1 == "char")
     {
         if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "float_32" || type2 == "float_64")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "char")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "bool")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         return false;
     }
     if (type1 == "bool")
     {
         if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "float_32" || type2 == "float_64")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "char")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         if (type2 == "bool")
-            return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+            return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
         return false;
     }
-    if (type1 == "o_set" && type2 == "o_set")
+    if (type1 == "o_set" && (type2 == "o_set" || type2 == "sets"))
     {
-        return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+        return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
     }
-    if (type1 == "u_set" && type2 == "u_set")
+    if (type1 == "u_set" && (type2 == "u_set" || type2 == "sets"))
     {
-        return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+        return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
     }
     if (type1 == type2)
-        return isCoherent(type_1.substr(type_1.find(' ') + 1), type_2.substr(type_2.find(' ') + 1));
+        return isCoherent((flag1_end ? std::string("") : type_1.substr(type_1.find(' ') + 1)), (flag2_end ? std::string("") : type_2.substr(type_2.find(' ') + 1)));
     return false;
 }
 
@@ -642,7 +653,7 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
         {
             if (entry == NULL)
             {
-                std::cout << "GLOBAL BRACKS" << std::endl;
+                // std::cout << "GLOBAL BRACKS" << std::endl;
                 if (vstl->lookup(id1) == NULL)
                     return make_pair(false, id1 + std::string(" : not defined"));
                 else
@@ -849,4 +860,75 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
         }
     }
     return make_pair(false, std::string("error"));
+}
+
+std::string getType(expr_attr *t_attr)
+{
+    if (t_attr->indicator == 1)
+    {
+        switch (t_attr->vtp)
+        {
+        case TYPE_INT_8:
+            return std::string("int_8");
+        case TYPE_INT_16:
+            return std::string("int_16");
+        case TYPE_INT_32:
+            return std::string("int_32");
+        case TYPE_INT_64:
+            return std::string("int_64");
+        case TYPE_UINT_8:
+            return std::string("uint_8");
+        case TYPE_UINT_16:
+            return std::string("uint_16");
+        case TYPE_UINT_32:
+            return std::string("uint_32");
+        case TYPE_UINT_64:
+            return std::string("uint_64");
+        case TYPE_FLOAT_32:
+            return std::string("float_32");
+        case TYPE_FLOAT_64:
+            return std::string("float_64");
+        case TYPE_CHAR:
+            return std::string("char");
+        case TYPE_BOOL:
+            return std::string("bool");
+        }
+    }
+    if (t_attr->indicator == 2)
+    {
+        switch (t_attr->vts)
+        {
+        case TYPE_USET:
+            return std::string("u_set ") + t_attr->inner->print();
+        case TYPE_OSET:
+            return std::string("o_set ") + t_attr->inner->print();
+        }
+    }
+    if (t_attr->indicator == 3)
+    {
+        switch (t_attr->vta)
+        {
+        case TYPE_DFA:
+            return std::string("dfa");
+        case TYPE_NFA:
+            return std::string("nfa");
+        case TYPE_PDA:
+            return std::string("pda");
+        case TYPE_CFG:
+            return std::string("cfg");
+        }
+    }
+    if (t_attr->indicator == 4)
+    {
+        return std::string("string");
+    }
+    if (t_attr->indicator == 5)
+    {
+        return std::string("regex");
+    }
+    if (t_attr->indicator == 7)
+    {
+        return t_attr->ifStruct;
+    }
+    return std::string("sets");
 }
