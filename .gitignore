@@ -30,3 +30,5 @@ prog
 *.obj
 *.elf
 *.bin
+
+.vscode
