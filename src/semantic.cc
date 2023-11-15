@@ -221,6 +221,31 @@ FunctionSymbolTableEntry::FunctionSymbolTableEntry(std::string name, int num_par
     this->return_type = return_type;
 }
 
+FSMSymbolTableEntry::FSMSymbolTableEntry(std::string name)
+{
+    this->name = name;
+}
+
+FSMSymbolTable::FSMSymbolTable()
+{
+    this->entries.clear();
+}
+
+bool FSMSymbolTable::insert(FSMSymbolTableEntry *fste)
+{
+    if (this->entries.find(fste->name) != this->entries.end())
+        return false;
+    this->entries[fste->name] = fste;
+    return true;
+}
+
+FSMSymbolTableEntry *FSMSymbolTable::lookup(std::string name)
+{
+    if (this->entries.find(name) == this->entries.end())
+        return NULL;
+    return this->entries[name];
+}
+
 bool FunctionSymbolTable::insert(FunctionSymbolTableEntry *fste)
 {
     if (this->entries.find(fste->name) != this->entries.end())

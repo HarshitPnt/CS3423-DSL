@@ -128,7 +128,7 @@ class FSMSymbolTable
 {
 public:
     std::unordered_map<std::string, FSMSymbolTableEntry *> entries;
-    int insert(FSMSymbolTableEntry *fste);
+    bool insert(FSMSymbolTableEntry *fste);
     FSMSymbolTableEntry *lookup(std::string name);
     void print();
     FSMSymbolTable();
