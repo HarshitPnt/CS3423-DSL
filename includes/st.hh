@@ -111,4 +111,26 @@ public:
     bool insert(FunctionSymbolTableEntry *fste);
     FunctionSymbolTableEntry *lookup(std::string name);
 };
+
+class FSMSymbolTableEntry
+{
+public:
+    std::string name;
+    std::string type;
+    VarSymbolTable *states_nterm;
+    VarSymbolTable *alpha_term;
+    VarSymbolTable *stackAlphabets;
+    FSMSymbolTableEntry(std::string name);
+    // bool stable;
+};
+
+class FSMSymbolTable
+{
+public:
+    std::unordered_map<std::string, FSMSymbolTableEntry *> entries;
+    int insert(FSMSymbolTableEntry *fste);
+    FSMSymbolTableEntry *lookup(std::string name);
+    void print();
+    FSMSymbolTable();
+};
 #endif

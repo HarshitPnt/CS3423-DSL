@@ -16,4 +16,5 @@ extern FunctionSymbolTable *fst;
 extern VarSymbolTable *global_vst;
 extern StructSymbolTable *sst;
 extern VarSymbolTable *current_vst;
+extern FSMSymbolTable *fsmst;
 #endif

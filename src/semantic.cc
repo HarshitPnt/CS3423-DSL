@@ -6,6 +6,7 @@ FunctionSymbolTable *fst;
 VarSymbolTable *global_vst;
 StructSymbolTable *sst;
 VarSymbolTable *current_vst;
+FSMSymbolTable *fsmt;
 void initST()
 {
     vstl = new VarSymbolTableList();
@@ -13,6 +14,7 @@ void initST()
     global_vst = new VarSymbolTable();
     sst = new StructSymbolTable();
     current_vst = global_vst;
+    fsmt = new FSMSymbolTable();
     vstl->insert(global_vst);
 }
 

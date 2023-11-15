@@ -1564,27 +1564,91 @@ control_body : statements
              | statements control_body
              ;
 
-if_statement : ifexp LBRACE control_body RBRACE elif_statement else_statement
+if_statement : ifexp LBRACE
+               {
+                 //create a new symbol table
+                 VarSymbolTable *table = new VarSymbolTable();
+                 vstl->insert(table);
+                 current_vst = table;
+               }
+               control_body RBRACE
+               {
+                    //delete the symbol table
+                    vstl->remove();
+                    current_vst = vstl->getTop();
+               } 
+               elif_statement else_statement
              ;
 
-ifexp : IF_KW LPAREN expression RPAREN {printlog("If");}
+ifexp : IF_KW LPAREN expression RPAREN {
+        if($3->indicator!=1)
+            yyerror("Invalid expression in if statement");
+        printlog("If");
+        }
       ;
 
-elif_statement : elif LBRACE control_body RBRACE
+elif_statement : elif LBRACE 
+                {
+                    //create a new symbol table
+                    VarSymbolTable *table = new VarSymbolTable();
+                    vstl->insert(table);
+                    current_vst = table;
+                }
+                control_body RBRACE
+                {
+                    //delete the symbol table
+                    vstl->remove();
+                    current_vst = vstl->getTop();
+                }
                |
                ;
 
-elif : ELIF_KW LPAREN expression RPAREN {printlog("Elif");}
-     ;
+elif : ELIF_KW LPAREN expression RPAREN 
+       {
+        if($3->indicator!=1)
+            yyerror("Invalid expression in elif statement");
+        printlog("Elif");
+       }
+       ;
 
-else_statement : ELSE_KW {printlog("Else");} LBRACE control_body RBRACE
+else_statement : ELSE_KW LBRACE 
+                {
+                    //create a new symbol table
+                    VarSymbolTable *table = new VarSymbolTable();
+                    vstl->insert(table);
+                    current_vst = table;
+                    printlog("Else");
+                } control_body RBRACE
+                {
+                    //delete the symbol table
+                    vstl->remove();
+                    current_vst = vstl->getTop();
+                }
                |
                ;
 
-while_statement : whileexp LBRACE {in_loop++;} control_body RBRACE {in_loop--;}
+while_statement : whileexp LBRACE 
+                {
+                   //create a new symbol table
+                   VarSymbolTable *table = new VarSymbolTable();
+                   vstl->insert(table);
+                   current_vst = table;
+                   in_loop++;
+                } control_body RBRACE 
+                {
+                    //delete the symbol table
+                    vstl->remove();
+                    current_vst = vstl->getTop();
+                    in_loop--;
+                }
                 ;
 
-whileexp : WHILE_KW LPAREN expression RPAREN {printlog("While");}
+whileexp : WHILE_KW LPAREN expression RPAREN 
+           {
+                if($3->indicator!=1)
+                    yyerror("Invalid expression in while statement");
+                printlog("While");
+           }
          ;
 
 call_statement : call SEMICOLON
@@ -1592,6 +1656,8 @@ call_statement : call SEMICOLON
 
 return_statement : RETURN_KW expression SEMICOLON
                  {
+                    if(!current_function)
+                        yyerror("Return statement outside function");
                     type_attr *type = new type_attr();
                     type->indicator = $2->indicator;
                     type->vtp = $2->vtp;
@@ -1619,6 +1685,8 @@ return_statement : RETURN_KW expression SEMICOLON
                  }
                  | RETURN_KW SEMICOLON
                  {
+                    if(!current_function)
+                        yyerror("Return statement outside function");
                     if(current_function->return_type != "void")
                     {
                         std::string error = "Return type mismatch/ function returns "+current_function->return_type;
