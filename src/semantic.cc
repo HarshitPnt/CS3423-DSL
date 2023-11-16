@@ -56,35 +56,35 @@ void StructSymbolTable::init()
     sst->insert(sste_transitions_pda);
     // insert cfg
     VarSymbolTable *cfg = new VarSymbolTable();
-    cfg->insert(new VarSymbolTableEntry("N", "nterm", NULL, std::list<int>()));
-    cfg->insert(new VarSymbolTableEntry("T", "term", NULL, std::list<int>()));
-    cfg->insert(new VarSymbolTableEntry("P", "productions", NULL, std::list<int>()));
-    cfg->insert(new VarSymbolTableEntry("S", "start", NULL, std::list<int>()));
+    cfg->insert(new VarSymbolTableEntry("N", "nterm", NULL));
+    cfg->insert(new VarSymbolTableEntry("T", "term", NULL));
+    cfg->insert(new VarSymbolTableEntry("P", "productions", NULL));
+    cfg->insert(new VarSymbolTableEntry("S", "start", NULL));
     StructSymbolTableEntry *sste_cfg = new StructSymbolTableEntry("cfg", cfg);
     // insert dfa
     VarSymbolTable *dfa = new VarSymbolTable();
-    dfa->insert(new VarSymbolTableEntry("Q", "states", NULL, std::list<int>()));
-    dfa->insert(new VarSymbolTableEntry("S", "alphabets", NULL, std::list<int>()));
-    dfa->insert(new VarSymbolTableEntry("delta", "transitions_dfa", NULL, std::list<int>()));
-    dfa->insert(new VarSymbolTableEntry("q0", "start", NULL, std::list<int>()));
-    dfa->insert(new VarSymbolTableEntry("F", "accept", NULL, std::list<int>()));
+    dfa->insert(new VarSymbolTableEntry("Q", "states", NULL));
+    dfa->insert(new VarSymbolTableEntry("S", "alphabets", NULL));
+    dfa->insert(new VarSymbolTableEntry("delta", "transitions_dfa", NULL));
+    dfa->insert(new VarSymbolTableEntry("q0", "start", NULL));
+    dfa->insert(new VarSymbolTableEntry("F", "accept", NULL));
     StructSymbolTableEntry *sste_dfa = new StructSymbolTableEntry("dfa", dfa);
     // insert nfa
     VarSymbolTable *nfa = new VarSymbolTable();
-    nfa->insert(new VarSymbolTableEntry("Q", "states", NULL, std::list<int>()));
-    nfa->insert(new VarSymbolTableEntry("S", "alphabets", NULL, std::list<int>()));
-    nfa->insert(new VarSymbolTableEntry("delta", "transitions_nfa", NULL, std::list<int>()));
-    nfa->insert(new VarSymbolTableEntry("q0", "start", NULL, std::list<int>()));
-    nfa->insert(new VarSymbolTableEntry("F", "accept", NULL, std::list<int>()));
+    nfa->insert(new VarSymbolTableEntry("Q", "states", NULL));
+    nfa->insert(new VarSymbolTableEntry("S", "alphabets", NULL));
+    nfa->insert(new VarSymbolTableEntry("delta", "transitions_nfa", NULL));
+    nfa->insert(new VarSymbolTableEntry("q0", "start", NULL));
+    nfa->insert(new VarSymbolTableEntry("F", "accept", NULL));
     StructSymbolTableEntry *sste_nfa = new StructSymbolTableEntry("nfa", nfa);
     // insert pda
     VarSymbolTable *pda = new VarSymbolTable();
-    pda->insert(new VarSymbolTableEntry("Q", "states", NULL, std::list<int>()));
-    pda->insert(new VarSymbolTableEntry("S", "alphabets", NULL, std::list<int>()));
-    pda->insert(new VarSymbolTableEntry("delta", "transitions_pda", NULL, std::list<int>()));
-    pda->insert(new VarSymbolTableEntry("q0", "start", NULL, std::list<int>()));
-    pda->insert(new VarSymbolTableEntry("F", "accept", NULL, std::list<int>()));
-    pda->insert(new VarSymbolTableEntry("G", "alphabets", NULL, std::list<int>()));
+    pda->insert(new VarSymbolTableEntry("Q", "states", NULL));
+    pda->insert(new VarSymbolTableEntry("S", "alphabets", NULL));
+    pda->insert(new VarSymbolTableEntry("delta", "transitions_pda", NULL));
+    pda->insert(new VarSymbolTableEntry("q0", "start", NULL));
+    pda->insert(new VarSymbolTableEntry("F", "accept", NULL));
+    pda->insert(new VarSymbolTableEntry("G", "alphabets", NULL));
     StructSymbolTableEntry *sste_pda = new StructSymbolTableEntry("pda", pda);
     // insert all symboltable entries into symboltable
     sst->insert(sste);
@@ -223,12 +223,11 @@ bool checkValidID(char *id)
     return false;
 }
 
-VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, inner_type *inner, std::list<int> dims)
+VarSymbolTableEntry::VarSymbolTableEntry(std::string name, std::string type, inner_type *inner)
 {
     this->name = name;
     this->type = type;
     this->inner = inner;
-    this->dimensions = dims;
 }
 
 VarSymbolTableEntry::VarSymbolTableEntry(std::string name)
@@ -276,7 +275,6 @@ bool VarSymbolTable::backpatch(VarSymbolTableEntry *vste, std::string type, inne
     vste->type = type;
     vste->inner = inner;
     vste->struct_vst = struct_vst;
-    vste->dimensions = dims;
     return 0;
 }
 

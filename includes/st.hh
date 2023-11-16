@@ -49,10 +49,9 @@ public:
     std::string type;
     inner_type *inner;
     VarSymbolTable *struct_vst;
-    std::list<int> dimensions;
     void print();
     VarSymbolTableEntry(std::string name);
-    VarSymbolTableEntry(std::string name, std::string type, inner_type *inner, std::list<int> dims);
+    VarSymbolTableEntry(std::string name, std::string type, inner_type *inner);
 };
 
 class VarSymbolTable

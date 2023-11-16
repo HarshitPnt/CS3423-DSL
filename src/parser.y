@@ -375,7 +375,6 @@ param: dtype ID
         }
         VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($2));
         entry->type = getType($1);
-        entry->dimensions = $1->dimensions;
         current_vst->insert(entry);
         ++num_params;
      }
@@ -399,7 +398,6 @@ param: dtype ID
         }
         VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($2));
         entry->type = std::string($1);
-        entry->dimensions = *temp;
         current_vst->insert(entry);
         ++num_params;
      }
