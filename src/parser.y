@@ -721,22 +721,27 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
             if(!ret.first)
                 yyerror(ret.second.c_str());
             std::string type = stripFound(ret.second);
-            if(type!="productions" && type!="transitions_nfa" && type!="transitions_dfa" && type!="transitions_pda")
+            if(type!="alphabets" && type!="transitions_nfa" && type!="transitions_dfa" && type!="transitions_pda")
             {
                 std::string error = std::string("Error: Invalid type conversion from transition function to ")+type;
                 yyerror(error.c_str());
             }
-            if(type=="transitions_dfa" && ($4->type!="dfa"))
+            if(type=="alphabets" && $4->type!="alphabets")
+            {
+                std::string error = std::string("Error: Invalid type conversion from ")+$4->type+std::string(" to ")+type;
+                yyerror(error.c_str());
+            }
+            if(type=="transitions_dfa" && ($4->type!="transitions" || $4->automata_type!="dfa"))
             {
                 std::string error = std::string("Error: Invalid type conversion from DFA to ")+type;
                 yyerror(error.c_str());
             }
-            if(type=="transitions_pda" && ($4->type!="pda"))
+            if(type=="transitions_pda" && ($4->type!="transitions" || $4->automata_type!="pda"))
             {
                 std::string error = std::string("Error: Invalid type conversion from PDA to ")+type;
                 yyerror(error.c_str());
             }
-            if(type=="transitions_nfa" && ($4->type!="nfa" && $4->type!="dfa"))
+            if(type=="transitions_nfa" && ($4->type!="transitions" || ($4->automata_type!="nfa" && $4->automata_type!="dfa")))
             {
                 std::string error = std::string("Error: Invalid type conversion from NFA to ")+type;
                 yyerror(error.c_str());
