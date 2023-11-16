@@ -1,0 +1,5 @@
+void main()
+{
+    pda a;
+    a.S := {A,B,C};
+}

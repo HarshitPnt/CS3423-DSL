@@ -90,6 +90,7 @@ public:
     std::unordered_map<std::string, StructSymbolTableEntry *> entries;
     bool insert(StructSymbolTableEntry *sste);
     StructSymbolTableEntry *lookup(std::string name);
+    void init();
     void print();
 };
 
@@ -112,25 +113,4 @@ public:
     FunctionSymbolTableEntry *lookup(std::string name);
 };
 
-class FSMSymbolTableEntry
-{
-public:
-    std::string name;
-    std::string type;
-    VarSymbolTable *states_nterm;
-    VarSymbolTable *alpha_term;
-    VarSymbolTable *stackAlphabets;
-    FSMSymbolTableEntry(std::string name);
-    // bool stable;
-};
-
-class FSMSymbolTable
-{
-public:
-    std::unordered_map<std::string, FSMSymbolTableEntry *> entries;
-    bool insert(FSMSymbolTableEntry *fste);
-    FSMSymbolTableEntry *lookup(std::string name);
-    void print();
-    FSMSymbolTable();
-};
 #endif

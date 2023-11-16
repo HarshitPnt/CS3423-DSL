@@ -37,6 +37,7 @@ FunctionSymbolTableEntry *current_function;
 #define getVTP(a) (a==TYPE_INT_64?"int_64":(a==TYPE_INT_32?"int_32":(a==TYPE_INT_16?"int_16":(a==TYPE_INT_8?"int_8":(a==TYPE_FLOAT_64?"float_64":(a==TYPE_FLOAT_32?"float_32":(a==TYPE_BOOL?"bool":"char")))))))
 #define getVTS(a) (a==TYPE_OSET?"o_set":"u_set")
 #define getVTSR(a) (a==TYPE_STR?"string":(a==TYPE_REGEX?"regex":"struct"))
+#define getFSM(a) (a==TYPE_DFA?"dfa":(a==TYPE_NFA?"nfa":(a==TYPE_PDA?"pda":"cfg")))
 %}
 %code requires {
     #include "../includes/semantic.hh"
@@ -60,6 +61,11 @@ FunctionSymbolTableEntry *current_function;
     id_list_attr *id_lst;
     expr_list_attr *expr_lst;
     param_list_attr *para;
+    state_list_attr *state_lst;
+    rules_attr *rules;
+    rhs_automata_attr *rhs_automata;
+    lhs_arrow_attr *lhs_arrow;
+
     VTYPE_PRIMITIVE dtype_primitive;
     VTYPE_AUTOMATA dtype_automata;
     VTYPE_SET dtype_set;
@@ -96,6 +102,10 @@ FunctionSymbolTableEntry *current_function;
 %nterm<para> param_list next_param
 %nterm<arg> argument_list arg_list_next
 %nterm<expr_lst> expression_list
+%nterm<state_lst> states_list
+%nterm<rules> rule rules_list
+%nterm<lhs_arrow> rhs_arrow lhs_arrow elements_others 
+%nterm<rhs_automata> rhs_automata
 %start program
 %%
 
@@ -144,15 +154,30 @@ struct_body: struct_body struct_member
 struct_member: dtype id_list_decl SEMICOLON
             {
                 //backpatching here
-                for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
+                
+                if($1->indicator!=3)
                 {
-                    if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL,$1->dimensions))
+                    for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                     {
-                        yyerror("Internal Error");
+                        if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL,$1->dimensions))
+                        {
+                            yyerror("Internal Error");
+                        }
+                        if($1->indicator==2)//sets (set inner type)
+                        {
+                            it->first->inner = $1->inner;
+                        }
                     }
-                    if($1->indicator==2)//sets (set inner type)
+                }
+                else
+                {
+                    for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                     {
-                        it->first->inner = $1->inner;
+                        VarSymbolTable *struct_vst = sst->lookup(std::string(getFSM($1->vta)))->fields;
+                        if(current_vst->backpatch(it->first,getType($1),NULL,struct_vst,$1->dimensions))
+                        {
+                            yyerror("Internal Error");
+                        }
                     }
                 }
             }
@@ -176,7 +201,6 @@ struct_member: dtype id_list_decl SEMICOLON
                         yyerror("Internal Error");
                     }
                 }
-
             }
             ;
 
@@ -430,8 +454,9 @@ variable_declaration: dtype id_list SEMICOLON
                                 {
                                     std::string str = std::string("Error: Invalid type conversion from ")+getType(it->second)+std::string(" to ")+getType($1);
                                     yyerror(str.c_str());
+                                    // *** sets
                                 }
-                                if($1->indicator==3 && it->second->indicator!=3)
+                                if($1->indicator==3 && it->second->indicator!=3 || ($1->indicator==3 && $1->vta != it->second->vta))
                                 {
                                     std::string str = std::string("Error: Invalid type conversion from ")+getType(it->second)+std::string(" to ")+getType($1);
                                     yyerror(str.c_str());
@@ -449,11 +474,25 @@ variable_declaration: dtype id_list SEMICOLON
                             }
                         }
                         // safe to backpatch
-                        for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
+                        if($1->indicator!=3)
                         {
-                            if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL,$1->dimensions))
+                            for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                             {
-                                yyerror("Internal Error");
+                                if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL,$1->dimensions))
+                                {
+                                    yyerror("Internal Error");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for(auto it=$2->lst.begin();it!=$2->lst.end();it++)
+                            {
+                                VarSymbolTable *struct_vst = sst->lookup(std::string(getFSM($1->vta)))->fields;
+                                if(current_vst->backpatch(it->first,getType($1),NULL,struct_vst,$1->dimensions))
+                                {
+                                    yyerror("Internal Error");
+                                }
                             }
                         }
                         // std::cout<<"print"<<std::endl;
@@ -625,9 +664,11 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
             }
             }
           | pseudo_ID OPER_ASN_SIMPLE rhs SEMICOLON {
+            // std::cout<<"HERE"<<std::endl;
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
             if(!ret.first)
                 yyerror(ret.second.c_str());
+            std::cout<<ret.second<<std::endl;
             std::string type_lhs = ret.second.substr(ret.second.find(" ")+1);
             std::string type_rhs = getType($3);
             // std::cout<<type_lhs<<" "<<type_rhs<<std::endl;
@@ -679,29 +720,80 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
             if(!ret.first)
                 yyerror(ret.second.c_str());
+            std::string type = stripFound(ret.second);
+            if(type!="productions" && type!="transitions_nfa" && type!="transitions_dfa" && type!="transitions_pda")
+            {
+                std::string error = std::string("Error: Invalid type conversion from transition function to ")+type;
+                yyerror(error.c_str());
+            }
+            if(type=="transitions_dfa" && ($4->type!="dfa"))
+            {
+                std::string error = std::string("Error: Invalid type conversion from DFA to ")+type;
+                yyerror(error.c_str());
+            }
+            if(type=="transitions_pda" && ($4->type!="pda"))
+            {
+                std::string error = std::string("Error: Invalid type conversion from PDA to ")+type;
+                yyerror(error.c_str());
+            }
+            if(type=="transitions_nfa" && ($4->type!="nfa" && $4->type!="dfa"))
+            {
+                std::string error = std::string("Error: Invalid type conversion from NFA to ")+type;
+                yyerror(error.c_str());
+            }
           }
           | pseudo_ID COLON OPER_ASN_SIMPLE cfg_rules SEMICOLON
           {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
             if(!ret.first)
                 yyerror(ret.second.c_str());
+            std::string type = stripFound(ret.second);
+            if(type!="productions")
+            {
+                std::string error = std::string("Error: Invalid type conversion from productions to ")+type;
+                yyerror(error.c_str());
+            }
           }
           | pseudo_ID COLON OPER_ASN_SIMPLE ID SEMICOLON
           {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
             if(!ret.first)
                 yyerror(ret.second.c_str());
+            std::string type = stripFound(ret.second);
+            if(type!="start")
+            {
+                std::string error = std::string("Error: Invalid type conversion from start state to")+type;
+                yyerror(error.c_str());
+            }
           }
           | pseudo_ID COLON OPER_ASN_SIMPLE LBRACE states_list RBRACE SEMICOLON
           {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
             if(!ret.first)
                 yyerror(ret.second.c_str());
+            // stateslist and accept states list
+            std::string type = stripFound(ret.second);
+            if(type!="states" && type!="accept")
+            {
+                std::string error = std::string("Error: Invalid type conversion from list of states to ")+type;
+                yyerror(error.c_str());
+            }
           }
           ;
 
 states_list: ID
+           {
+                //need to accumulate IDs which will be used as states and non-terminals
+                $$ = new state_list_attr();
+                $$->lst.push_back(std::string($1));
+
+           }
            | states_list COMMA ID
+           {
+                $$ = new state_list_attr();
+                $$->lst = $1->lst;
+                $$->lst.push_back(std::string($3));
+           }
            ;
 
 cfg_rules : LBRACE cfg_rule_list RBRACE
@@ -1498,7 +1590,17 @@ arg_list_next:
              }
 
 rhs_automata: LBRACE alphabet_list RBRACE
+            {
+                $$ = new rhs_automata_attr();
+                $$->type=std::string("alphabet");
+                $$->automata_type = std::string("");
+            }
             | LBRACE rules_list RBRACE
+            {
+                $$ = new rhs_automata_attr();
+                $$->type=std::string("transitions");
+                $$->automata_type = $2->type;
+            }
             ;
 
 alphabet_list: alphabet
@@ -1509,18 +1611,66 @@ alphabet : ID COLON STRING_CONST
          ;
 
 rules_list : rule
+           {
+                $$ = new rules_attr();
+                $$->type = $1->type;
+           }
            | rules_list COMMA rule
+           {
+                $$ = new rules_attr();
+                if($1->type==$3->type)
+                    $$->type = $1->type;
+                else if(($1->type=="nfa" && $3->type=="dfa") || ($1->type=="dfa" && $3->type=="nfa"))
+                    $$->type = std::string("nfa");
+                else
+                    yyerror("Invalid rule: All rules must be of same type");
+           }
            ;
 
 rule :LPAREN pseudo_ID lhs_arrow ARROW rhs_arrow RPAREN
+     {
+        $$ = new rules_attr();
+        if($3->type==$5->type)
+            $$->type = $3->type;
+        else if(($3->type=="nfa" && $5->type=="dfa") || ($3->type=="dfa" && $5->type=="nfa"))
+            $$->type = std::string("nfa");
+        else
+            yyerror("Invalid rule: All rules must be of same type");
+     }
      ;
 
 lhs_arrow : COMMA ID
+          {
+            $$ = new lhs_arrow_attr();
+            $$->type = std::string("dfa");
+          }
           | COMMA element_PDA
+          {
+            $$ = new lhs_arrow_attr();
+            $$->type = std::string("pda");
+          }
           | COMMA EPSILON
+          {
+            $$ = new lhs_arrow_attr();
+            $$->type = std::string("nfa");
+          }
           | COMMA REGEX_R REGEX_LIT
+          {
+            $$ = new lhs_arrow_attr();
+            //parsing of regex needs to be done
+            // $$->str = std::string($3);
+            $$->type = std::string("dfa");
+          }
           | COMMA LBRACE elements_PDA RBRACE
+          {
+            $$ = new lhs_arrow_attr();
+            $$->type = std::string("pda");
+          }
           | COMMA LBRACE elements_others RBRACE
+          {
+            $$ = new lhs_arrow_attr();
+            $$->type = $3->type;
+          }
           ;
 
 elements_PDA : element_PDA
@@ -1532,13 +1682,50 @@ element_PDA : LPAREN ID COMMA ID RPAREN
             ;
 
 elements_others : ID
+                {
+                    $$ = new lhs_arrow_attr();
+                    $$->type = std::string("dfa");
+                }
+                | EPSILON
+                {
+                    $$ = new lhs_arrow_attr();
+                    $$->type = std::string("nfa");
+                }
                 | elements_others COMMA ID
+                {
+                    $$ = new lhs_arrow_attr();
+                    if($1->type=="dfa")
+                        $$->type = std::string("dfa");
+                    else
+                        $$->type = std::string("nfa");
+                }
+                | elements_others COMMA EPSILON
+                {
+                    $$ = new lhs_arrow_attr();
+                    $$->type = std::string("nfa");
+                }
                 ;
 
 rhs_arrow : pseudo_ID
+          {
+            $$ = new lhs_arrow_attr();
+            $$->type = std::string("dfa");
+          }
           | LBRACE elements_others RBRACE
+          {
+            $$ = new lhs_arrow_attr();
+            $$->type = std::string("nfa");
+          }
           | element_PDA
+          {
+            $$ = new lhs_arrow_attr();
+            $$->type = std::string("pda");
+          }
           | LBRACE elements_PDA RBRACE
+          {
+            $$ = new lhs_arrow_attr();
+            $$->type = std::string("pda");
+          }
           ;
 
 cfg_rhs : cfg_rhs_ele

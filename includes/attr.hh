@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <map>
 #include "st.hh"
 #include <utility>
 #ifndef __attr_hh__
@@ -97,5 +98,30 @@ class expr_list_attr
 {
 public:
     std::string inner;
+};
+
+class state_list_attr
+{
+public:
+    std::list<std::string> lst;
+};
+
+class rhs_automata_attr
+{
+public:
+    std::string type;
+    std::string automata_type;
+};
+
+class rules_attr
+{
+public:
+    std::string type;
+};
+
+class lhs_arrow_attr
+{
+public:
+    std::string type;
 };
 #endif

@@ -6,15 +6,102 @@ FunctionSymbolTable *fst;
 VarSymbolTable *global_vst;
 StructSymbolTable *sst;
 VarSymbolTable *current_vst;
-FSMSymbolTable *fsmt;
+
+void StructSymbolTable::init()
+{
+    // insert nterm, term, alphabets, productions, states, start, accept
+    VarSymbolTable *nterm = new VarSymbolTable();
+    nterm = NULL;
+    StructSymbolTableEntry *sste = new StructSymbolTableEntry("nterm", nterm);
+    // insert terminal
+    VarSymbolTable *term = new VarSymbolTable();
+    term = NULL;
+    StructSymbolTableEntry *sste_term = new StructSymbolTableEntry("term", term);
+    // insert alphabets
+    VarSymbolTable *alphabets = new VarSymbolTable();
+    alphabets = NULL;
+    StructSymbolTableEntry *sste_alphabets = new StructSymbolTableEntry("alphabets", alphabets);
+    // insert productions
+    VarSymbolTable *productions = new VarSymbolTable();
+    productions = NULL;
+    StructSymbolTableEntry *sste_productions = new StructSymbolTableEntry("productions", productions);
+    // insert transitions_dfa
+    VarSymbolTable *transitions_dfa = new VarSymbolTable();
+    transitions_dfa = NULL;
+    StructSymbolTableEntry *sste_transitions_dfa = new StructSymbolTableEntry("transitions_dfa", transitions_dfa);
+    // insert transitions_nfa
+    VarSymbolTable *transitions_nfa = new VarSymbolTable();
+    transitions_nfa = NULL;
+    StructSymbolTableEntry *sste_transitions_nfa = new StructSymbolTableEntry("transitions_nfa", transitions_nfa);
+    // insert transitions_pda
+    VarSymbolTable *transitions_pda = new VarSymbolTable();
+    transitions_pda = NULL;
+    StructSymbolTableEntry *sste_transitions_pda = new StructSymbolTableEntry("transitions_pda", transitions_pda);
+    // insert start
+    VarSymbolTable *start = new VarSymbolTable();
+    start = NULL;
+    StructSymbolTableEntry *sste_start = new StructSymbolTableEntry("start", start);
+    // insert accept
+    VarSymbolTable *accept = new VarSymbolTable();
+    accept = NULL;
+    StructSymbolTableEntry *sste_accept = new StructSymbolTableEntry("accept", accept);
+    sst->insert(sste);
+    sst->insert(sste_term);
+    sst->insert(sste_alphabets);
+    sst->insert(sste_productions);
+    sst->insert(sste_start);
+    sst->insert(sste_accept);
+    sst->insert(sste_transitions_dfa);
+    sst->insert(sste_transitions_nfa);
+    sst->insert(sste_transitions_pda);
+    // insert cfg
+    VarSymbolTable *cfg = new VarSymbolTable();
+    cfg->insert(new VarSymbolTableEntry("N", "nterm", NULL, std::list<int>()));
+    cfg->insert(new VarSymbolTableEntry("T", "term", NULL, std::list<int>()));
+    cfg->insert(new VarSymbolTableEntry("P", "productions", NULL, std::list<int>()));
+    cfg->insert(new VarSymbolTableEntry("S", "start", NULL, std::list<int>()));
+    StructSymbolTableEntry *sste_cfg = new StructSymbolTableEntry("cfg", cfg);
+    // insert dfa
+    VarSymbolTable *dfa = new VarSymbolTable();
+    dfa->insert(new VarSymbolTableEntry("Q", "states", NULL, std::list<int>()));
+    dfa->insert(new VarSymbolTableEntry("S", "alphabets", NULL, std::list<int>()));
+    dfa->insert(new VarSymbolTableEntry("delta", "transitions_dfa", NULL, std::list<int>()));
+    dfa->insert(new VarSymbolTableEntry("q0", "start", NULL, std::list<int>()));
+    dfa->insert(new VarSymbolTableEntry("F", "accept", NULL, std::list<int>()));
+    StructSymbolTableEntry *sste_dfa = new StructSymbolTableEntry("dfa", dfa);
+    // insert nfa
+    VarSymbolTable *nfa = new VarSymbolTable();
+    nfa->insert(new VarSymbolTableEntry("Q", "states", NULL, std::list<int>()));
+    nfa->insert(new VarSymbolTableEntry("S", "alphabets", NULL, std::list<int>()));
+    nfa->insert(new VarSymbolTableEntry("delta", "transitions_nfa", NULL, std::list<int>()));
+    nfa->insert(new VarSymbolTableEntry("q0", "start", NULL, std::list<int>()));
+    nfa->insert(new VarSymbolTableEntry("F", "accept", NULL, std::list<int>()));
+    StructSymbolTableEntry *sste_nfa = new StructSymbolTableEntry("nfa", nfa);
+    // insert pda
+    VarSymbolTable *pda = new VarSymbolTable();
+    pda->insert(new VarSymbolTableEntry("Q", "states", NULL, std::list<int>()));
+    pda->insert(new VarSymbolTableEntry("S", "alphabets", NULL, std::list<int>()));
+    pda->insert(new VarSymbolTableEntry("delta", "transitions_pda", NULL, std::list<int>()));
+    pda->insert(new VarSymbolTableEntry("q0", "start", NULL, std::list<int>()));
+    pda->insert(new VarSymbolTableEntry("F", "accept", NULL, std::list<int>()));
+    pda->insert(new VarSymbolTableEntry("G", "alphabets", NULL, std::list<int>()));
+    StructSymbolTableEntry *sste_pda = new StructSymbolTableEntry("pda", pda);
+    // insert all symboltable entries into symboltable
+    sst->insert(sste);
+    sst->insert(sste_cfg);
+    sst->insert(sste_dfa);
+    sst->insert(sste_nfa);
+    sst->insert(sste_pda);
+}
+
 void initST()
 {
     vstl = new VarSymbolTableList();
     fst = new FunctionSymbolTable();
     global_vst = new VarSymbolTable();
     sst = new StructSymbolTable();
+    sst->init();
     current_vst = global_vst;
-    fsmt = new FSMSymbolTable();
     vstl->insert(global_vst);
 }
 
@@ -219,31 +306,6 @@ FunctionSymbolTableEntry::FunctionSymbolTableEntry(std::string name, int num_par
     this->num_params = num_params;
     this->params = params;
     this->return_type = return_type;
-}
-
-FSMSymbolTableEntry::FSMSymbolTableEntry(std::string name)
-{
-    this->name = name;
-}
-
-FSMSymbolTable::FSMSymbolTable()
-{
-    this->entries.clear();
-}
-
-bool FSMSymbolTable::insert(FSMSymbolTableEntry *fste)
-{
-    if (this->entries.find(fste->name) != this->entries.end())
-        return false;
-    this->entries[fste->name] = fste;
-    return true;
-}
-
-FSMSymbolTableEntry *FSMSymbolTable::lookup(std::string name)
-{
-    if (this->entries.find(name) == this->entries.end())
-        return NULL;
-    return this->entries[name];
 }
 
 bool FunctionSymbolTable::insert(FunctionSymbolTableEntry *fste)
@@ -635,6 +697,7 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
                     id2 = name.substr(f_dot + 1, f_sq - f_dot - 1);
                 else
                     id2 = name.substr(f_dot + 1, std::min(f_sq, next_f_dot) - f_dot - 1);
+                // next->print();
                 if (next->lookup(id2) == NULL) // check if a is member of A
                     return make_pair(false, id2 + std::string(" : not a member of struct ") + id1);
                 return checkPseudoID(next, name.substr(f_dot + 1), entry_local->type);
@@ -958,4 +1021,9 @@ std::string getType(expr_attr *t_attr)
         return t_attr->ifStruct;
     }
     return std::string("sets");
+}
+
+std::string stripFound(std::string ret)
+{
+    return ret.substr(ret.find(" ") + 1);
 }
