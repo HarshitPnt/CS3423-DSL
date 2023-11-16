@@ -16,7 +16,7 @@ u_set<int_8> y;
 o_set<o_set<int_8>> z;
 
 regex r;
-cfg c;
+cfg c; <!-- Redeclaration of c --!>
 dfa d;
 nfa n;
 pda p;

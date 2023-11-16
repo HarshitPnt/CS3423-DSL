@@ -10,13 +10,10 @@ VarSymbolTable *current_vst;
 void StructSymbolTable::init()
 {
     // insert nterm, term, alphabets, productions, states, start, accept
-    VarSymbolTable *nterm = new VarSymbolTable();
-    nterm = NULL;
-    StructSymbolTableEntry *sste = new StructSymbolTableEntry("nterm", nterm);
     // insert terminal
     VarSymbolTable *term = new VarSymbolTable();
     term = NULL;
-    StructSymbolTableEntry *sste_term = new StructSymbolTableEntry("term", term);
+    StructSymbolTableEntry *sste_term = new StructSymbolTableEntry("states", term);
     // insert alphabets
     VarSymbolTable *alphabets = new VarSymbolTable();
     alphabets = NULL;
@@ -45,7 +42,6 @@ void StructSymbolTable::init()
     VarSymbolTable *accept = new VarSymbolTable();
     accept = NULL;
     StructSymbolTableEntry *sste_accept = new StructSymbolTableEntry("accept", accept);
-    sst->insert(sste);
     sst->insert(sste_term);
     sst->insert(sste_alphabets);
     sst->insert(sste_productions);
@@ -56,8 +52,8 @@ void StructSymbolTable::init()
     sst->insert(sste_transitions_pda);
     // insert cfg
     VarSymbolTable *cfg = new VarSymbolTable();
-    cfg->insert(new VarSymbolTableEntry("N", "nterm", NULL));
-    cfg->insert(new VarSymbolTableEntry("T", "term", NULL));
+    cfg->insert(new VarSymbolTableEntry("N", "alphabets", NULL));
+    cfg->insert(new VarSymbolTableEntry("T", "states", NULL));
     cfg->insert(new VarSymbolTableEntry("P", "productions", NULL));
     cfg->insert(new VarSymbolTableEntry("S", "start", NULL));
     StructSymbolTableEntry *sste_cfg = new StructSymbolTableEntry("cfg", cfg);
@@ -87,7 +83,6 @@ void StructSymbolTable::init()
     pda->insert(new VarSymbolTableEntry("G", "alphabets", NULL));
     StructSymbolTableEntry *sste_pda = new StructSymbolTableEntry("pda", pda);
     // insert all symboltable entries into symboltable
-    sst->insert(sste);
     sst->insert(sste_cfg);
     sst->insert(sste_dfa);
     sst->insert(sste_nfa);
@@ -268,7 +263,7 @@ VarSymbolTable *VarSymbolTableList::lookup(std::string name)
     return NULL;
 }
 
-bool VarSymbolTable::backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner, VarSymbolTable *struct_vst, std::list<int> dims)
+bool VarSymbolTable::backpatch(VarSymbolTableEntry *vste, std::string type, inner_type *inner, VarSymbolTable *struct_vst)
 {
     if (this->entries.find(vste->name) == this->entries.end())
         return 1;
@@ -345,6 +340,7 @@ void VarSymbolTable::print()
 
 void VarSymbolTableList::print()
 {
+    std::cout << this->entries.size() << std::endl;
     for (auto it = this->entries.begin(); it != this->entries.end(); it++)
     {
         (*it)->print();
@@ -352,6 +348,77 @@ void VarSymbolTableList::print()
 }
 
 std::string getType(type_attr *t_attr)
+{
+    if (t_attr->indicator == 1)
+    {
+        switch (t_attr->vtp)
+        {
+        case TYPE_INT_8:
+            return std::string("int_8");
+        case TYPE_INT_16:
+            return std::string("int_16");
+        case TYPE_INT_32:
+            return std::string("int_32");
+        case TYPE_INT_64:
+            return std::string("int_64");
+        case TYPE_UINT_8:
+            return std::string("uint_8");
+        case TYPE_UINT_16:
+            return std::string("uint_16");
+        case TYPE_UINT_32:
+            return std::string("uint_32");
+        case TYPE_UINT_64:
+            return std::string("uint_64");
+        case TYPE_FLOAT_32:
+            return std::string("float_32");
+        case TYPE_FLOAT_64:
+            return std::string("float_64");
+        case TYPE_CHAR:
+            return std::string("char");
+        case TYPE_BOOL:
+            return std::string("bool");
+        }
+    }
+    if (t_attr->indicator == 2)
+    {
+        switch (t_attr->vts)
+        {
+        case TYPE_USET:
+            return std::string("u_set");
+        case TYPE_OSET:
+            return std::string("o_set");
+        }
+    }
+    if (t_attr->indicator == 3)
+    {
+        switch (t_attr->vta)
+        {
+        case TYPE_DFA:
+            return std::string("dfa");
+        case TYPE_NFA:
+            return std::string("nfa");
+        case TYPE_PDA:
+            return std::string("pda");
+        case TYPE_CFG:
+            return std::string("cfg");
+        }
+    }
+    if (t_attr->indicator == 4)
+    {
+        return std::string("string");
+    }
+    if (t_attr->indicator == 5)
+    {
+        return std::string("regex");
+    }
+    if (t_attr->indicator == 7)
+    {
+        return std::string("struct");
+    }
+    return std::string("sets");
+}
+
+std::string getType(id_attr *t_attr)
 {
     if (t_attr->indicator == 1)
     {
@@ -612,8 +679,28 @@ std::pair<bool, std::string> checkInner(std::string inner, std::string &name)
                 next = inner;
             else
                 next = inner.substr(0, space);
-            if (next != "o_set" && next != "u_set")
-                return std::make_pair(false, next + std::string(" : not a set"));
+            if (next != "o_set" && next != "string")
+                return std::make_pair(false, next + std::string(" : not a o_set/string"));
+            if (next == "string")
+            {
+                std::string copy = name;
+                if (copy.find("]") != copy.length() - 1)
+                {
+                    size_t l_sq = copy.find("]");
+                    if (copy[l_sq + 1] == '.')
+                    {
+                        return std::make_pair(false, std::string("char is not a struct"));
+                    }
+                    else
+                    {
+                        return std::make_pair(false, std::string("char is not a o_set"));
+                    }
+                }
+                else
+                {
+                    return std::make_pair(true, std::string("char"));
+                }
+            }
             size_t f_sq = name.find("[");
             size_t l_sq = name.find("]");
             if (name.substr(f_sq + 1, l_sq - f_sq - 1) != "__expr__")
@@ -677,9 +764,17 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
             else
             {
                 // A.a
+                // std::cout << "HERE" << std::endl;
                 VarSymbolTable *vst_local = vstl->lookup(id1);
+                // if (!vst_local)
+                //     std::cout << "error" << std::endl;
+                // else
+                //     std::cout << "no error" << std::endl;
                 // searching for A
                 VarSymbolTableEntry *entry_local = vst_local->lookup(id1); // found A
+                // std::cout << "found id" << std::endl;
+                // if (entry_local)
+                //     std::cout << "no error" << std::endl;
                 // entry_local->print();
                 // entry_local->struct_vst->print();
                 if (!isStruct(entry_local->type)) // checking if A is a struct
@@ -696,6 +791,7 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
                 else
                     id2 = name.substr(f_dot + 1, std::min(f_sq, next_f_dot) - f_dot - 1);
                 // next->print();
+                // std::cout << id2 << std::endl;
                 if (next->lookup(id2) == NULL) // check if a is member of A
                     return make_pair(false, id2 + std::string(" : not a member of struct ") + id1);
                 return checkPseudoID(next, name.substr(f_dot + 1), entry_local->type);
@@ -746,13 +842,13 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
                     return make_pair(false, id1 + std::string(" : not defined"));
                 else
                 {
-                    if (vstl->lookup(id1)->lookup(id1)->type != "u_set" && vstl->lookup(id1)->lookup(id1)->type != "o_set")
-                        return make_pair(false, id1 + std::string(" : not a set"));
+                    if (vstl->lookup(id1)->lookup(id1)->type != "string" && vstl->lookup(id1)->lookup(id1)->type != "o_set")
+                        return make_pair(false, id1 + std::string(" : not a o_set/string"));
                     else
                     {
                         std::string type = vstl->lookup(id1)->lookup(id1)->type;
-                        if (type == "o_set" || type == "u_set")
-                            return make_pair(true, std::string("@found ") + type + std::string(" ") + vstl->lookup(id1)->lookup(id1)->inner->print());
+                        if (type == "o_set" || type == "string")
+                            return make_pair(true, std::string("@found ") + type + (type == "o_set" ? (std::string(" ") + vstl->lookup(id1)->lookup(id1)->inner->print()) : std::string("")));
                         else
                             return make_pair(true, std::string("@found ") + type);
                     }
@@ -764,12 +860,19 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
                     return make_pair(false, id1 + std::string(" : not a member of struct ") + std::string(struct_name));
                 else
                 {
-                    if (entry->lookup(id1)->type != "u_set" && entry->lookup(id1)->type != "o_set")
-                        return make_pair(false, id1 + std::string(" : not a set"));
+                    if (entry->lookup(id1)->type != "string" && entry->lookup(id1)->type != "o_set")
+                        return make_pair(false, id1 + std::string(" : not a o_set/string"));
                     else
                     {
-                        std::string inner = entry->lookup(id1)->inner->print();
-                        return make_pair(true, std::string("@found ") + inner);
+                        if (entry->lookup(id1)->type == "o_set")
+                        {
+                            std::string inner = entry->lookup(id1)->inner->print();
+                            return make_pair(true, std::string("@found ") + inner);
+                        }
+                        else
+                        {
+                            return make_pair(true, std::string("@found char"));
+                        }
                     }
                 }
             }
@@ -784,10 +887,12 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
                     return make_pair(false, id1 + std::string(" : not defined"));
                 else
                 {
-                    if (vstl->lookup(id1)->lookup(id1)->type != "u_set" && vstl->lookup(id1)->lookup(id1)->type != "o_set")
-                        return make_pair(false, id1 + std::string(" : not a set"));
+                    if (vstl->lookup(id1)->lookup(id1)->type != "string" && vstl->lookup(id1)->lookup(id1)->type != "o_set")
+                        return make_pair(false, id1 + std::string(" : not a o_set/string"));
                     else
                     {
+                        if (vstl->lookup(id1)->lookup(id1)->type == "string")
+                            return make_pair(false, std::string(" char: not a o_set/struct"));
                         inner = vstl->lookup(id1)->lookup(id1)->inner->print();
                         // std::cout << inner << std::endl;
                         if (name[l_sq + 1] == '.')
@@ -812,7 +917,6 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
                         else
                         {
                             // check inner
-                            // std::cout << "here" << std::endl;
                             name = name.substr(l_sq + 1);
                             std::pair<bool, std::string> ret = checkInner(inner, name);
                             if (ret.first == false)
@@ -822,7 +926,7 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
                                 // now recurse with next A.a[1][2](here).b or A.a[1][2]
                                 f_dot = name.find(".");
                                 f_sq = name.find("[");
-                                if (f_sq == std::string::npos)
+                                if (f_sq == std::string::npos && f_dot == std::string::npos)
                                     return make_pair(true, std::string("@found ") + ret.second);
                                 else
                                 {
@@ -867,11 +971,23 @@ std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string na
                     return make_pair(false, id1 + std::string(" : not a member of struct ") + std::string(struct_name));
                 else
                 {
-                    if (entry->lookup(id1)->type != "u_set" && entry->lookup(id1)->type != "o_set")
-                        return make_pair(false, id1 + std::string(" : not a set"));
+                    if (entry->lookup(id1)->type != "o_set" && entry->lookup(id1)->type != "string")
+                        return make_pair(false, id1 + std::string(" : not a o_set/string"));
                     else
                     {
-                        std::string inner = entry->lookup(id1)->inner->print();
+                        std::string inner;
+                        if (entry->lookup(id1)->type == "string")
+                        {
+                            inner = std::string("char");
+                            if (name[l_sq + 1] == '.')
+                                return make_pair(false, std::string("char : not a struct"));
+                            else if (name[l_sq + 1] == '[')
+                                return make_pair(false, std::string("char : not a set"));
+                            else
+                                return make_pair(true, std::string("@found char"));
+                        }
+                        else
+                            inner = entry->lookup(id1)->inner->print();
                         // std::cout << inner << std::endl;
                         if (name[l_sq + 1] == '.')
                         {
@@ -1024,4 +1140,11 @@ std::string getType(expr_attr *t_attr)
 std::string stripFound(std::string ret)
 {
     return ret.substr(ret.find(" ") + 1);
+}
+
+std::string trim(std::string str)
+{
+    while (str[str.length() - 1] == ' ' && str.length())
+        str = str.substr(0, str.length() - 1);
+    return str;
 }

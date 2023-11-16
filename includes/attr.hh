@@ -44,7 +44,6 @@ public:
     constant *val;
     std::string ifStruct;
     int indicator;
-    std::list<int> dimensions;
     inner_type *inner = NULL;
 };
 

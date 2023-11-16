@@ -41,9 +41,20 @@ float_64 distance(Point a, Point b)
     return dist;
 }
 
-o_set<float_64> findEuclideanDistance(Grid grid)
+float_32 size(o_set<Point> y)
 {
-    int_8 s = size(grid.set);
+    float_32 x;
+    return x;
+}
+
+void insert(o_set<float_64> xx, float_64 y)
+{
+    return;
+}
+
+o_set<float_64> findEuclideanDistance(Grid grid1)
+{
+    int_8 s = size(grid1.set);
     o_set<float_64> return_values;
 
     int_8 i = 0;
@@ -52,7 +63,7 @@ o_set<float_64> findEuclideanDistance(Grid grid)
         int_8 j = i+1;
         while(j<s)
         {
-            insert(return_values, distance(grid[i],grid[j]));
+            insert(return_values, distance(grid1.set[i],grid1.set[j]));
             j+=1;
         }
         i+=1;

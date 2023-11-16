@@ -1,0 +1,11 @@
+int_8 x;
+
+struct A{
+    int_64 x;
+};
+
+int_8 foo(int_8 y)
+{
+    int_8 a;
+    return a;
+}

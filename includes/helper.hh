@@ -10,5 +10,7 @@ bool isCoherent(std::string type1, std::string type2);
 std::pair<bool, std::string> checkPseudoID(VarSymbolTable *entry, std::string name, std::string struct_name);
 bool isStruct(std::string type);
 std::string getType(expr_attr *t_attr);
+std::string getType(id_attr *t_attr);
 std::string stripFound(std::string ret);
+std::string trim(std::string str);
 #endif

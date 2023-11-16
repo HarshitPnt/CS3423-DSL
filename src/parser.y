@@ -159,7 +159,7 @@ struct_member: dtype id_list_decl SEMICOLON
                 {
                     for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                     {
-                        if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL,$1->dimensions))
+                        if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL))
                         {
                             yyerror("Internal Error");
                         }
@@ -174,7 +174,7 @@ struct_member: dtype id_list_decl SEMICOLON
                     for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                     {
                         VarSymbolTable *struct_vst = sst->lookup(std::string(getFSM($1->vta)))->fields;
-                        if(current_vst->backpatch(it->first,getType($1),NULL,struct_vst,$1->dimensions))
+                        if(current_vst->backpatch(it->first,getType($1),NULL,struct_vst))
                         {
                             yyerror("Internal Error");
                         }
@@ -196,7 +196,7 @@ struct_member: dtype id_list_decl SEMICOLON
                 VarSymbolTable *struct_vst = sst->lookup(std::string($1))->fields;
                 for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                 {
-                    if(current_vst->backpatch(it->first,std::string($1),NULL,struct_vst,*temp))
+                    if(current_vst->backpatch(it->first,std::string($1),NULL,struct_vst))
                     {
                         yyerror("Internal Error");
                     }
@@ -256,12 +256,7 @@ expression_list: expression
                }
                ;
 
-function_declaration: function_header
-                    {
-                        vstl->remove(); //remove the parameter scope
-                        current_vst = vstl->getTop();
-                    } 
-                    LBRACE
+function_declaration: function_header LBRACE
                     {
                         //create a function scope
                         VarSymbolTable *new_st = new VarSymbolTable();
@@ -272,6 +267,8 @@ function_declaration: function_header
                     {
                         in_function = 0;
                         //remove function scope
+                        if(vstl->remove())
+                            yyerror("Internal Error");
                         if(vstl->remove())
                             yyerror("Internal Error");
                         current_vst = vstl->getTop();
@@ -338,6 +335,8 @@ function_header: dtype ID LPAREN param_list RPAREN {
                         }
                         //push new function to function table
                         FunctionSymbolTableEntry *entry = new FunctionSymbolTableEntry(std::string($2),num_params,current_vst,std::string($1));
+                        vstl->insert(entry->params);
+                        current_vst = entry->params;
                         current_function = entry;
                         //insert function into function table
                         for(auto it = $4->lst.begin();it!=$4->lst.end();it++)
@@ -353,9 +352,40 @@ param_list:
                 //no params
                 $$ = new param_list_attr();
                 $$->num = 0;
+                VarSymbolTable *new_st = new VarSymbolTable();
+                current_vst = new_st;
+                vstl->insert(new_st);
             }
           | param next_param
           {
+            if(vstl->lookup($1->name))
+            {
+                std::string error = "Variable redeclaration: "+$1->name;
+                yyerror(error.c_str());
+            }
+            if($1->indicator==7)
+            {
+                //check if struct exists
+                if(!sst->lookup($1->ifStruct))
+                {
+                    std::string str = std::string("Error: Struct ")+$1->ifStruct+std::string(" not defined");
+                    yyerror(str.c_str());
+                }
+                VarSymbolTableEntry *entry = new VarSymbolTableEntry($1->name);
+                entry->type = $1->ifStruct;
+                entry->struct_vst = sst->lookup($1->ifStruct)->fields;
+                current_vst->insert(entry);
+            }
+            else
+            {
+                VarSymbolTableEntry *entry = new VarSymbolTableEntry($1->name);
+                entry->type = getType($1);
+                if($1->indicator==2)
+                {
+                    entry->inner = genInnerType($1->inner);
+                }
+                current_vst->insert(entry);
+            }
             $$ = new param_list_attr();
             $$->num = num_params;
             $$->lst = $2->lst;
@@ -367,38 +397,23 @@ param: dtype ID
      {
         $$ = new id_attr();
         $$->name = std::string($2);
-        //check if ID already present
-        if(current_vst->lookup(std::string($2)))
-        {
-            std::string error = "Variable redeclaration: "+std::string($2);
-            yyerror(error.c_str());
-        }
-        VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($2));
-        entry->type = getType($1);
-        current_vst->insert(entry);
+        $$->indicator = $1->indicator;
+        $$->vtp = $1->vtp;
+        $$->vta = $1->vta;
+        $$->vts = $1->vts;
+        std::string inner = $1->inner->print();
+        if(inner[inner.length()-1]==' ')
+            inner = inner.substr(0,inner.length()-1);
+        $$->inner = inner;
         ++num_params;
      }
      | ID ID
      {
         $$ = new id_attr();
         $$->name = std::string($2);
-        //check if ID already present
-        std::list<int> *temp;
-        temp = new std::list<int>();
-        if(current_vst->lookup(std::string($2)))
-        {
-            std::string error = "Variable redeclaration: "+std::string($2);
-            yyerror(error.c_str());
-        }
-        //check if struct exists
-        if(!sst->lookup(std::string($1)))
-        {
-            std::string str = std::string("Error: Struct ")+std::string($1)+std::string(" not defined");
-            yyerror(str.c_str());
-        }
-        VarSymbolTableEntry *entry = new VarSymbolTableEntry(std::string($2));
-        entry->type = std::string($1);
-        current_vst->insert(entry);
+        $$->indicator = 7;
+        $$->vtsr = TYPE_STRU;
+        $$->ifStruct = std::string($1);
         ++num_params;
      }
      ;
@@ -408,6 +423,9 @@ next_param :
                 //end of params
                 $$ = new param_list_attr();
                 $$->num = num_params;
+
+                VarSymbolTable *new_st = new VarSymbolTable();
+                current_vst = new_st;
             }
            | COMMA param next_param
            {
@@ -415,6 +433,35 @@ next_param :
                 $$->num = num_params;
                 $$->lst = $3->lst;
                 $$->lst.push_back($2->name);
+                //check if variable redeclaration
+                if(vstl->lookup($2->name))
+                {
+                    std::string error = "Variable redeclaration: "+$2->name;
+                    yyerror(error.c_str());
+                }
+                if($2->indicator ==7)
+                {
+                    //check if struct exists
+                    if(!sst->lookup($2->ifStruct))
+                    {
+                        std::string str = std::string("Error: Struct ")+$2->ifStruct+std::string(" not defined");
+                        yyerror(str.c_str());
+                    }
+                    VarSymbolTableEntry *entry = new VarSymbolTableEntry($2->name);
+                    entry->type = $2->ifStruct;
+                    entry->struct_vst = sst->lookup($2->ifStruct)->fields;
+                    current_vst->insert(entry);
+                }
+                else
+                {
+                    VarSymbolTableEntry *entry = new VarSymbolTableEntry($2->name);
+                    entry->type = getType($2);
+                    if($2->indicator==2)
+                    {
+                        entry->inner = genInnerType($2->inner);
+                    }
+                    current_vst->insert(entry);
+                }
            }
            ;
 
@@ -431,13 +478,24 @@ statements: variable_declaration {printlog("Variable declaration");}
           | break_statement {printlog("Break");}
           | continue_statement {printlog("Continue");}
           | call_statement {printlog("Function call");}
-          | LBRACE control_body RBRACE {printlog("Block");}
+          | LBRACE {
+                        //create a new symbol table
+                        VarSymbolTable *new_st = new VarSymbolTable();
+                        current_vst = new_st;
+                        vstl->insert(new_st);
+                    }
+          control_body RBRACE {
+            //remove symbol table
+            if(vstl->remove())
+                yyerror("Internal Error");
+            current_vst = vstl->getTop();
+            printlog("Block");
+            }
           ;
 
 variable_declaration: dtype id_list SEMICOLON
                     {
                         // backpatch id_list with dtype
-                        // std::cout<<getType($1)<<std::endl;
                         for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                         {
                             if(it->second->indicator)
@@ -476,7 +534,7 @@ variable_declaration: dtype id_list SEMICOLON
                         {
                             for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                             {
-                                if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL,$1->dimensions))
+                                if(current_vst->backpatch(it->first,getType($1),$1->inner,NULL))
                                 {
                                     yyerror("Internal Error");
                                 }
@@ -487,14 +545,12 @@ variable_declaration: dtype id_list SEMICOLON
                             for(auto it=$2->lst.begin();it!=$2->lst.end();it++)
                             {
                                 VarSymbolTable *struct_vst = sst->lookup(std::string(getFSM($1->vta)))->fields;
-                                if(current_vst->backpatch(it->first,getType($1),NULL,struct_vst,$1->dimensions))
+                                if(current_vst->backpatch(it->first,getType($1),NULL,struct_vst))
                                 {
                                     yyerror("Internal Error");
                                 }
                             }
                         }
-                        // std::cout<<"print"<<std::endl;
-                        // vstl->print();
                     }
                     | ID id_list SEMICOLON
                     {
@@ -509,7 +565,7 @@ variable_declaration: dtype id_list SEMICOLON
                         VarSymbolTable *struct_fields = sst->lookup(std::string($1))->fields;
                         for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                         {
-                            if(current_vst->backpatch(it->first,std::string($1),NULL,struct_fields,*temp))
+                            if(current_vst->backpatch(it->first,std::string($1),NULL,struct_fields))
                             {
                                 yyerror("Internal Error");
                             }
@@ -645,7 +701,6 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
             //we need to match rhs type with type of pseudo_ID
             std::string type_lhs = ret.second.substr(ret.second.find(" ")+1);
             std::string type_rhs = getType($3);
-            // std::cout<<type_lhs<<" "<<type_rhs<<std::endl;
             if(type_rhs[type_rhs.length()-1]==' ')
                     type_rhs=type_rhs.substr(0,type_rhs.length()-1);
             if(!isPrimitive(type_rhs) || !isPrimitive(type_lhs))
@@ -662,14 +717,11 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
             }
             }
           | pseudo_ID OPER_ASN_SIMPLE rhs SEMICOLON {
-            // std::cout<<"HERE"<<std::endl;
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
             if(!ret.first)
                 yyerror(ret.second.c_str());
-            std::cout<<ret.second<<std::endl;
             std::string type_lhs = ret.second.substr(ret.second.find(" ")+1);
             std::string type_rhs = getType($3);
-            // std::cout<<type_lhs<<" "<<type_rhs<<std::endl;
             if(type_rhs[type_rhs.length()-1]==' ')
                     type_rhs=type_rhs.substr(0,type_rhs.length()-1);
             if(type_rhs=="o_set"||type_rhs=="u_set"||type_rhs=="sets")
@@ -689,10 +741,8 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
             if(!ret.first)
                 yyerror(ret.second.c_str());
-            // std::cout<<"HERE"<<std::endl;
             std::string type_lhs = ret.second.substr(ret.second.find(" ")+1);
             std::string type_rhs("regex");
-            // std::cout<<type_lhs<<" "<<type_rhs<<std::endl;
             if(!isCoherent(type_lhs,type_rhs))
             {
                 std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
@@ -706,7 +756,6 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 yyerror(ret.second.c_str());
             std::string type_lhs = ret.second.substr(ret.second.find(" ")+1);
             std::string type_rhs("string");
-            // std::cout<<type_lhs<<" "<<type_rhs<<std::endl;
             if(!isCoherent(type_lhs,type_rhs))
             {
                 std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
@@ -731,17 +780,17 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
             }
             if(type=="transitions_dfa" && ($4->type!="transitions" || $4->automata_type!="dfa"))
             {
-                std::string error = std::string("Error: Invalid type conversion from DFA to ")+type;
+                std::string error = std::string("Error: Invalid type conversion from ")+($4->type=="transitions"?(std::string("transitions_")+$4->automata_type):"alphabets")+std::string(" to ")+type;
                 yyerror(error.c_str());
             }
             if(type=="transitions_pda" && ($4->type!="transitions" || $4->automata_type!="pda"))
             {
-                std::string error = std::string("Error: Invalid type conversion from PDA to ")+type;
+                std::string error = std::string("Error: Invalid type conversion from")+($4->type=="transitions"?(std::string("transitions_")+$4->automata_type):"alphabets")+std::string(" to ")+type;
                 yyerror(error.c_str());
             }
             if(type=="transitions_nfa" && ($4->type!="transitions" || ($4->automata_type!="nfa" && $4->automata_type!="dfa")))
             {
-                std::string error = std::string("Error: Invalid type conversion from NFA to ")+type;
+                std::string error = std::string("Error: Invalid type conversion from")+($4->type=="transitions"?(std::string("transitions_")+$4->automata_type):"alphabets")+std::string(" to ")+type;
                 yyerror(error.c_str());
             }
           }
@@ -1284,20 +1333,23 @@ expression: LPAREN expression RPAREN {
                                     $$->vts = $2->vts;
                                     $$->isConst = $2->isConst;
                                     $$->val = $2->val;
-                                    switch($$->val->type)
+                                    if($$->val)
                                     {
-                                        case CINT:
-                                                $$->val->ccint = -($$->val->ccint);
-                                                break;
-                                        case CFLOAT:
-                                                $$->val->ccfloat = -($$->val->ccfloat);
-                                                break;
-                                        case CBOOL:
-                                                $$->val->ccbool = !($$->val->ccbool);
-                                                break;
-                                        case CCHAR:
-                                                $$->val->ccchar = -($$->val->ccchar);
-                                                break;
+                                        switch($$->val->type)
+                                        {
+                                            case CINT:
+                                                    $$->val->ccint = -($$->val->ccint);
+                                                    break;
+                                            case CFLOAT:
+                                                    $$->val->ccfloat = -($$->val->ccfloat);
+                                                    break;
+                                            case CBOOL:
+                                                    $$->val->ccbool = !($$->val->ccbool);
+                                                    break;
+                                            case CCHAR:
+                                                    $$->val->ccchar = -($$->val->ccchar);
+                                                    break;
+                                        }
                                     }
                                 }
           | OPER_PLUS expression { 
@@ -1360,7 +1412,6 @@ expression: LPAREN expression RPAREN {
                             std::string type = ret.second.substr(ret.second.find(' ')+1);
                             if(type.find(" ")!=std::string::npos && type.find(" ")!=type.length()-1)
                                 type = type.substr(0,type.find(' ') );
-                            // std::cout<<ret.second<<std::endl;
                             if(type=="int_8")
                             {
                                 $$->indicator = 1;
@@ -1415,11 +1466,9 @@ expression: LPAREN expression RPAREN {
                             {
                                 $$->indicator = 2;
                                 $$->vts = getSetType(type.c_str());
-                                // std::cout<<ret.second<<std::endl;
                                 size_t first_space = ret.second.find(" ");
                                 size_t second = ret.second.find(" ",first_space+1);
                                 $$->inner = genInnerType(ret.second.substr(second+1));
-                                // std::cout<<$$->inner->print()<<std::endl;
                             }
                             else if(type=="nfa")
                             {
@@ -1453,7 +1502,25 @@ expression: LPAREN expression RPAREN {
           | call {
                     // To be handled (to be done)
                     $$ = new expr_attr();
-                    $$->indicator = 1;
+                    $$->indicator = $1->indicator;
+                    if($1->indicator==1)
+                        $$->vtp = $1->vtp;
+                    else if($1->indicator==2)
+                    {
+                        $$->vts = $1->vts;
+                        $$->inner = $1->inner;
+                    }
+                    else if($1->indicator==3)
+                        $$->vta = $1->vta;
+                    else if($1->indicator==4)
+                        $$->vtsr = $1->vtsr;
+                    else if($1->indicator==5)
+                        $$->vtsr = $1->vtsr;
+                    else if($1->indicator==7)
+                    {
+                        $$->vtsr = $1->vtsr;
+                        $$->ifStruct = $1->ifStruct;
+                    }
                     
                  }
           ;
@@ -1481,7 +1548,6 @@ call : ID LPAREN argument_list RPAREN
             //recursively generate all inner types
             type = type.substr(type.find(' ')+1);
             $$->inner = genInnerType(type);
-            // std::cout<<$$->inner->print()<<std::endl;
         }
         else if(isPrimitive(outer_type))
         {
@@ -1510,28 +1576,32 @@ call : ID LPAREN argument_list RPAREN
         // we also need to check argument types
         std::vector<std::string> arg_pos_list_rev = entry->id_list;
         VarSymbolTable *params_table = entry->params;
-        auto it_list = arg_pos_list_rev.rbegin();
-        auto it_arg_list = $3->lst.rbegin();
+        params_table->print();
+        auto it_list = arg_pos_list_rev.begin();
+        auto it_arg_list = $3->lst.begin();
         //compare types
         int i=1;
-        while(it_list!=arg_pos_list_rev.rend() && it_arg_list!=$3->lst.rend())
+        while(it_list!=arg_pos_list_rev.end() && it_arg_list!=$3->lst.end())
         {
             std::string type_expected = params_table->lookup(*it_list)->type;
             std::string type_actual = *it_arg_list;
-            if(type_expected=="o_set"||type_expected=="u_set")
+            type_actual = trim(type_actual);
+            if(type_expected=="o_set"||type_expected=="u_set"||type_expected=="o_set "|| type_expected=="u_set ")
             {
                 //concat inner types
-                type_expected+=std::string(" ")+params_table->lookup(*it_list)->inner->print();
+                type_expected=trim(trim(type_expected)+std::string(" ")+params_table->lookup(*it_list)->inner->print());
             }
             if(!isCoherent(type_expected,type_actual))
             {
                 std::string error = std::string("Argument type mismatch at pos " + std::to_string(i)+ ": Expected ")+type_expected+std::string(" but found ")+type_actual;
                 yyerror(error.c_str());
             }
+            ++it_list;
+            ++it_arg_list;
         }
-        if(it_list!=arg_pos_list_rev.rend())
+        if(it_list!=arg_pos_list_rev.end())
             yyerror("Too few arguments");
-        else if(it_arg_list!=$3->lst.rend())
+        else if(it_arg_list!=$3->lst.end())
             yyerror("Too many arguments");
      }
      ;
@@ -1595,7 +1665,7 @@ arg_list_next:
 rhs_automata: LBRACE alphabet_list RBRACE
             {
                 $$ = new rhs_automata_attr();
-                $$->type=std::string("alphabet");
+                $$->type=std::string("alphabets");
                 $$->automata_type = std::string("");
             }
             | LBRACE rules_list RBRACE
@@ -1859,8 +1929,7 @@ return_statement : RETURN_KW expression SEMICOLON
                     std::string inner = type->inner->print();
                     if(inner[inner.length()-1]==' ')
                         inner = inner.substr(0,inner.length()-1);
-                    // std::cout<<getType(type) + std::string(" ")+type->inner->print()<<std::endl;
-                    // std::cout<<current_function->return_type<<std::endl;
+                    
                     if(!isCoherent(current_function->return_type,(getType(type) + std::string(" ")+inner)))
                     {
                         std::string str = std::string("Return type mismatch, expecting ")+current_function->return_type;
@@ -1897,7 +1966,6 @@ dtype : TYPE_PRIMITIVE {
                         $$ = new type_attr();
                         $$->indicator = 1;
                         $$->vtp = $1;
-                        $$->dimensions.push_front(0);
                       }
       | TYPE_SET COMP_LT set_type COMP_GT {
                                             $$ = new type_attr();
@@ -1905,38 +1973,31 @@ dtype : TYPE_PRIMITIVE {
                                             $$->vts = $1; 
                                             // start from here 
                                             $$->inner = $3->inner;
-                                            $$->dimensions = $3->dimensions;
-                                            $$->dimensions.push_front(0);
                                           }
       | TYPE_AUTOMATA {
                         $$ = new type_attr();
                         $$->indicator = 3;
                         $$->vta = $1;
-                        $$->dimensions.push_front(0);
                       }
       | TYPE_STRING {
                         $$ = new type_attr();
                         $$->indicator = 4;
                         $$->vtsr = $1;
-                        $$->dimensions.push_front(0);
                     }
       | TYPE_REG {
                         $$ = new type_attr();
                         $$->indicator = 5;
                         $$->vtsr = $1;
-                        $$->dimensions.push_front(0);
                  }
       ;
 
 set_type : dtype {
                     $$ = new type_attr();
                     $$->inner = new inner_type($1->inner,getType($1));
-                    $$->dimensions = $1->dimensions;
                  }
          | ID {
                 $$ = new type_attr();
                 $$->inner = new inner_type(NULL,std::string($1));
-                $$->dimensions.push_front(0);
               }
          ;
 
@@ -1946,7 +2007,7 @@ void yyerror(const char *s) {
 
     fprintf(parse_log, "Parser error: %d\n", yylineno);
     std::cout<<RED<<"Parser error: "<<yylineno<<RESET;
-    std::cout<<":"<<s<<std::endl;
+    std::cout<<": "<<s<<std::endl;
     terminate();
 
 }
