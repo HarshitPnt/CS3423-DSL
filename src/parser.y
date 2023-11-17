@@ -111,6 +111,10 @@ FunctionSymbolTableEntry *current_function;
 %%
 
 program : instruction_list
+        {
+            if(!fst->lookup("main"))
+                yyerror("No main function found");
+        }
 
 instruction_list: instruction_list struct_declaration
                 | instruction_list function_declaration
@@ -123,6 +127,11 @@ struct_declaration: STRUCT_KW ID
                                     //check if struct already exists
                                     if(sst->lookup(std::string($2)))
                                     {
+                                        if(sst->lookup(std::string($2))->isTemplate)
+                                        {
+                                            std::string error = "typename in use: "+std::string($2);
+                                            yyerror(error.c_str());
+                                        }
                                         std::string error = "Struct redeclaration: "+std::string($2);
                                         yyerror(error.c_str());
                                     }
@@ -271,16 +280,16 @@ function_declaration: function_header LBRACE
                         if(vstl->remove())
                             yyerror("Internal Error");
                         current_vst = vstl->getTop();
-                        if(isTemplateFn)
-                        {
-                            //remove struct entries
-                            std::vector<std::string> type_list = current_function->template_params;
-                            for(auto it = type_list.begin();it!=type_list.end();it++)
-                            {
-                                if(sst->remove(*it))
-                                    yyerror("Internal Error");
-                            }
-                        }
+                        // if(isTemplateFn)
+                        // {
+                        //     //remove struct entries
+                        //     std::vector<std::string> type_list = current_function->template_params;
+                        //     for(auto it = type_list.begin();it!=type_list.end();it++)
+                        //     {
+                        //         if(sst->remove(*it))
+                        //             yyerror("Internal Error");
+                        //     }
+                        // }
                         isTemplateFn = 0;
                         current_function = NULL;
                     }
@@ -412,8 +421,8 @@ function_header: dtype ID LPAREN param_list RPAREN {
                         for(auto it = $8->lst.begin();it!=$8->lst.end();it++)
                         {
                             std::string type = entry->params->lookup(*it)->type;
-                            if(isPrimitive(type))
-                                continue;
+                            if(isPrimitive(type) || isAutomata(type))
+                                ;
                             else if(isSet(type))
                             {
                                 //recurisvely find the inner template/struct
@@ -422,7 +431,7 @@ function_header: dtype ID LPAREN param_list RPAREN {
                                 if(inner.find(" ")==std::string::npos)
                                 {
                                     //check structs
-                                    if(sst->lookup(inner))
+                                    if(sst->lookup(inner) || isAutomata(inner) || isPrimitive(inner))
                                         ;
                                     else
                                     {
@@ -438,7 +447,7 @@ function_header: dtype ID LPAREN param_list RPAREN {
                                         inner = inner.substr(inner.find(" ")+1);
                                         inner_next = inner.substr(0,inner.find(" "));
                                     }
-                                    if(sst->lookup(inner_next))
+                                    if(sst->lookup(inner_next) || isPrimitive(inner_next) || isAutomata(inner_next))
                                         ;
                                     else
                                     {
@@ -448,14 +457,15 @@ function_header: dtype ID LPAREN param_list RPAREN {
                                 }
                             }
                             else if(sst->lookup(type))
-                                continue;
+                                ;
                             else if(std::find(type_list.begin(),type_list.end(),type)!=type_list.end())
-                                continue;
+                                ;
                             else
                             {
                                 std::string error = "Invalid type for argument Struct/typename not defined: "+std::string(*it);
                                 yyerror(error.c_str());
                             }
+                            entry->id_list.push_back(*it);
                         }
                         fst->insert(entry);
                     }
@@ -498,24 +508,58 @@ function_header: dtype ID LPAREN param_list RPAREN {
                     for(auto it = $8->lst.begin();it!=$8->lst.end();it++)
                     {
                         std::string type = entry->params->lookup(*it)->type;
-                        if(isPrimitive(type))
-                            continue;
+                        if(isSet(type))
+                        {
+                                std::string inner = entry->params->lookup(*it)->inner->print();
+                                inner = trim(inner);
+                                if(inner.find(" ")==std::string::npos)
+                                {
+                                    //check structs
+                                    if(sst->lookup(inner) || isPrimitive(inner) || isAutomata(inner))
+                                        ;
+                                    else
+                                    {
+                                        std::string error = "Invalid type for argument Struct/typename not defined: "+std::string(*it);
+                                        yyerror(error.c_str());
+                                    }
+                                }
+                                else
+                                {
+                                    std::string inner_next = inner.substr(0,inner.find(" "));
+                                    while(isSet(inner_next))
+                                    {
+                                        inner = inner.substr(inner.find(" ")+1);
+                                        inner_next = inner.substr(0,inner.find(" "));
+                                    }
+                                    if(sst->lookup(inner_next) || isPrimitive(inner_next) || isAutomata(inner_next))
+                                        ;
+                                    else
+                                    {
+                                        std::string error = "Invalid type for argument Struct/typename not defined: "+std::string(*it);
+                                        yyerror(error.c_str());
+                                    }
+                                }
+                        }
+                        else if(isPrimitive(type) || isAutomata(type))
+                            ;
                         else if(sst->lookup(type))
-                            continue;
+                            ;
                         else if(std::find(type_list.begin(),type_list.end(),type)!=type_list.end())
-                            continue;
+                            ;
                         else
                         {
                             std::string error = "Invalid type for argument Struct/typename not defined: "+std::string(*it);
                             yyerror(error.c_str());
                         }
+                        //insert into param list
+                        entry->id_list.push_back(*it);
                     }
                 }
                 ;
 
 type_list : ID
           {
-            std::cout<<"HERE"<<std::endl;
+            
             //check if ID exists as a struct
             if(sst->lookup(std::string($1)))
             {
@@ -531,6 +575,7 @@ type_list : ID
             //insert this ID in the struct symbol table
             VarSymbolTable *table = new VarSymbolTable();
             StructSymbolTableEntry *entry_struct = new StructSymbolTableEntry(std::string($1),table);
+            entry_struct->isTemplate = true;
             sst->insert(entry_struct);
           }
           | type_list COMMA ID
@@ -551,6 +596,7 @@ type_list : ID
             //insert this ID in the struct symbol table
             VarSymbolTable *table = new VarSymbolTable();
             StructSymbolTableEntry *entry_struct = new StructSymbolTableEntry(std::string($3),table);
+            entry_struct->isTemplate = true;
             sst->insert(entry_struct);
           }
           ;
@@ -1821,7 +1867,7 @@ call : ID LPAREN argument_list RPAREN
         else if(it_arg_list!=$3->lst.end())
             yyerror("Too many arguments");
      }
-     | ID TEMP_LEFT type_list_call TEMP_RIGHT ID LPAREN argument_list RPAREN
+     | ID TEMP_LEFT type_list_call TEMP_RIGHT LPAREN argument_list RPAREN
      {
         //check if function exists and is a template function
         FunctionSymbolTableEntry *entry = fst->lookup(std::string($1));
@@ -1875,10 +1921,10 @@ call : ID LPAREN argument_list RPAREN
         std::vector<std::string> arg_pos_list_rev = entry->id_list;
         VarSymbolTable *params_table = entry->params;
         auto it_list = arg_pos_list_rev.begin();
-        auto it_arg_list = $7->lst.begin();
+        auto it_arg_list = $6->lst.begin();
         //compare types
         int i=1;
-        while(it_list!=arg_pos_list_rev.end() && it_arg_list!=$7->lst.end())
+        while(it_list!=arg_pos_list_rev.end() && it_arg_list!=$6->lst.end())
         {
             std::string type_expected = params_table->lookup(*it_list)->type;
             std::string type_actual = *it_arg_list;
@@ -1901,7 +1947,7 @@ call : ID LPAREN argument_list RPAREN
         }
         if(it_list!=arg_pos_list_rev.end())
             yyerror("Too few arguments");
-        else if(it_arg_list!=$7->lst.end())
+        else if(it_arg_list!=$6->lst.end())
             yyerror("Too many arguments");
 
      }
@@ -2249,6 +2295,8 @@ return_statement : RETURN_KW expression SEMICOLON
                     type->vtp = $2->vtp;
                     type->vta = $2->vta;
                     type->vts = $2->vts;
+                    type->vtsr = $2->vtsr;
+                    type->ifStruct = $2->ifStruct;
                     type->inner = $2->inner;
                     if(current_function->return_type == std::string("void"))
                         yyerror("Return type mismatch/ function returns void");
@@ -2256,7 +2304,8 @@ return_statement : RETURN_KW expression SEMICOLON
                     if(inner[inner.length()-1]==' ')
                         inner = inner.substr(0,inner.length()-1);
                     
-                    if(!isCoherent(current_function->return_type,(getType(type) + std::string(" ")+inner)))
+                    // std::cout<<type->indicator<<std::endl;
+                    if(!isCoherent(current_function->return_type,(trim(getType(type) + std::string(" ")+inner))))
                     {
                         std::string str = std::string("Return type mismatch, expecting ")+current_function->return_type;
                         yyerror(str.c_str());
@@ -2339,9 +2388,9 @@ void yyerror(const char *s) {
 }
 
 int main(int argc, char **argv) {
-    #ifdef YYDEBUG
-         yydebug = 1;
-    #endif
+    // #ifdef YYDEBUG
+    //      yydebug = 1;
+    // #endif
     initST();
 
     yyin = fopen(argv[1],"r");

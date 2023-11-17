@@ -1,4 +1,7 @@
-o_set<o_set<int_8>> a;
+void main()
+{
+    o_set<o_set<int_8>> a;
 
-int_8 x = 5;
-a[x][x] = 10;
+    int_8 x = 5;
+    a[x][x] = 10;
+}

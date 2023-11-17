@@ -1,4 +1,14 @@
-temp_fn[[T]] void insert(o_set<T> x, T y)
+temp_fn[[T]] int_8 insert(o_set<T> x, T y)
 {
     <!--inserts a value into the set --!> 
+    return y;
+}
+
+void main()
+{
+    <!-- going to call a template function --!>
+
+    o_set<int_8> x;
+
+    int_8 y = insert[[int_8]](x,8);
 }

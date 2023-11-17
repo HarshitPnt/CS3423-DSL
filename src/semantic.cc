@@ -204,7 +204,6 @@ bool checkValidID(char *id)
         if (reti == 0)
         {
             int val = regexec(&regex, id, 0, NULL, 0);
-            std::cout << val << std::endl;
             if (val == REG_NOMATCH)
                 return false;
             return true;
@@ -433,7 +432,7 @@ std::string getType(type_attr *t_attr)
     }
     if (t_attr->indicator == 7)
     {
-        return std::string("struct");
+        return t_attr->ifStruct;
     }
     return std::string("sets");
 }
@@ -588,7 +587,10 @@ bool isCoherent(std::string type_1, std::string type_2)
     }
     else
         type2 = type_2.substr(0, type_2.find(' '));
-    // std::cout << type1 << " " << type2 << std::endl;
+    if (sst->lookup(type1) && sst->lookup(type1)->isTemplate)
+        return true;
+    if (sst->lookup(type2) && sst->lookup(type2)->isTemplate)
+        return true;
     if (type1 == "int_8" || type1 == "int_16" || type1 == "int_32" || type1 == "int_64" || type1 == "uint_8" || type1 == "uint_16" || type1 == "uint_32" || type1 == "uint_64")
     {
         if (type2 == "int_8" || type2 == "int_16" || type2 == "int_32" || type2 == "int_64" || type2 == "uint_8" || type2 == "uint_16" || type2 == "uint_32" || type2 == "uint_64")

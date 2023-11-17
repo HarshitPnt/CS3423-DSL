@@ -9,4 +9,8 @@ struct B{
 
 B b;
 int_8 i;
-b.c[i][i][i].a[i]=5;
+
+void main()
+{
+    b.c[i][i][i].a[i]=5;
+}

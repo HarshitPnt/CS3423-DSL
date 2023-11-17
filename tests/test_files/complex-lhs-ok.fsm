@@ -12,5 +12,9 @@ struct Plane{
 
 Plane plane;
 int_8 i,j;
-plane.Lines[i].Points[i].x = 10;
-plane.Lines[i].Points[j].y = 20;
+
+void main()
+{
+    plane.Lines[i].Points[i].x = 10;
+    plane.Lines[i].Points[0].y = 20;
+}
