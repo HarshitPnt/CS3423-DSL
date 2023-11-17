@@ -1,0 +1,4 @@
+temp_fn[[T]] void insert(o_set<T> x, T y)
+{
+    <!--inserts a value into the set --!> 
+}

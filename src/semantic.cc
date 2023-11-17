@@ -299,6 +299,18 @@ FunctionSymbolTableEntry::FunctionSymbolTableEntry(std::string name, int num_par
     this->num_params = num_params;
     this->params = params;
     this->return_type = return_type;
+    this->isTemplate = false;
+    this->template_params.clear();
+}
+
+FunctionSymbolTableEntry::FunctionSymbolTableEntry(std::string name, int num_params, VarSymbolTable *params, std::string return_type, bool isTemplate, std::vector<std::string> template_params)
+{
+    this->name = name;
+    this->num_params = num_params;
+    this->params = params;
+    this->return_type = return_type;
+    this->isTemplate = isTemplate;
+    this->template_params = template_params;
 }
 
 bool FunctionSymbolTable::insert(FunctionSymbolTableEntry *fste)
@@ -345,6 +357,14 @@ void VarSymbolTableList::print()
     {
         (*it)->print();
     }
+}
+
+bool StructSymbolTable::remove(std::string name)
+{
+    if (sst->lookup(name) == NULL)
+        return 1;
+    this->entries.erase(name);
+    return 0;
 }
 
 std::string getType(type_attr *t_attr)

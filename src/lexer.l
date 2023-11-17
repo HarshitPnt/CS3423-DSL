@@ -89,6 +89,7 @@ break {printtoken("reserved keyword"); return BREAK_KW;}
 struct {printtoken("reserved keyword"); return STRUCT_KW;}
 return {printtoken("reserved keyword"); return RETURN_KW;}
 continue {printtoken("reserved keyword"); return CONTINUE_KW;}
+temp_fn {printtoken("reserved keyword"); return TEMP_FN_KW;}
 
 "r"/{single_quote}([^'])*{single_quote}    {
     printtoken("regex_start");
@@ -188,6 +189,9 @@ continue {printtoken("reserved keyword"); return CONTINUE_KW;}
 "!" {printtoken("operator"); return OPER_NOT;}
 "&&" {printtoken("operator"); return OPER_AND;}
 "||" {printtoken("operator"); return OPER_OR;}
+
+"[[" {printtoken("operator"); return TEMP_LEFT;}
+"]]" {printtoken("operator"); return TEMP_RIGHT;}
 
 "<" {printtoken("operator"); return COMP_LT;}
 ">" {printtoken("operator"); return COMP_GT;}

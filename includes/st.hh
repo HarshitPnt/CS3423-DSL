@@ -2,6 +2,7 @@
 #define ST_HH
 #include <string>
 #include <unordered_map>
+#include <algorithm>
 #include <vector>
 #include <list>
 
@@ -88,6 +89,7 @@ class StructSymbolTable
 public:
     std::unordered_map<std::string, StructSymbolTableEntry *> entries;
     bool insert(StructSymbolTableEntry *sste);
+    bool remove(std::string name);
     StructSymbolTableEntry *lookup(std::string name);
     void init();
     void print();
@@ -101,7 +103,11 @@ public:
     VarSymbolTable *params;
     std::vector<std::string> id_list;
     std::string return_type;
+    bool isTemplate;
+    std::vector<std::string> template_params;
+
     FunctionSymbolTableEntry(std::string name, int num_params, VarSymbolTable *params, std::string return_type);
+    FunctionSymbolTableEntry(std::string name, int num_params, VarSymbolTable *params, std::string return_type, bool isTemplate, std::vector<std::string> template_params);
 };
 
 class FunctionSymbolTable

@@ -28,6 +28,7 @@ void terminate()
 int in_function = 0;
 int in_loop = 0;
 int num_params = 0;
+int isTemplateFn = 0;
 FunctionSymbolTableEntry *current_function;
 
 #define printlog(a) fprintf(parse_log,"%s declaration at line no: %d\n",a,yylineno)
@@ -83,11 +84,11 @@ FunctionSymbolTableEntry *current_function;
 %token <cint> INT_CONST <cfloat> FLOAT_CONST <cstring> STRING_CONST <cchar> CHAR_CONST <cbool> BOOL_CONST
 %left REGEX_R REGEX_LIT
 %left <identifier> ID
-%token IF_KW ELIF_KW ELSE_KW WHILE_KW BREAK_KW STRUCT_KW RETURN_KW CONTINUE_KW
+%token IF_KW ELIF_KW ELSE_KW WHILE_KW BREAK_KW STRUCT_KW RETURN_KW CONTINUE_KW TEMP_FN_KW
 %token ARROW COLON
 %left COMMA DOT SEMICOLON DOLLAR
 %left OPER_AND OPER_OR
-%left<comp> OPER_COMP COMP_GT COMP_LT
+%left<comp> OPER_COMP COMP_GT COMP_LT TEMP_LEFT TEMP_RIGHT
 %left OPER_PLUS OPER_MINUS OPER_MUL OPER_DIV OPER_MOD
 %left AT_THE_RATE OPER_POWER
 %left OPER_NOT OPER_HASH
@@ -102,7 +103,7 @@ FunctionSymbolTableEntry *current_function;
 %nterm<para> param_list next_param
 %nterm<arg> argument_list arg_list_next
 %nterm<expr_lst> expression_list
-%nterm<state_lst> states_list
+%nterm<state_lst> states_list type_list type_list_call
 %nterm<rules> rule rules_list
 %nterm<lhs_arrow> rhs_arrow lhs_arrow elements_others 
 %nterm<rhs_automata> rhs_automata
@@ -120,7 +121,6 @@ instruction_list: instruction_list struct_declaration
 struct_declaration: STRUCT_KW ID
                                 {
                                     //check if struct already exists
-                                    // sst->print();
                                     if(sst->lookup(std::string($2)))
                                     {
                                         std::string error = "Struct redeclaration: "+std::string($2);
@@ -137,7 +137,6 @@ struct_declaration: STRUCT_KW ID
                     {
                         //first get the symbol table for this struct and put it into the members column of the struct symbol table
                         StructSymbolTableEntry *entry = new StructSymbolTableEntry(std::string($2),current_vst);
-                        // entry->fields->print();
                         sst->insert(entry);
                         printlog("Struct");
                         //remove struct scope from the varSymbolTableList
@@ -272,6 +271,17 @@ function_declaration: function_header LBRACE
                         if(vstl->remove())
                             yyerror("Internal Error");
                         current_vst = vstl->getTop();
+                        if(isTemplateFn)
+                        {
+                            //remove struct entries
+                            std::vector<std::string> type_list = current_function->template_params;
+                            for(auto it = type_list.begin();it!=type_list.end();it++)
+                            {
+                                if(sst->remove(*it))
+                                    yyerror("Internal Error");
+                            }
+                        }
+                        isTemplateFn = 0;
                         current_function = NULL;
                     }
                     ;
@@ -310,6 +320,11 @@ function_header: dtype ID LPAREN param_list RPAREN {
                         for(auto it = $4->lst.begin();it!=$4->lst.end();it++)
                         {
                             entry->id_list.push_back(*it);
+                            if(entry->params->lookup(*it)->type=="template")
+                            {
+                                std::string error = "Invalid type for argument: "+std::string(*it);
+                                yyerror(error.c_str());
+                            }
                         }
                         fst->insert(entry);
                     }
@@ -342,10 +357,203 @@ function_header: dtype ID LPAREN param_list RPAREN {
                         for(auto it = $4->lst.begin();it!=$4->lst.end();it++)
                         {
                             entry->id_list.push_back(*it);
+                            if(entry->params->lookup(*it)->type=="template")
+                            {
+                                std::string error = "Invalid type for argument: "+std::string(*it);
+                                yyerror(error.c_str());
+                            }
                         }
                         fst->insert(entry);
                     }
+                | TEMP_FN_KW TEMP_LEFT type_list TEMP_RIGHT ID ID LPAREN param_list RPAREN {
+                        // struct return type
+                        // need to insert the typenames into the struct symbol table and after the function need to remove them
+                        if(in_function)
+                            yyerror("Nested function declaration");
+                        in_function = 1;
+                        isTemplateFn = 1;
+                        //check for function
+                        if(fst->lookup(std::string($6)))
+                        {
+                            std::string error = "Function redeclaration: "+std::string($6);
+                            yyerror(error.c_str());
+                        }
+                        //check if struct exists
+                        FunctionSymbolTableEntry *entry;
+                        std::vector<std::string> type_list;
+                        for(auto it = $3->lst.begin();it!=$3->lst.end();it++)
+                        {
+                            type_list.push_back(*it);
+                        }
+                        if(std::string($5)!=std::string("void"))
+                        {
+                            if(sst->lookup(std::string($5)))
+                            {
+                                //return type is struct
+                                entry = new FunctionSymbolTableEntry(std::string($6),num_params,current_vst,std::string($5),true,type_list);
+                                vstl->insert(entry->params);
+                                current_vst = entry->params;
+                            }
+                            else
+                            {
+                                std::string str = std::string("Error: struct ")+std::string($5)+std::string(" not defined");
+                                yyerror(str.c_str());
+                            }
+                        }
+                        else
+                        {
+                            //return type is void
+                            entry = new FunctionSymbolTableEntry(std::string($6),num_params,current_vst,std::string($5),true,type_list);
+                            vstl->insert(entry->params);
+                            current_vst = entry->params;
+                        }
+                        //type checking for arguments
+                        current_function = entry;
+                        for(auto it = $8->lst.begin();it!=$8->lst.end();it++)
+                        {
+                            std::string type = entry->params->lookup(*it)->type;
+                            if(isPrimitive(type))
+                                continue;
+                            else if(isSet(type))
+                            {
+                                //recurisvely find the inner template/struct
+                                std::string inner = entry->params->lookup(*it)->inner->print();
+                                inner = trim(inner);
+                                if(inner.find(" ")==std::string::npos)
+                                {
+                                    //check structs
+                                    if(sst->lookup(inner))
+                                        ;
+                                    else
+                                    {
+                                        std::string error = "Invalid type for argument Struct/typename not defined: "+std::string(*it);
+                                        yyerror(error.c_str());
+                                    }
+                                }
+                                else
+                                {
+                                    std::string inner_next = inner.substr(0,inner.find(" "));
+                                    while(isSet(inner_next))
+                                    {
+                                        inner = inner.substr(inner.find(" ")+1);
+                                        inner_next = inner.substr(0,inner.find(" "));
+                                    }
+                                    if(sst->lookup(inner_next))
+                                        ;
+                                    else
+                                    {
+                                        std::string error = "Invalid type for argument Struct/typename not defined: "+std::string(*it);
+                                        yyerror(error.c_str());
+                                    }
+                                }
+                            }
+                            else if(sst->lookup(type))
+                                continue;
+                            else if(std::find(type_list.begin(),type_list.end(),type)!=type_list.end())
+                                continue;
+                            else
+                            {
+                                std::string error = "Invalid type for argument Struct/typename not defined: "+std::string(*it);
+                                yyerror(error.c_str());
+                            }
+                        }
+                        fst->insert(entry);
+                    }
+                | TEMP_FN_KW TEMP_LEFT type_list TEMP_RIGHT dtype ID LPAREN param_list RPAREN {
+                    if(in_function)
+                            yyerror("Nested function declaration");
+                    in_function = 1;
+                    isTemplateFn = 1;
+                    //check for function
+                    if(fst->lookup(std::string($6)))
+                    {
+                        std::string error = "Function redeclaration: "+std::string($6);
+                        yyerror(error.c_str());
+                    }
+                    //make a functionsymboltable entry
+                    std::vector<std::string> type_list;
+                    for(auto it = $3->lst.begin();it!=$3->lst.end();it++)
+                    {
+                        type_list.push_back(*it);
+                    }
+                    FunctionSymbolTableEntry *entry = new FunctionSymbolTableEntry(std::string($6),num_params,current_vst,getType($5),true,type_list);
+                    vstl->insert(entry->params);
+                    current_vst = entry->params;
+                    std::string outer;
+                    if($5->indicator==2)//set
+                    {
+                        outer = getType($5);
+                        outer= outer + std::string(" ") + $5->inner->print();
+                        entry->return_type = outer;
+                    }
+                    else
+                    {
+                        outer = getType($5);
+                        entry->return_type = outer;
+                    }
+                    outer = trim(outer);
+                    current_function = entry;
+                    fst->insert(entry);
+                    //type checking of arguments
+                    for(auto it = $8->lst.begin();it!=$8->lst.end();it++)
+                    {
+                        std::string type = entry->params->lookup(*it)->type;
+                        if(isPrimitive(type))
+                            continue;
+                        else if(sst->lookup(type))
+                            continue;
+                        else if(std::find(type_list.begin(),type_list.end(),type)!=type_list.end())
+                            continue;
+                        else
+                        {
+                            std::string error = "Invalid type for argument Struct/typename not defined: "+std::string(*it);
+                            yyerror(error.c_str());
+                        }
+                    }
+                }
                 ;
+
+type_list : ID
+          {
+            std::cout<<"HERE"<<std::endl;
+            //check if ID exists as a struct
+            if(sst->lookup(std::string($1)))
+            {
+                std::string error = "Cannot be used as typename as Struct with same name exists: "+std::string($1);
+                yyerror(error.c_str());
+            }
+            if(std::string($1)=="void")
+            {
+                yyerror("Cannot use void as typename");
+            }
+            $$ = new state_list_attr();
+            $$->lst.push_back(std::string($1));
+            //insert this ID in the struct symbol table
+            VarSymbolTable *table = new VarSymbolTable();
+            StructSymbolTableEntry *entry_struct = new StructSymbolTableEntry(std::string($1),table);
+            sst->insert(entry_struct);
+          }
+          | type_list COMMA ID
+          {
+            //check if ID exists as a struct
+            if(sst->lookup(std::string($3)))
+            {
+                std::string error = "Cannot be used as typename as Struct with same name exists: "+std::string($3);
+                yyerror(error.c_str());
+            }
+            if(std::string($3)=="void")
+            {
+                yyerror("Cannot use void as typename");
+            }
+            $$ = new state_list_attr();
+            $$->lst = $1->lst;
+            $$->lst.push_back(std::string($3));
+            //insert this ID in the struct symbol table
+            VarSymbolTable *table = new VarSymbolTable();
+            StructSymbolTableEntry *entry_struct = new StructSymbolTableEntry(std::string($3),table);
+            sst->insert(entry_struct);
+          }
+          ;
 
 param_list: 
             {
@@ -379,7 +587,10 @@ param_list:
             else
             {
                 VarSymbolTableEntry *entry = new VarSymbolTableEntry($1->name);
-                entry->type = getType($1);
+                if($1->indicator!=8)
+                    entry->type = getType($1);
+                else
+                    entry->type = std::string("template");
                 if($1->indicator==2)
                 {
                     entry->inner = genInnerType($1->inner);
@@ -412,6 +623,10 @@ param: dtype ID
         $$ = new id_attr();
         $$->name = std::string($2);
         $$->indicator = 7;
+        if(!sst->lookup(std::string($1)))
+        {
+            $$->indicator = 8;
+        }
         $$->vtsr = TYPE_STRU;
         $$->ifStruct = std::string($1);
         ++num_params;
@@ -1533,6 +1748,8 @@ call : ID LPAREN argument_list RPAREN
             std::string error = "Function "+std::string($1)+std::string(" not defined");
             yyerror(error.c_str());
         }
+        if(fst->lookup(std::string($1))->isTemplate)
+            yyerror("Function is a template function");
         //check if argument type matches (to be done)
         //create type of call from return type of function
         FunctionSymbolTableEntry *entry = fst->lookup(std::string($1));
@@ -1576,7 +1793,6 @@ call : ID LPAREN argument_list RPAREN
         // we also need to check argument types
         std::vector<std::string> arg_pos_list_rev = entry->id_list;
         VarSymbolTable *params_table = entry->params;
-        params_table->print();
         auto it_list = arg_pos_list_rev.begin();
         auto it_arg_list = $3->lst.begin();
         //compare types
@@ -1598,13 +1814,123 @@ call : ID LPAREN argument_list RPAREN
             }
             ++it_list;
             ++it_arg_list;
+            ++i;
         }
         if(it_list!=arg_pos_list_rev.end())
             yyerror("Too few arguments");
         else if(it_arg_list!=$3->lst.end())
             yyerror("Too many arguments");
      }
+     | ID TEMP_LEFT type_list_call TEMP_RIGHT ID LPAREN argument_list RPAREN
+     {
+        //check if function exists and is a template function
+        FunctionSymbolTableEntry *entry = fst->lookup(std::string($1));
+        if(!entry)
+        {
+            std::string error = "Function "+std::string($1)+std::string(" not defined");
+            yyerror(error.c_str());
+        }
+        if(!entry->isTemplate)
+            yyerror("Function is not a template function");
+        //check type_list
+        if(entry->template_params.size()!=$3->lst.size())
+            yyerror("Invalid number of template arguments");
+        // handling return type
+        $$ = new type_attr();
+        std::string type = entry->return_type;
+        std::string outer_type = type.substr(0,type.find(' '));
+        if(isSet(outer_type)) //set
+        {
+            $$->indicator = 2;
+            $$->vts = getSetType(outer_type.c_str());
+            //recursively generate all inner types
+            type = type.substr(type.find(' ')+1);
+            $$->inner = genInnerType(type);
+        }
+        else if(isPrimitive(outer_type))
+        {
+            $$->indicator = 1;
+            $$->vtp = getPrimitiveType(outer_type.c_str());
+        }
+        else if(isAutomata(outer_type))
+        {
+            $$->indicator = 3;
+            $$->vta = getAutomataType(outer_type.c_str());
+        }
+        else if(isSR(outer_type))
+        {
+            if(outer_type=="string")
+                $$->indicator = 4;
+            else
+                $$->indicator = 5;
+            $$->vtsr = getSRType(outer_type.c_str());
+        }
+        else
+        {
+            $$->indicator = 7;
+            $$->vtsr = TYPE_STRU;
+            $$->ifStruct = outer_type;
+        }
+        // we also need to check argument types
+        std::vector<std::string> arg_pos_list_rev = entry->id_list;
+        VarSymbolTable *params_table = entry->params;
+        auto it_list = arg_pos_list_rev.begin();
+        auto it_arg_list = $7->lst.begin();
+        //compare types
+        int i=1;
+        while(it_list!=arg_pos_list_rev.end() && it_arg_list!=$7->lst.end())
+        {
+            std::string type_expected = params_table->lookup(*it_list)->type;
+            std::string type_actual = *it_arg_list;
+            type_actual = trim(type_actual);
+            if(type_expected=="template")
+                continue;
+            if(type_expected=="o_set"||type_expected=="u_set"||type_expected=="o_set "|| type_expected=="u_set ")
+            {
+                //concat inner types
+                type_expected=trim(trim(type_expected)+std::string(" ")+params_table->lookup(*it_list)->inner->print());
+            }
+            if(!isCoherent(type_expected,type_actual))
+            {
+                std::string error = std::string("Argument type mismatch at pos " + std::to_string(i)+ ": Expected ")+type_expected+std::string(" but found ")+type_actual;
+                yyerror(error.c_str());
+            }
+            ++it_list;
+            ++it_arg_list;
+            ++i;
+        }
+        if(it_list!=arg_pos_list_rev.end())
+            yyerror("Too few arguments");
+        else if(it_arg_list!=$7->lst.end())
+            yyerror("Too many arguments");
+
+     }
      ;
+
+type_list_call: type_call
+              {
+                $$ = new state_list_attr();
+                $$->lst.push_back(std::string("temp"));
+              }
+              | type_list_call COMMA type_call
+              {
+                $$ = new state_list_attr();
+                $$->lst = $1->lst;
+                $$->lst.push_back(std::string("temp"));
+              }
+              ;
+
+type_call: dtype
+         | ID
+         {
+            //check if struct exists
+            if(!sst->lookup(std::string($1)))
+            {
+                std::string error = "Struct "+std::string($1)+std::string(" not defined");
+                yyerror(error.c_str());
+            }
+         }
+         ;
 
 argument_list: 
              {
@@ -2013,9 +2339,9 @@ void yyerror(const char *s) {
 }
 
 int main(int argc, char **argv) {
-    // #ifdef YYDEBUG
-    //      yydebug = 1;
-    // #endif
+    #ifdef YYDEBUG
+         yydebug = 1;
+    #endif
     initST();
 
     yyin = fopen(argv[1],"r");
