@@ -24,6 +24,7 @@ namespace fsm
         void out();
         ~o_set();
         o_set();
+        o_set(std::vector<T>);
     };
 
     template <typename T>
@@ -40,10 +41,12 @@ namespace fsm
         void out();
         ~u_set();
         u_set();
+        u_set(std::vector<T>);
     };
 
     class dfa
     {
+    public:
         std::set<std::string> Q;
         std::unordered_map<std::string, std::string> S;
         std::unordered_map<std::string, std::unordered_map<std::string, std::string>> delta;
@@ -52,7 +55,7 @@ namespace fsm
         void insert_state(std::string);
         void remove_state(std::string);
         void insert_alphabet(std::string, std::string);
-        void remove_alphabet(std::string, std::string);
+        void remove_alphabet(std::string);
         void insert_final(std::string);
         void remove_final(std::string);
         void add_transition(std::string, std::string, std::string);
@@ -64,13 +67,17 @@ namespace fsm
         dfa();
     };
 
+    // Incomplete
     class regex
     {
+    public:
         regex_t reg;
         std::string str;
+        bool valid;
         bool simulate(std::string);
+        bool is_valid();
         ~regex();
-        regex();
+        regex(std::string);
     };
 
     class nfa
