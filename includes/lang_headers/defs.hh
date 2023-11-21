@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <vector>
 #include <map>
+#include <iostream>
 
 namespace fsm
 {
@@ -19,7 +20,7 @@ namespace fsm
         void insert(T);
         void remove(T);
         bool empty();
-        void delete();
+        void del();
         void out();
         ~o_set();
         o_set();
@@ -28,13 +29,14 @@ namespace fsm
     template <typename T>
     class u_set
     {
+    public:
         std::unordered_set<T> set;
         int size();
         bool find(T);
         void insert(T);
         void remove(T);
         bool empty();
-        void delete();
+        void del();
         void out();
         ~u_set();
         u_set();
