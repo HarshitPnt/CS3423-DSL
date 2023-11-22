@@ -11,9 +11,17 @@ TESTS_TOKS := tests/logs
 _CSRC := lexer.l parser.y semantic.c
 OBJS := lexer.o parser.o semantic.o
 CSRC := $(pathsubst %,${SRC}/%,$(_CSRC))
+LIBFOLDER := lib
+COMPILER := g++
+VERSION := -std=c++17
 
 run: compile
 	./build/prog ${FILE} ${LOGS}
+
+test_code_gen :
+	${COMPILER} ${VERSION} -c ${FILE}.cc -o ${FILE}.o
+	${COMPILER} -o ${FILE} ${FILE}.o -L./${LIBFOLDER} -lfsm
+	./${FILE}
 
 compile:
 	 ${MAKE} -C ./build compile

@@ -4,6 +4,10 @@ YACCDEFINE := --defines
 YACCFLAGS := -v --debug -o
 OBJS := lexer.o parser.o semantic.o
 CSRC := $(patsubst %,${SRC}/%,$(_CSRC))
+FSMFOLDER := "../src/fsm"
+LIBFILES := $(shell find ${FSMFOLDER} -type f)
+LIBOBJS := $(patsubst %.cc,%.o,$(notdir ${LIBFILES}))
+LIBFOLDER := "../lib"
 COMPILER := g++
 VERSION := -std=c++17
 
@@ -18,8 +22,12 @@ lexer: ${SRC}/lexer.l
 semantic: ${SRC}/semantic.cc
 	${COMPILER} ${VERSION} -c ${SRC}/semantic.cc
 
-compile:clean parser lexer semantic
+compile:clean parser lexer semantic lib
 	${COMPILER} -o prog parser.o lexer.o semantic.o
+
+lib: 
+	${COMPILER} ${VERSION} -c ${LIBFILES} 
+	ar crf ${LIBFOLDER}/libfsm.a ${LIBOBJS}
 
 clean:
 	rm -f *.o parser.o lexer.o semantic.o
