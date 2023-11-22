@@ -1,4 +1,4 @@
-#include "../includes/lang_headers/dfa.hh"
+#include "../../includes/lang_headers/dfa.hh"
 #include <string>
 #include <iostream>
 
@@ -204,5 +204,13 @@ namespace fsm
         }
         this->is_valid = true;
         return;
+    }
+
+    dfa::~dfa()
+    {
+        this->delta.clear();
+        this->F.clear();
+        this->Q.clear();
+        this->S.clear();
     }
 }

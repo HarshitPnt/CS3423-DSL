@@ -26,8 +26,8 @@ test_code_gen :
 compile:
 	 ${MAKE} -C ./build compile
 
-lib: 
-	${MAKE} -C ./build lib
+library: 
+	${MAKE} -C ./build library
 	
 test: compile
 	rm -rf ${TESTS_TOKS}

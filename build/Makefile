@@ -22,10 +22,12 @@ lexer: ${SRC}/lexer.l
 semantic: ${SRC}/semantic.cc
 	${COMPILER} ${VERSION} -c ${SRC}/semantic.cc
 
-compile:clean parser lexer semantic lib
+compile:clean parser lexer semantic library
 	${COMPILER} -o prog parser.o lexer.o semantic.o
 
-lib: 
+library:
+	rm -rf ${LIBFOLDER}
+	mkdir ${LIBFOLDER}
 	${COMPILER} ${VERSION} -c ${LIBFILES} 
 	ar crf ${LIBFOLDER}/libfsm.a ${LIBOBJS}
 
@@ -33,3 +35,5 @@ clean:
 	rm -f *.o parser.o lexer.o semantic.o
 	rm -f parser.cc lexer.cc
 	rm -f tokens.hh parser.output prog
+	rm -f ${LIBFOLDER}/libfsm.a
+

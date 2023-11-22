@@ -137,7 +137,8 @@ namespace fsm
         catch (const std::exception &e)
         {
             std::cerr << RED << "Runtime Error: " << RESET << e.what() << '\n';
-            std::abort();
+            throw std::out_of_range("Index out of range");
+            // std::abort();
         }
     }
 
