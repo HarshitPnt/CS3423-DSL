@@ -265,4 +265,9 @@ namespace fsm
         }
         return false;
     }
+
+    cfg cfg::_CNF()
+    {
+    }
+
 }

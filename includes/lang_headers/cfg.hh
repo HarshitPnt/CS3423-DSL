@@ -23,6 +23,7 @@ namespace fsm
         void out();
         ~cfg();
         cfg();
+        cfg _CNF();
 
     private:
         std::unordered_map<std::string, std::string> T;
