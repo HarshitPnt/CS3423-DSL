@@ -1,6 +1,7 @@
 #include "../../includes/lang_headers/cfg.hh"
 
 #include <iostream>
+#include <regex>
 
 std::string &trim(std::string &s, const char *t = " \t\n\r\f\v")
 {
@@ -41,9 +42,17 @@ namespace fsm
         }
         else
         {
+            // check if this val is a prefix of any other val
+            for (auto it = this->T_vals.set.begin(); it != this->T_vals.set.end(); ++it)
+            {
+                if ((*it).find(val) == 0)
+                {
+                    std::cerr << "Terminal " << val << " is a prefix of " << (*it) << '\n';
+                    return false;
+                }
+            }
             this->T[alias] = val;
             this->T_vals.insert(val);
-            // check for prefixes/suffixes (to be done)
             return true;
         }
     }
@@ -266,8 +275,197 @@ namespace fsm
         return false;
     }
 
+    std::string replaceText(std::string str, std::string pattern,std::string replacement)
+    {
+        std::regex regexPattern(pattern);
+        return std::regex_replace(str, regexPattern, replacement);
+    }
+
     cfg cfg::_CNF()
     {
+        // fetch all the productions and add non-terminals for terminals
+        CNF = new cfg();
+        CNF->start = std::string("@start");
+        // add all non-terminals
+        for (auto &nterm : this->N.set)
+        {
+            CNF->N.insert(nterm);
+        }
+        // fetch terminals
+        for (auto &term : this->T)
+        {
+            CNF->N.insert(term.first);
+        }
+        // add start production
+        CNF->add_P(CNF->start + " -> " + this->start);
+        // for all terminals add productions
+        for (auto &term : this->T)
+        {
+            CNF->add_P(term.first + " -> " + term.second);
+        }
+        // add all productions
+        std::unordered_map<std::string, std::string> new_nterm;
+        long long int new_count = 0;
+        for (auto &production : this->P)
+        {
+            for (auto &rhs : production.second)
+            {
+                // before change all terminals to non-terminals
+                for (auto &term : this->T)
+                {
+                    rhs = replaceText(rhs, std::string("T_"), std::string("NT_"));
+                }
+                // check if rhs is two non-terminals or less
+                size_t first = rhs.find("NT_");
+                size_t second = rhs.find("NT_", first + 1);
+                if(second == std::string::npos)
+                {
+                    // only one non-terminal
+                    CNF->add_P(production.first + " -> " + rhs);
+                    continue;
+                }
+                size_t third = rhs.find("NT_", second + 1);
+                if(third == std::string::npos)
+                {
+                    // only two non-terminals
+                    CNF->add_P(production.first + " -> " + rhs);
+                    continue;
+                }
+                //extract last two non-terminals
+                while(true)
+                {
+                    size_t end = rhs.find_last_of("NT_");
+                    size_t second_last = rhs.find_last_of("NT_", end - 1);
+                    if(second_last == std::string::npos)
+                    {
+                        // only two non-terminals
+                        break;
+                    }
+                    std::string last_2 = rhs.substr(second_last, end - second_last + 3);
+                    last_2 = trim(last_2);
+                    // check if this non terminal exists
+                    if(new_nterm.find(last_2) == new_nterm.end())
+                    {
+                        // add this non-terminal
+                        new_nterm[last_2] = "NT_" +std::string("@") +std::to_string(new_count);
+                        new_count++;
+                        std::string new_char= new_nterm[last_2];
+                        rhs = replaceText(rhs, last_2, new_char);
+                    }
+                    else
+                    {
+                        // this non-terminal already exists
+                        std::string new_char = new_nterm[last_2];
+                        rhs = replaceText(rhs, last_2, new_char);
+                    }
+                }
+                rhs = trim(rhs);
+                CNF->add_P(production.first + " -> " + rhs);
+                
+            }
+        }
+        //eliminate empty transitions
+        while(true)
+        {
+            bool flag = false;
+            for(auto &production : CNF->P)
+            {
+                for(auto &rhs : production.second)
+                {
+                    if(rhs == "T_\\e")
+                    {
+                        // empty transition
+                        CNF->remove_P(production.first + " -> " + rhs);
+                        if(CNF->P[production.first].size() == 0)
+                        {
+                            // remove this non-terminal
+                            CNF->remove_N(production.first);
+                        }
+                        //find all productions which have this non-terminal in rhs
+                        for(auto &production2 : CNF->P)
+                        {
+                            for(auto &rhs2 : production2.second)
+                            {
+                                if(rhs2.find(std::string("NT_") + production.first) != std::string::npos)
+                                {
+                                    // this production has this non-terminal
+                                    // check if only one non-terminal
+                                    size_t first = rhs2.find_last_of("NT_");
+                                    if(first==0)
+                                    {
+                                        // only one non-terminal
+                                        CNF->add_P(production2.first + " -> T_\\e");
+                                        if(CNF->P[production.first].size()==0)
+                                        {
+                                            // remove this non-terminal
+                                            CNF->remove_P(production2.first + " -> " + rhs2);
+                                        }
+                                        flag = true;
+                                    }
+                                    else
+                                    {
+                                        // more than one non-terminal
+                                        size_t first = rhs2.find("NT_"+production.first);
+                                        size_t second = rhs2.find("NT_"+production.first, first + 1);
+                                        if(second==std::string::npos)
+                                        {
+                                            // only one non-terminal
+                                            std::string rhs_new = replaceText(rhs2,"NT_"+production.first,"");
+                                            rhs_new = trim(rhs_new);
+                                            CNF->add_P(production2.first + " -> " + rhs_new);
+                                        }
+                                        else
+                                        {
+                                            if(is_non_terminal(production.first))
+                                            {
+                                                // more than one non-terminal
+                                                std::string rhs_new = rhs2.substr(0,second-1);
+                                                rhs_new = trim(rhs_new);
+                                                CNF->add_P(production2.first + " -> " + rhs_new);
+                                                rhs_new = rhs2.substr(second);
+                                                rhs_new = trim(rhs_new);
+                                                CNF->add_P(production2.first + " -> " + rhs_new);
+                                                //epsilon transition
+                                                CNF->add_P(production2.first + " -> T_\\e");
+                                                flag = true;
+                                            }
+                                            else
+                                            {
+                                                CNF->add_P(production2.first + " -> " + "T_\\e");
+                                                CNF->remove_P(production2.first + " -> " + rhs2);
+                                                flag = true;
+                                            }
+                                            
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if(!flag)
+                    break;
+            }
+        }
+        //eliminate unit transitions
+        //check all productions
+        for(auto &production : CNF->P)
+        {
+            for(auto &rhs : production.second)
+            {
+                if(rhs.find_last_of("NT_") == 0)
+                {
+                    // unit transition
+                    CNF->remove_P(production.first + " -> " + rhs);
+                    //find all productions with rhs NT
+                    for(auto &rhs2 : CNF->P[rhs.substr(3)])
+                    {
+                        CNF->add_P(production.first + " -> " + rhs2);
+                    }
+                }
+            }
+        }
+        return *CNF;
     }
 
 }

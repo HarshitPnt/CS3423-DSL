@@ -39,3 +39,7 @@ if P[n,1,1] is true then
 else
     return "not a member of language"
 ```
+
+```text
+CNF Algorithm
+```

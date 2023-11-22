@@ -18,7 +18,7 @@ VERSION := -std=c++17
 run: compile
 	./build/prog ${FILE} ${LOGS}
 
-test_code_gen :
+test_code_gen : library
 	${COMPILER} ${VERSION} -c ${FILE}.cc -o ${FILE}.o
 	${COMPILER} -o ${FILE} ${FILE}.o -L./${LIBFOLDER} -lfsm
 	./${FILE}

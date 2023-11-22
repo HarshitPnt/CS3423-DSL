@@ -33,6 +33,8 @@ namespace fsm
 
     bool regex::simulate(std::string str)
     {
+        if(this->valid == 0)
+            return false;
         return regexec(&(this->reg), str.c_str(), 0, NULL, 0) == 0;
     }
 

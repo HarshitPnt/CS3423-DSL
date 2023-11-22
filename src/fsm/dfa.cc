@@ -1,5 +1,4 @@
 #include "../../includes/lang_headers/dfa.hh"
-#include <string>
 #include <iostream>
 
 namespace fsm
@@ -22,7 +21,6 @@ namespace fsm
     {
         if (this->Q.find(state) == this->Q.end())
             return false;
-        this->Q.erase(state);
         if (this->q0 == state)
         {
             this->q0 = "";
@@ -31,21 +29,27 @@ namespace fsm
         {
             this->F.erase(state);
         }
-        for (auto d : this->delta)
+        for (auto it = this->delta.begin(); it != this->delta.end();)
         {
-            if (d.first == state)
+            if (it->first == state)
             {
-                delta.erase(d.first);
+                it = this->delta.erase(it);
                 continue;
             }
-            for (auto a : d.second)
+            for (auto a = it->second.begin(); a != it->second.end();)
             {
-                if (a.second == state)
+                if (a->second == state)
                 {
-                    d.second.erase(a.first);
+                    a = it->second.erase(a);
+                }
+                else
+                {
+                    a++;
                 }
             }
+            it++;
         }
+        this->Q.erase(state);
         checkValidity();
         return true;
     }
@@ -63,38 +67,41 @@ namespace fsm
                     throw std::runtime_error("Ambiguous alphabet");
                 }
             }
-            this->S[alphabet] = val;
-            is_valid = false;
-            return true;
         }
         catch (std::exception &e)
         {
             std::cerr << "Runtime Error: " << e.what() << '\n';
-            return false;
+            throw e;
         }
-    } // namespace fsm
+        this->S[alphabet] = val;
+        is_valid = false;
+        return true;
+    }
 
-    // removing alphabet will remove all transitions with that alphabet
     bool dfa::remove_alphabet(std::string alphabet)
     {
         auto it = this->S.find(alphabet);
-        bool temp = !(this->S.end() == this->S.erase(it));
+        bool temp = this->S.end() == this->S.erase(it);
 
-        if (!temp)
+        if (temp)
             return false;
 
-        for (auto d : this->delta)
+        for (auto &d : this->delta)
         {
             if (d.second.find(alphabet) != d.second.end())
+            {
                 d.second.erase(alphabet);
+            }
         }
         checkValidity();
-        return temp;
+        return !temp;
     }
 
     bool dfa::insert_final(std::string state)
     {
-        if (this->F.find(state) != this->F.end())
+        if (this->Q.find(state) == this->Q.end())
+            return false;
+        else if (this->F.find(state) != this->F.end())
             return false;
         this->F.insert(state);
         return true;
@@ -152,6 +159,7 @@ namespace fsm
         if (this->Q.find(state) == this->Q.end())
             return false;
         this->q0 = state;
+        checkValidity();
         return true;
     }
 
@@ -167,7 +175,7 @@ namespace fsm
             val += c;
             for (auto a : this->S)
             {
-                if (a.second.compare(0, val.length(), val) == 0)
+                if (a.second == val)
                 {
                     alphabet = a.first;
                     break;
@@ -190,7 +198,7 @@ namespace fsm
 
     void dfa::checkValidity()
     {
-        if (this->Q.empty() || this->S.empty() || this->F.empty() || this->q0.empty() || this->delta.size() == this->Q.size())
+        if (this->Q.empty() || this->S.empty() || this->F.empty() || this->q0.empty() || this->delta.size() != this->Q.size())
         {
             this->is_valid = false;
             return;
@@ -213,5 +221,42 @@ namespace fsm
         this->F.clear();
         this->Q.clear();
         this->S.clear();
+    }
+
+    void dfa::out()
+    {
+        std::cout << "\n---DFA Details---\n";
+
+        if (!this->is_valid)
+            std::cout << "\nDFA is not valid\n";
+        else
+            std::cout << "\nDFA is valid\n";
+        std::cout << "\nStates: \n";
+        for (auto q : this->Q)
+        {
+            std::cout << q << " ";
+        }
+        std::cout << "\n";
+        std::cout << "\ninput ( Token : Sigma ): \n";
+        for (auto s : this->S)
+        {
+            std::cout << s.first << " : " << s.second << std::endl;
+        }
+        std::cout << "\n";
+        std::cout << "Accept States: \n";
+        for (auto f : this->F)
+        {
+            std::cout << f << " ";
+        }
+        std::cout << "\n";
+        std::cout << "\nq0: " << this->q0 << "\n";
+        std::cout << "\nTransition Function ( state -> nextState on token) : \n";
+        for (auto d : this->delta)
+        {
+            for (auto a : d.second)
+                std::cout << d.first << " -> " << a.second << " on " << a.first << "\n";
+        }
+        std::cout << "\n";
+        std::cout << "-----------------\n";
     }
 }

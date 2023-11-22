@@ -26,6 +26,7 @@ namespace fsm
         cfg _CNF();
 
     private:
+        cfg *CNF;
         std::unordered_map<std::string, std::string> T;
         o_set<std::string> T_vals;
         o_set<std::string> N;
