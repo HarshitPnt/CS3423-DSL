@@ -162,7 +162,6 @@ temp_fn {printtoken("reserved keyword"); return TEMP_FN_KW;}
 {type_regex} {
     printtoken("datatype"); 
     yylval.dtype_SR = getSRType(yytext);
-    // std::cout<<"Yo "<<getSRType(yytext)<<std::endl;
     return TYPE_REG;
 }
 

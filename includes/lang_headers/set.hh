@@ -8,6 +8,9 @@
 #include <unordered_map>
 #include <vector>
 #include <iostream>
+#define RED "\033[1;31m"
+#define GREEN "\033[1;32m"
+#define RESET "\033[0m"
 
 namespace fsm
 {
@@ -26,18 +29,7 @@ namespace fsm
         ~o_set();
         o_set();
         o_set(std::vector<T>);
-        T operator[](size_t index) const
-        {
-            if (index < set.size())
-            {
-                return set[index];
-            }
-            else
-            {
-                std::cerr << "Index out of bounds!" << std::endl;
-                return T();
-            }
-        }
+        T operator[](size_t index) const;
     };
 
     template <typename T>
@@ -124,6 +116,29 @@ namespace fsm
     o_set<T>::~o_set()
     {
         this->set.clear();
+    }
+
+    template <typename T>
+    T o_set<T>::operator[](size_t index) const
+    {
+        try
+        {
+            if (index < set.size())
+            {
+                auto it = set.begin();
+                std::advance(it, index);
+                return *it;
+            }
+            else
+            {
+                throw std::out_of_range("Index out of range");
+            }
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << RED << "Runtime Error: " << RESET << e.what() << '\n';
+            std::abort();
+        }
     }
 
     template <typename T>

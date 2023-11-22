@@ -13,6 +13,7 @@ int main()
     ord_s.insert(4);
     ord_s.insert(5);
     ord_s.out();
+    std::cout << ord_s[10] << std::endl;
     // Test 2: Removal
     ord_s.remove(3);
     ord_s.out();
