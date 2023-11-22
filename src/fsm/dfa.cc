@@ -72,8 +72,9 @@ namespace fsm
             std::cerr << "Runtime Error: " << e.what() << '\n';
             return false;
         }
-    }
+    } // namespace fsm
 
+    // removing alphabet will remove all transitions with that alphabet
     bool dfa::remove_alphabet(std::string alphabet)
     {
         auto it = this->S.find(alphabet);
