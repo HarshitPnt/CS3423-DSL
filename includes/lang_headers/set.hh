@@ -26,6 +26,18 @@ namespace fsm
         ~o_set();
         o_set();
         o_set(std::vector<T>);
+        T operator[](size_t index) const
+        {
+            if (index < set.size())
+            {
+                return set[index];
+            }
+            else
+            {
+                std::cerr << "Index out of bounds!" << std::endl;
+                return T();
+            }
+        }
     };
 
     template <typename T>
