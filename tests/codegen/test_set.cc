@@ -10,10 +10,9 @@ class test
 int main()
 {
     // Test for o_set
-    fsm::o_set<test> ord_s;
-    test t;
+    o_set<int> ord_s;
     // Test 1: Insertion
-    ord_s.insert(t);
+    ord_s.insert(1);
     // ord_s.out();
     // Test 2: Removal
     // ord_s.remove(3);

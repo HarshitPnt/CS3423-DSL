@@ -8,40 +8,37 @@
 #include <unordered_map>
 #include <vector>
 
-namespace fsm
+template <typename T>
+class o_set
 {
-    template <typename T>
-    class o_set
-    {
-    public:
-        std::set<T> set;
-        int size();
-        bool find(T);
-        void insert(T);
-        void remove(T);
-        bool empty();
-        void del();
-        void out();
-        ~o_set();
-        o_set();
-        o_set(std::vector<T>);
-    };
+public:
+    std::set<T> set;
+    int size();
+    bool find(T x);
+    void insert(T x);
+    void remove(T x);
+    bool empty();
+    void del();
+    void out();
+    ~o_set();
+    o_set();
+    o_set(std::vector<T>);
+};
 
-    template <typename T>
-    class u_set
-    {
-    public:
-        std::unordered_set<T> set;
-        int size();
-        bool find(T);
-        void insert(T);
-        void remove(T);
-        bool empty();
-        void del();
-        void out();
-        ~u_set();
-        u_set();
-        u_set(std::vector<T>);
-    };
+template <typename T>
+class u_set
+{
+public:
+    std::unordered_set<T> set;
+    int size();
+    bool find(T x);
+    void insert(T x);
+    void remove(T x);
+    bool empty();
+    void del();
+    void out();
+    ~u_set();
+    u_set();
+    u_set(std::vector<T>);
 };
 #endif
