@@ -1,8 +1,10 @@
 #include "../../includes/lang_headers/set.hh"
+#include <iostream>
 
 using namespace std;
 
-int main(){
+int main()
+{
     // Test for o_set
     fsm::o_set<int> ord_s;
     // Test 1: Insertion

@@ -1,4 +1,3 @@
-#pragma once
 #include "lang_headers/dfa.hh"
 #include "lang_headers/nfa.hh"
 #include "lang_headers/pda.hh"
