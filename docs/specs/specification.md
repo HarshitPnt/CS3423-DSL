@@ -769,9 +769,9 @@ a.T = {a:"a", demo:"b"};
 a.N = {A, B};
 a.S = A;
 a.P = {
-    A -> ${a}B$,
-    B -> ${demo}A$,
-    A -> {${a}A, \e$}
+    A -> ${a}B,
+    B -> ${demo}A,
+    A -> {${a}A, \e}
 };
 
 add_T(a, c:"c", d:"d"); <!-- a.T = {a:"a", demo:"b", c:"c", d:"d"}--!>
@@ -834,10 +834,10 @@ a.Sigma = {a:"0",b:"1",c:"2"};
 
 a.F = {q1, q2};
 a.delta = {
-  q0; ${a} -> q1$,
-  a.Q[0] ; ${b} -> a.Q[1]$,
-  q1 ; r'[${a}${c}]' -> q2$,
-  q2; { ${a}, ${c} } -> q1$
+  q0, ${a} -> q1,
+  a.Q[0] , ${b} -> a.Q[1],
+  q1 , r'[${a}${c}]' -> q2,
+  q2, { ${a}, ${c} } -> q1
 };
 
 insert_states(a, q3, q4); <!-- a.Q = {q0, q1, q2, q3, q4} --!>
@@ -846,7 +846,7 @@ insert_letters(a, d:"3", e:"4"); <!-- a.Sigma = {a:"0",b:"1",c:"2",d:"3",e:"4"} 
 
 change_start(a, q3); <!-- a.q0 = q3 --!>
 
-add_transition(a, q3; ${d} -> q4); <!-- a.delta = {q0, ${a} -> q1, q0, ${e} -> q1,
+add_transition(a, q3, ${d} -> q4); <!-- a.delta = {q0, ${a} -> q1, q0, ${e} -> q1,
 q1 , ${b} -> q2, q1, ${c} -> q2, q2, ${a} -> q1, q2, ${c} -> q1, q3, ${d} -> q4} --!>
 
 insert_final(a, q3); <!-- a.F = {q1, q2, q3} --!>
@@ -857,10 +857,10 @@ q0, ${b} -> q1, q1 , ${b} -> q2, q1, ${c} -> q2, q2, ${a} -> q1, q2, ${c} -> q1}
 remove_letters(a, c); <!-- a.Sigma = {a:"0",b:"1",d:"3",e:"4"}, a.delta = {q0, ${a} -> q1,
 q0, ${b} -> q1, q1 , ${b} -> q2, q2, ${a} -> q1} --!>
 
-remove_transition(a, q2; ${a} -> q1); <!-- a.delta = {q0, ${a} -> q1,
+remove_transition(a, q2, ${a} -> q1); <!-- a.delta = {q0, ${a} -> q1,
  q0, ${b} -> q1,  q1 , ${b} -> q2} --!>
 
-remove_transition(a, q2; ${a} -> q1); <!-- a.delta = {q0, ${a} -> q1,
+remove_transition(a, q2, ${a} -> q1); <!-- a.delta = {q0, ${a} -> q1,
  q0, ${b} -> q1,  q1 , ${b} -> q2} --!>
 
 simulate(a, 101); <!-- error: DFA a is not in stable state(does not have
