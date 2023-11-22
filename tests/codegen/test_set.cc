@@ -7,13 +7,29 @@ class test
     int a;
 };
 
+template <typename T>
+class obj
+{
+public:
+    T x;
+    void display();
+};
+
+template <typename T>
+void obj<T>::display()
+{
+    cout << "Hello World" << endl;
+}
+
 int main()
 {
     // Test for o_set
     o_set<int> ord_s;
     // Test 1: Insertion
     ord_s.insert(1);
-    // ord_s.out();
+    // obj<int> o;
+    // o.display();
+    ord_s.out();
     // Test 2: Removal
     // ord_s.remove(3);
     // ord_s.out();
