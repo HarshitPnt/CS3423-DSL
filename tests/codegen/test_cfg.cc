@@ -60,12 +60,31 @@ int main()
     // first set S to start
     flag = cfg_obj.change_start("S");
     flag = cfg_obj.remove_N("S");
-    cfg_obj.out();
+    // cfg_obj.out();
     // now change start and then try to remove
     flag = cfg_obj.change_start("A");
     flag = cfg_obj.remove_N("S");
+    // cfg_obj.out();
+    // try to remove non-existant non-terminal
+    flag = cfg_obj.remove_N("S");
+    flag = cfg_obj.add_P("S -> %{A}");
+    flag = cfg_obj.add_N("B");
+    flag = cfg_obj.add_P("A -> %{B}");
+    flag = cfg_obj.add_P("B -> ${demo}");
+    flag = cfg_obj.add_P("B -> ${demo}%{B}");
+    flag = cfg_obj.add_P("B -> \\e");
     cfg_obj.out();
+    // flag = cfg_obj.remove_N("B");
     // test remove_P
+    flag = cfg_obj.remove_P("A -> %{B}");
+    // cfg_obj.out();
+    // remove non-existant production
+    flag = cfg_obj.remove_P("A -> %{B}");
+    flag = cfg_obj.remove_P("C -> ${demo}");
+    flag = cfg_obj.remove_P("B -> ${c}");
     // test change_start
     // test CNF
+    std::cout << "Testing Chomsky Normal Form" << std::endl;
+    fsm::cfg x = cfg_obj._CNF();
+    x.out();
 }

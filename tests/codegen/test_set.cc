@@ -44,6 +44,13 @@ int main()
     ord_s.insert(6);
     cout << ord_s.size() << "\n";
 
+    // Test 6: Addition of two sets
+    fsm::o_set<int> ord_s2;
+    ord_s2.insert(1);
+    ord_s2.insert(2);
+    ord_s2.insert(3);
+    ord_s2.insert(4);
+
     // // Test for u_set
     fsm::u_set<int> unord_s;
     // // Test 1: Insertion

@@ -310,7 +310,8 @@ namespace fsm
     {
         // fetch all the productions and add non-terminals for terminals
         CNF = new cfg();
-        CNF->start = std::string("@start");
+        CNF->add_N("@start");
+        CNF->change_start("@start");
         // add all non-terminals
         for (auto &nterm : this->N.set)
         {
@@ -319,10 +320,11 @@ namespace fsm
         // fetch terminals
         for (auto &term : this->T)
         {
-            CNF->N.insert(term.first);
+            CNF->add_N(term.first);
         }
         // add start production
-        CNF->add_P(CNF->start + " -> " + this->start);
+        CNF->add_P(CNF->start + " -> " + "NT_" + this->start);
+        CNF->out();
         // for all terminals add productions
         for (auto &term : this->T)
         {

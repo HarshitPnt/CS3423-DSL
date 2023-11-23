@@ -27,15 +27,29 @@ namespace fsm
         dfa();
 
     private:
+        // is the dfa valid
         bool is_valid = false;
+
+        // check if the dfa is valid
         void checkValidity();
+
+        // Transition function : Q-input x S-input -> Q-output
         std::unordered_map<std::string, std::unordered_map<std::string, std::string>> delta;
+
+        // Q0 : initial state
         std::string q0;
+
+        // F : final states
         std::unordered_set<std::string> F;
+
+        // S : alphabet
         std::unordered_map<std::string, std::string> S;
+
+        // Q : set of states
         std::set<std::string> Q;
-        bool findState(std::string state);
-        bool findAlphabet(std::string alphabet);
+
+        // bool findState(std::string state);
+        // bool findAlphabet(std::string alphabet);
     };
 
 } // namespace fsm

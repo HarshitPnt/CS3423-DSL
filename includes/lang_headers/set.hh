@@ -30,6 +30,9 @@ namespace fsm
         o_set();
         o_set(std::vector<T>);
         T operator[](size_t index) const;
+        o_set<T> operator+(o_set<T> &other);
+        o_set<T> operator-(o_set<T> &other);
+        o_set<o_set<T>> power_set(); // TODO
     };
 
     template <typename T>
@@ -47,6 +50,9 @@ namespace fsm
         ~u_set();
         u_set();
         u_set(std::vector<T>);
+        u_set<T> operator+(u_set<T> &other);
+        u_set<T> operator-(u_set<T> &other);
+        u_set<u_set<T>> power_set(); // TODO
     };
 
     template <typename T>
@@ -143,6 +149,52 @@ namespace fsm
     }
 
     template <typename T>
+    o_set<T> o_set<T>::operator+(o_set<T> &other)
+    {
+        o_set<T> result;
+        for (auto element : this->set)
+        {
+            result.insert(element);
+        }
+        for (auto element : other.set)
+        {
+            result.insert(element);
+        }
+        return result;
+    }
+
+    template <typename T>
+    o_set<T> o_set<T>::operator-(o_set<T> &other)
+    {
+        o_set<T> result;
+        for (auto element : this->set)
+        {
+            if (!other.find(element))
+            {
+                result.insert(element);
+            }
+        }
+        for (auto element : other.set)
+        {
+            if (!this->find(element))
+            {
+                result.insert(element);
+            }
+        }
+        return result;
+    }
+
+    template <typename T>
+    o_set<o_set<T>> o_set<T>::power_set()
+    {
+        o_set<o_set<T>> result;
+        o_set<T> empty;
+        result.insert(empty);
+        // Find all subsets of the set
+        return result;
+    }
+
+    template <typename T>
     u_set<T>::u_set()
     {
         this->set = std::unordered_set<T>();
@@ -209,6 +261,52 @@ namespace fsm
     u_set<T>::~u_set()
     {
         this->set.clear();
+    }
+
+    template <typename T>
+    u_set<T> u_set<T>::operator+(u_set<T> &other)
+    {
+        u_set<T> result;
+        for (auto element : this->set)
+        {
+            result.insert(element);
+        }
+        for (auto element : other.set)
+        {
+            result.insert(element);
+        }
+        return result;
+    }
+
+    template <typename T>
+    u_set<T> u_set<T>::operator-(u_set<T> &other)
+    {
+        u_set<T> result;
+        for (auto element : this->set)
+        {
+            if (!other.find(element))
+            {
+                result.insert(element);
+            }
+        }
+        for (auto element : other.set)
+        {
+            if (!this->find(element))
+            {
+                result.insert(element);
+            }
+        }
+        return result;
+    }
+
+    template <typename T>
+    u_set<u_set<T>> u_set<T>::power_set()
+    {
+        u_set<u_set<T>> result;
+        u_set<T> empty;
+        result.insert(empty);
+        // Find all subsets of the set
+        return result;
     }
 }
 
