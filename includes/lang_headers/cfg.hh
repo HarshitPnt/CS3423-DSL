@@ -31,7 +31,7 @@ namespace fsm
         o_set<std::string> T_vals;
         o_set<std::string> N;
         std::string start;
-        std::unordered_map<std::string, std::vector<std::string>> P; // "@NT_nterm @T_term"
+        std::unordered_map<std::string, std::vector<std::string>> P; // "NT_nterm T_term"
         bool is_terminal(std::string);
         int is_terminal(std::string, std::string);
         bool is_non_terminal(std::string);
