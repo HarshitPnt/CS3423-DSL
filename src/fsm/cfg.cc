@@ -311,14 +311,65 @@ namespace fsm
         return std::regex_replace(str, regexPattern, replacement);
     }
 
-    bool _add_P(std::string production) //NT_ and T_
+    bool cfg::_add_P(std::string production) //NT_ and T_
     {
         // parse this production
+        std::cout<<"Re: "<<production<<std::endl;
         std::string temp = production;
         std::string initial_state, production_right;
         try
         {
-            
+            initial_state = std::string(production.substr(0, production.find("->")));
+            initial_state = trim(initial_state);
+            if(!is_non_terminal(initial_state))
+                throw std::runtime_error("Invalid production: " + initial_state + " is not a non-terminal");
+            production_right = std::string(production.substr(production.find("->") + 2));
+            production_right = trim(production_right);
+            std::string rhs = "";
+            while (production_right.length())
+            {
+                if (production_right[0] == 'N') // non_terminal
+                {
+                    // extract the non terminal
+                    size_t end = production_right.find_first_of(" ");
+                    std::string non_terminal;
+                    if(end==std::string::npos)
+                        non_terminal = production_right.substr(3);
+                    else
+                        non_terminal = production_right.substr(3, end - 3);
+                    if (!is_non_terminal(non_terminal))
+                        throw std::runtime_error("Invalid production: " + non_terminal + " is not a non-terminal");
+                    rhs += "NT_" + non_terminal + " ";
+                    if(end==std::string::npos)
+                        break;
+                    production_right = production_right.substr(end + 1);
+                }
+                else
+                {
+                    size_t end = production_right.find_first_of(" ");
+                    std::string terminal;
+                    if(end==std::string::npos)
+                        terminal = production_right.substr(3);
+                    else
+                        terminal = production_right.substr(3, end - 3);
+                    if (!is_terminal(terminal))
+                        throw std::runtime_error("Invalid production: " + terminal + " is not a terminal");
+                    rhs += "T_" + terminal + " ";
+                    if(end==std::string::npos)
+                        break;
+                    production_right = production_right.substr(end + 1);
+                }
+            }
+            rhs = trim(rhs);
+            if(rhs=="")
+                return false;
+            // check if production exists
+            if (isProduction(initial_state, rhs))
+                throw std::runtime_error("Production already exists");
+            std::cout << "HERE adding " << rhs << std::endl;
+            this->P[initial_state].push_back(rhs);
+            std::cout<<"Returning true"<<std::endl;
+            return true;
         }
         catch(const std::exception& e)
         {
@@ -353,7 +404,7 @@ namespace fsm
             CNF->add_P(term.first + " -> " +"${" +term.first+"}");
         }
         this->out();
-        CNF->out();
+        // CNF->out();
         // add all productions
         std::unordered_map<std::string, std::string> new_nterm;
         long long int new_count = 0;
@@ -362,9 +413,16 @@ namespace fsm
             for (auto &rhs : production.second)
             {
                 // before change all terminals to non-terminals
+                if(trim(rhs)=="T_\\e" || trim(rhs)=="NT_\\e")
+                {
+                    CNF->P[production.first].push_back(rhs);
+                    continue;
+                }
                 for (auto &term : this->T)
                 {
+                    rhs = replaceText(rhs, std::string("NT_"), std::string("NF_"));
                     rhs = replaceText(rhs, std::string("T_"), std::string("NT_"));
+                    rhs = replaceText(rhs, std::string("NF_"), std::string("NT_"));
                 }
                 // check if rhs is two non-terminals or less
                 size_t first = rhs.find("NT_");
@@ -372,14 +430,14 @@ namespace fsm
                 if (second == std::string::npos)
                 {
                     // only one non-terminal
-                    CNF->add_P(production.first + " -> " + rhs);
+                    CNF->_add_P(production.first + " -> " + rhs);
                     continue;
                 }
                 size_t third = rhs.find("NT_", second + 1);
                 if (third == std::string::npos)
                 {
                     // only two non-terminals
-                    CNF->add_P(production.first + " -> " + rhs);
+                    CNF->_add_P(production.first + " -> " + rhs);
                     continue;
                 }
                 // extract last two non-terminals
@@ -411,7 +469,7 @@ namespace fsm
                     }
                 }
                 rhs = trim(rhs);
-                CNF->add_P(production.first + " -> " + rhs);
+                CNF->_add_P(production.first + " -> " + rhs);
             }
         }
         CNF->out();
@@ -445,7 +503,7 @@ namespace fsm
                                     if (first == 0)
                                     {
                                         // only one non-terminal
-                                        CNF->add_P(production2.first + " -> T_\\e");
+                                        CNF->_add_P(production2.first + " -> T_\\e");
                                         if (CNF->P[production.first].size() == 0)
                                         {
                                             // remove this non-terminal
@@ -463,7 +521,7 @@ namespace fsm
                                             // only one non-terminal
                                             std::string rhs_new = replaceText(rhs2, "NT_" + production.first, "");
                                             rhs_new = trim(rhs_new);
-                                            CNF->add_P(production2.first + " -> " + rhs_new);
+                                            CNF->_add_P(production2.first + " -> " + rhs_new);
                                         }
                                         else
                                         {
@@ -472,17 +530,17 @@ namespace fsm
                                                 // more than one non-terminal
                                                 std::string rhs_new = rhs2.substr(0, second - 1);
                                                 rhs_new = trim(rhs_new);
-                                                CNF->add_P(production2.first + " -> " + rhs_new);
+                                                CNF->_add_P(production2.first + " -> " + rhs_new);
                                                 rhs_new = rhs2.substr(second);
                                                 rhs_new = trim(rhs_new);
-                                                CNF->add_P(production2.first + " -> " + rhs_new);
+                                                CNF->_add_P(production2.first + " -> " + rhs_new);
                                                 // epsilon transition
-                                                CNF->add_P(production2.first + " -> T_\\e");
+                                                CNF->_add_P(production2.first + " -> T_\\e");
                                                 flag = true;
                                             }
                                             else
                                             {
-                                                CNF->add_P(production2.first + " -> " + "T_\\e");
+                                                CNF->_add_P(production2.first + " -> " + "T_\\e");
                                                 CNF->remove_P(production2.first + " -> " + rhs2);
                                                 flag = true;
                                             }
@@ -510,7 +568,7 @@ namespace fsm
                     // find all productions with rhs NT
                     for (auto &rhs2 : CNF->P[rhs.substr(3)])
                     {
-                        CNF->add_P(production.first + " -> " + rhs2);
+                        CNF->_add_P(production.first + " -> " + rhs2);
                     }
                 }
             }

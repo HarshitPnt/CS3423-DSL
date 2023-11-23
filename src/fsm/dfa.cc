@@ -151,15 +151,13 @@ namespace fsm
 
     bool dfa::remove_transition(std::string state, std::string alphabet, std::string next_state)
     {
-        if(state.length()==0 || alphabet.length()==0 || next_state.length()==0)
+        if(state.length()==0 || alphabet.length()==0 || next_state.length()==0 || this->Q.find(state) == this->Q.end() || this->Q.find(next_state) == this->Q.end() || this->S.find(alphabet) == this->S.end())
             return false;
-        if (this->delta.find(state) == this->delta.end())
-        {
-            return false;
-        }
         else
         {
             if (this->delta[state].find(alphabet) == this->delta[state].end())
+                return false;
+            else if(this->delta[state][alphabet]!=next_state)
                 return false;
             if (this->delta[state].size() == 1)
                 this->delta.erase(state);

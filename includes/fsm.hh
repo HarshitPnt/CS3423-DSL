@@ -10,8 +10,8 @@
 
 namespace fsm
 {
-    dfa reg_to_dfa(const regex &r);
-    nfa reg_to_nfa(const regex &r);
-    dfa nfa_to_dfa(const nfa &n);
-    pda cfg_to_pda(const cfg &c);
+    dfa reg_to_dfa(regex &r);
+    nfa reg_to_nfa(regex &r);
+    dfa nfa_to_dfa(nfa &n);
+    pda cfg_to_pda(cfg &c);
 } // namespace fsm

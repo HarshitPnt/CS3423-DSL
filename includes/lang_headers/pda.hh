@@ -10,12 +10,6 @@ namespace fsm
     class pda
     {
     private:
-        // is the pda valid
-        bool is_valid = false;
-
-        // check if the pda is valid
-        void checkValidity();
-
         // start state
         std::string q0;
 
@@ -28,6 +22,9 @@ namespace fsm
         // input alphabet
         std::unordered_map<std::string, std::string> S;
 
+        // stack alphabet
+        std::unordered_map<std::string, std::string> T;
+
         // Transition function : Q-input x S-input x S-stack --> Q-output x S-stack
         std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::string, std::string>>>> delta;
 
@@ -38,6 +35,8 @@ namespace fsm
         bool remove_state(std::string);
         bool insert_alphabet(std::string, std::string);
         bool remove_alphabet(std::string);
+        bool insert_stack(std::string, std::string);
+        bool remove_stack(std::string);
         bool insert_final(std::string);
         bool remove_final(std::string);
         bool add_transition(std::string, std::string, std::string, std::string, std::string);
