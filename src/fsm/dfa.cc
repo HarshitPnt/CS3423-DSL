@@ -10,6 +10,8 @@ namespace fsm
 
     bool dfa::insert_state(std::string state)
     {
+        if (state.length() == 0)
+            return false;
         if (this->Q.find(state) != this->Q.end())
             return false;
         this->Q.insert(state);
@@ -19,6 +21,8 @@ namespace fsm
 
     bool dfa::remove_state(std::string state)
     {
+        if (state.length() == 0)
+            return false;
         if (this->Q.find(state) == this->Q.end())
             return false;
         if (this->q0 == state)
@@ -56,6 +60,8 @@ namespace fsm
 
     bool dfa::insert_alphabet(std::string alphabet, std::string val)
     {
+        if (alphabet.length() == 0 || val.length() == 0)
+            return false;
         if (this->S.find(alphabet) != this->S.end())
             return false;
         try
@@ -80,6 +86,8 @@ namespace fsm
 
     bool dfa::remove_alphabet(std::string alphabet)
     {
+        if (alphabet.length() == 0)
+            return false;
         auto it = this->S.find(alphabet);
         bool temp = this->S.end() == this->S.erase(it);
 
@@ -99,6 +107,8 @@ namespace fsm
 
     bool dfa::insert_final(std::string state)
     {
+        if(state.length()==0)
+            return false;
         if (this->Q.find(state) == this->Q.end())
             return false;
         else if (this->F.find(state) != this->F.end())
@@ -109,6 +119,8 @@ namespace fsm
 
     bool dfa::remove_final(std::string state)
     {
+        if(state.length()==0)
+            return false;
         if (this->F.find(state) == this->F.end())
             return false;
         this->F.erase(state);
@@ -117,6 +129,8 @@ namespace fsm
 
     bool dfa::add_transition(std::string state, std::string alphabet, std::string next_state)
     {
+        if(state.length()==0 || alphabet.length()==0 || next_state.length()==0)
+            return false;
         if ((this->Q.find(state) == this->Q.end()) || (this->Q.find(next_state) == this->Q.end()) || (this->S.find(alphabet) == this->S.end()))
             return false;
         if (this->delta.find(state) == this->delta.end())
@@ -137,6 +151,8 @@ namespace fsm
 
     bool dfa::remove_transition(std::string state, std::string alphabet, std::string next_state)
     {
+        if(state.length()==0 || alphabet.length()==0 || next_state.length()==0)
+            return false;
         if (this->delta.find(state) == this->delta.end())
         {
             return false;
@@ -156,6 +172,8 @@ namespace fsm
 
     bool dfa::change_start(std::string state)
     {
+        if(state.length()==0)
+            return false;
         if (this->Q.find(state) == this->Q.end())
             return false;
         this->q0 = state;

@@ -37,6 +37,7 @@ namespace fsm
         bool is_non_terminal(std::string);
         std::string parseProduction(std::string);
         bool isProduction(std::string, std::string);
+        bool _add_P(std::string);
     };
 } // namespace fsm
 #endif

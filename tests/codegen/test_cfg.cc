@@ -73,7 +73,7 @@ int main()
     flag = cfg_obj.add_P("B -> ${demo}");
     flag = cfg_obj.add_P("B -> ${demo}%{B}");
     flag = cfg_obj.add_P("B -> \\e");
-    cfg_obj.out();
+    // cfg_obj.out();
     // flag = cfg_obj.remove_N("B");
     // test remove_P
     flag = cfg_obj.remove_P("A -> %{B}");
@@ -86,5 +86,5 @@ int main()
     // test CNF
     std::cout << "Testing Chomsky Normal Form" << std::endl;
     fsm::cfg x = cfg_obj._CNF();
-    x.out();
+    // x.out();
 }

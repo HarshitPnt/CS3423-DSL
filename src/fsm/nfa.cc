@@ -3,6 +3,7 @@
 
 namespace fsm
 {
+    std::string epsilon = "\\e";
     nfa::nfa()
     {
         this->q0 = "";
@@ -54,6 +55,8 @@ namespace fsm
 
     bool nfa::insert_alphabet(std::string alphabet, std::string val)
     {
+        if (alphabet.length() == 0 || val.length() == 0)
+            return false;
         if (this->S.find(alphabet) != this->S.end())
             return false;
         try
@@ -75,6 +78,8 @@ namespace fsm
 
     bool nfa::remove_alphabet(std::string alphabet)
     {
+        if (alphabet.length() == 0)
+            return false;
         auto it = this->S.find(alphabet);
         if (it == this->S.end())
             return false;
@@ -117,7 +122,7 @@ namespace fsm
             return false;
         if (this->Q.find(next_state) == this->Q.end())
             return false;
-        if (this->S.find(alphabet) == this->S.end())
+        if (alphabet != epsilon && this->S.find(alphabet) == this->S.end())
             return false;
         if (this->delta.find(state) == this->delta.end())
         {
@@ -144,7 +149,7 @@ namespace fsm
             return false;
         if (this->Q.find(next_state) == this->Q.end())
             return false;
-        if (this->S.find(alphabet) == this->S.end())
+        if (alphabet != epsilon && this->S.find(alphabet) == this->S.end())
             return false;
         if (this->delta.find(state) == this->delta.end())
             return false;
@@ -162,6 +167,8 @@ namespace fsm
 
     bool nfa::change_start(std::string state)
     {
+        if(state.length()==0)
+            return false;
         if (this->Q.find(state) == this->Q.end())
             return false;
         this->q0 = state;
@@ -174,5 +181,33 @@ namespace fsm
         this->S.clear();
         this->delta.clear();
         this->F.clear();
+    }
+
+    bool nfa::simulate(std::string input)
+    {
+        if (this->q0.length() == 0)
+            return false;
+        std::unordered_set<std::string> current_states;
+        std::unordered_set<std::string> next_states;
+        current_states.insert(this->q0);
+        for (auto i : input)
+        {
+            for (auto state : current_states)
+            {
+                auto it = this->delta[state].equal_range(std::string(1, i));
+                for (auto j = it.first; j != it.second; j++)
+                {
+                    next_states.insert(j->second);
+                }
+            }
+            current_states = next_states;
+            next_states.clear();
+        }
+        for (auto i : current_states)
+        {
+            if (this->F.find(i) != this->F.end())
+                return true;
+        }
+        return false;
     }
 } // namespace fsm

@@ -31,6 +31,11 @@ namespace fsm
 
     bool cfg::add_T(std::string alias, std::string val)
     {
+        if(val.length()==0)
+        {
+            std::cerr<<"Invalid terminal\n";
+            return false;
+        }
         int x = this->is_terminal(alias, val);
         if (x) // 0 if not 1 if terminal with same name and 2 if with same value
         {
@@ -306,6 +311,23 @@ namespace fsm
         return std::regex_replace(str, regexPattern, replacement);
     }
 
+    bool _add_P(std::string production) //NT_ and T_
+    {
+        // parse this production
+        std::string temp = production;
+        std::string initial_state, production_right;
+        try
+        {
+            
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            return false;
+        }
+        
+    }
+
     cfg cfg::_CNF()
     {
         // fetch all the productions and add non-terminals for terminals
@@ -321,15 +343,17 @@ namespace fsm
         for (auto &term : this->T)
         {
             CNF->add_N(term.first);
+            CNF->add_T(term.first, term.second);
         }
         // add start production
-        CNF->add_P(CNF->start + " -> " + "NT_" + this->start);
-        CNF->out();
+        CNF->add_P(CNF->start + " -> " + "%{" + this->start + "}");
         // for all terminals add productions
         for (auto &term : this->T)
         {
-            CNF->add_P(term.first + " -> " + term.second);
+            CNF->add_P(term.first + " -> " +"${" +term.first+"}");
         }
+        this->out();
+        CNF->out();
         // add all productions
         std::unordered_map<std::string, std::string> new_nterm;
         long long int new_count = 0;
@@ -390,6 +414,7 @@ namespace fsm
                 CNF->add_P(production.first + " -> " + rhs);
             }
         }
+        CNF->out();
         // eliminate empty transitions
         while (true)
         {
