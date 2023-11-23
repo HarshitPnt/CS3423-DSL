@@ -31,9 +31,9 @@ namespace fsm
 
     bool cfg::add_T(std::string alias, std::string val)
     {
-        if(val.length()==0)
+        if (val.length() == 0)
         {
-            std::cerr<<"Invalid terminal\n";
+            std::cerr << "Invalid terminal\n";
             return false;
         }
         int x = this->is_terminal(alias, val);
@@ -311,17 +311,17 @@ namespace fsm
         return std::regex_replace(str, regexPattern, replacement);
     }
 
-    bool cfg::_add_P(std::string production) //NT_ and T_
+    bool cfg::_add_P(std::string production) // NT_ and T_
     {
         // parse this production
-        std::cout<<"Re: "<<production<<std::endl;
+        std::cout << "Re: " << production << std::endl;
         std::string temp = production;
         std::string initial_state, production_right;
         try
         {
             initial_state = std::string(production.substr(0, production.find("->")));
             initial_state = trim(initial_state);
-            if(!is_non_terminal(initial_state))
+            if (!is_non_terminal(initial_state))
                 throw std::runtime_error("Invalid production: " + initial_state + " is not a non-terminal");
             production_right = std::string(production.substr(production.find("->") + 2));
             production_right = trim(production_right);
@@ -333,14 +333,14 @@ namespace fsm
                     // extract the non terminal
                     size_t end = production_right.find_first_of(" ");
                     std::string non_terminal;
-                    if(end==std::string::npos)
+                    if (end == std::string::npos)
                         non_terminal = production_right.substr(3);
                     else
                         non_terminal = production_right.substr(3, end - 3);
                     if (!is_non_terminal(non_terminal))
                         throw std::runtime_error("Invalid production: " + non_terminal + " is not a non-terminal");
                     rhs += "NT_" + non_terminal + " ";
-                    if(end==std::string::npos)
+                    if (end == std::string::npos)
                         break;
                     production_right = production_right.substr(end + 1);
                 }
@@ -348,35 +348,34 @@ namespace fsm
                 {
                     size_t end = production_right.find_first_of(" ");
                     std::string terminal;
-                    if(end==std::string::npos)
+                    if (end == std::string::npos)
                         terminal = production_right.substr(3);
                     else
                         terminal = production_right.substr(3, end - 3);
                     if (!is_terminal(terminal))
                         throw std::runtime_error("Invalid production: " + terminal + " is not a terminal");
                     rhs += "T_" + terminal + " ";
-                    if(end==std::string::npos)
+                    if (end == std::string::npos)
                         break;
                     production_right = production_right.substr(end + 1);
                 }
             }
             rhs = trim(rhs);
-            if(rhs=="")
+            if (rhs == "")
                 return false;
             // check if production exists
             if (isProduction(initial_state, rhs))
                 throw std::runtime_error("Production already exists");
             std::cout << "HERE adding " << rhs << std::endl;
             this->P[initial_state].push_back(rhs);
-            std::cout<<"Returning true"<<std::endl;
+            std::cout << "Returning true" << std::endl;
             return true;
         }
-        catch(const std::exception& e)
+        catch (const std::exception &e)
         {
             std::cerr << e.what() << '\n';
             return false;
         }
-        
     }
 
     cfg cfg::_CNF()
@@ -401,7 +400,7 @@ namespace fsm
         // for all terminals add productions
         for (auto &term : this->T)
         {
-            CNF->add_P(term.first + " -> " +"${" +term.first+"}");
+            CNF->add_P(term.first + " -> " + "${" + term.first + "}");
         }
         this->out();
         // CNF->out();
@@ -413,9 +412,9 @@ namespace fsm
             for (auto &rhs : production.second)
             {
                 // before change all terminals to non-terminals
-                if(trim(rhs)=="T_\\e" || trim(rhs)=="NT_\\e")
+                if (trim(rhs) == "T_\\e")
                 {
-                    CNF->P[production.first].push_back(rhs);
+                    CNF->P[production.first].push_back(trim(rhs));
                     continue;
                 }
                 for (auto &term : this->T)
@@ -472,8 +471,9 @@ namespace fsm
                 CNF->_add_P(production.first + " -> " + rhs);
             }
         }
-        CNF->out();
+        // CNF->out();
         // eliminate empty transitions
+        int x;
         while (true)
         {
             bool flag = false;
@@ -484,7 +484,7 @@ namespace fsm
                     if (rhs == "T_\\e")
                     {
                         // empty transition
-                        CNF->remove_P(production.first + " -> " + rhs);
+                        CNF->P[production.first].erase(std::find(CNF->P[production.first].begin(), CNF->P[production.first].end(), rhs));
                         if (CNF->P[production.first].size() == 0)
                         {
                             // remove this non-terminal
@@ -555,6 +555,7 @@ namespace fsm
                     break;
             }
         }
+        CNF->out();
         // eliminate unit transitions
         // check all productions
         for (auto &production : CNF->P)
