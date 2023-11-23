@@ -4,68 +4,83 @@ namespace fsm
 {
     // Convert a regular expression to a DFA
 
-    nfa reg_to_nfa(regex reg)
+    nfa reg_to_nfa(regex reg, int state = 0)
     {
         if (reg.is_valid() == false)
             throw std::runtime_error("Invalid regex");
         std::string str = reg.str;
-        int state = 0;
         nfa n;
         n.insert_state(std::to_string(state));
         while (str.length() != 0)
         {
-            if(str[0] == '('){
+            // if (str[0] == '(')
+            // {
             //     int i = 1;
             //     int count = 1;
-            //     while(count != 0){
-            //         if(str[i] == '(')
+            //     while (count != 0)
+            //     {
+            //         if (str[i] == '(')
             //             count++;
-            //         else if(str[i] == ')')
+            //         else if (str[i] == ')')
             //             count--;
             //         i++;
             //     }
-            //     std::string temp = str.substr(1, i-2);
+            //     std::string temp = str.substr(1, i - 2);
             //     str = str.substr(i);
-            //     nfa temp_nfa = reg_to_nfa(regex(temp));
-            //     n.insert_nfa(temp_nfa, std::to_string(state));
-            //     state += temp_nfa.Q.size();
-            //     n.insert_state(std::to_string(state));
-            //     n.add_transition(std::to_string(state-1), "epsilon", std::to_string(state));
-            //     state++;
-            }
-            // else if(str[0] == '*'){
-            //     n.add_transition(std::to_string(state-1), "epsilon", std::to_string(state));
-            //     n.add_transition(std::to_string(state), "epsilon", std::to_string(state-1));
-            //     str = str.substr(1);
-            // }
-            // else if(str[0] == '|'){
-            //     n.insert_state(std::to_string(state));
-            //     n.add_transition(std::to_string(state-1), "epsilon", std::to_string(state));
-            //     state++;
-            //     str = str.substr(1);
-            // }
-            // else if(str[0] == '+'){
-            //     n.add_transition(std::to_string(state-1), "epsilon", std::to_string(state));
-            //     str = str.substr(1);
-            // }
-            // else if(str[0] == '?'){
-            //     n.add_transition(std::to_string(state-1), "epsilon", std::to_string(state));
-            //     n.add_transition(std::to_string(state-1), "epsilon", std::to_string(state));
-            //     str = str.substr(1);
-            // }
-            // else{
-            //     n.insert_state(std::to_string(state));
-            //     n.insert_alphabet(std::string(1, str[0]), std::string(1, str[0]));
-            //     n.add_transition(std::to_string(state-1), std::string(1, str[0]), std::to_string(state));
-            //     state++;
-            //     str = str.substr(1);
+            //     nfa temp_nfa = reg_to_nfa(regex(temp), state + 1);
             // }
         }
         return n;
     }
 
+    // Convert a NFA to a DFA
     dfa nfa_to_dfa(nfa n)
     {
+        // dfa dfa;
+        // std::map<std::set<std::string>, std::string> stateNames;
+        // std::queue<std::set<std::string>> statesQueue;
+
+        // std::set<std::string> startState = {n.get_start()};
+        // statesQueue.push(startState);
+        // stateNames[startState] = "q0";
+        // dfa.insert_state("q0");
+        // dfa.change_start("q0");
+
+        // while (!statesQueue.empty())
+        // {
+        //     std::set<std::string> currentState = statesQueue.front();
+        //     statesQueue.pop();
+
+        //     for (auto &symbol : n.get_alphabet())
+        //     {
+        //         std::set<std::string> newState;
+        //         for (auto &state : currentState)
+        //         {
+        //             std::set<std::string> reachable = n.get_reachable(state, symbol);
+        //             newState.insert(reachable.begin(), reachable.end());
+        //         }
+
+        //         if (!newState.empty() && stateNames.find(newState) == stateNames.end())
+        //         {
+        //             std::string newStateName = "q" + std::to_string(stateNames.size());
+        //             stateNames[newState] = newStateName;
+        //             dfa.insert_state(newStateName);
+        //             statesQueue.push(newState);
+
+        //             if (n.is_final(*newState.begin()))
+        //             {
+        //                 dfa.insert_final(newStateName);
+        //             }
+        //         }
+
+        //         if (!newState.empty())
+        //         {
+        //             dfa.add_transition(stateNames[currentState], symbol, stateNames[newState]);
+        //         }
+        //     }
+        // }
+
+        // return dfa;
     }
 
     dfa reg_to_dfa(regex reg)

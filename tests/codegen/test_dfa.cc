@@ -89,7 +89,7 @@ int main()
     //  d.add_transition("q2","c","q2");
     //  d.change_start("q3");
 //     // No out bound transition from q3.Only state in the dfa is q3 and q0 and q1 are not reachable from q3.
-     d.out();
+//     d.out();
 
 //     // This should throw error as we have no q5 state .
  //    cout << d.insert_final("q5") << endl;
@@ -98,43 +98,54 @@ int main()
     d.insert_state("q5");
 
 //     // insering a state that is already present.
-     cout << d.insert_state("q5") << endl;
+//     cout << d.insert_state("q5") << endl;
 
 //     // This should throw error as we have no q6 state .
 //     cout << d.add_transition("q5", "a", "q6") << endl;
 
 //     // This should return false as there is no alphabet "d".
-//     cout << d.add_transition("q3", "d", "q5") << endl;
+ //    cout << d.add_transition("q3", "d", "q5") << endl;
 
 //     // This should return false as q1 has been deleted.
-//     cout << d.add_transition("q5", "a", "q1") << endl;
+ //    cout << d.add_transition("q5", "a", "q1") << endl;
+     
 
-//     d.add_transition("q3", "a", "q5");
-//     // Should return true.
-//     cout << "011 : " << d.simulate("011") << endl;
+     d.add_transition("q3", "a", "q5");
+ //    d.out();
+//     // Should return false.
+ //    cout << "011 : " << d.simulate("011") << endl;
+ 
 
-//     d.add_transition("q5", "c", "q5");
+
+     d.add_transition("q5", "c", "q5");
 
 //     // This should return false as transition from q5 for alphabet c already exists.
-//     cout << d.add_transition("q5", "c", "q3") << endl;
+ //    cout << d.add_transition("q5", "c", "q3") << endl;
 
-//     // This should return false as there is state q6.
-//     d.change_start("q6");
+//     // This should return false as there is no state q6.
+//     cout<<d.change_start("q6")<<endl;
 
-//     d.remove_state("q0");
+     d.remove_state("q0");
 //     d.out();
 //     // This should return false as q1 has been deleted.
-//     d.remove_state("q1");
-//     d.out();
-//     d.remove_state("q2");
+//    cout<<d.remove_state("q1")<<endl;
 
-//     d.insert_final("q5");
-
+     d.remove_state("q2");
+   //  d.out();
+     d.insert_final("q5");
+     d.add_transition("q5","a","q3");
+     d.out();
 //     // Should return true.
-//     cout << "000 : " << d.simulate("000") << endl;
+     cout << "000 : " << d.simulate("000") << endl;
 
 //     // Should return false.
-//     cout << "0000 : " << d.simulate("0000") << endl;
+     cout << "0000 : " << d.simulate("0000") << endl;
+    //Alphabets checks
+     cout<<d.remove_alphabet("f")<<endl;
+    cout<<d.insert_alphabet("a","0")<<endl;
+        cout<<d.insert_alphabet("a","1")<<endl;
+    cout<<d.insert_alphabet("b","0")<<endl;
+
 
 //     return 0;
 }

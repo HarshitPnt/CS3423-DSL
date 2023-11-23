@@ -76,6 +76,11 @@ namespace fsm
         return true;
     }
 
+    std::unordered_map<std::string, std::string> nfa::get_alphabet()
+    {
+        return this->S;
+    }
+
     bool nfa::remove_alphabet(std::string alphabet)
     {
         if (alphabet.length() == 0)
@@ -106,6 +111,15 @@ namespace fsm
             return false;
         this->F.insert(state);
         return true;
+    }
+
+    bool nfa::is_final(std::string state)
+    {
+        if (this->Q.find(state) == this->Q.end())
+            return false;
+        if (this->F.find(state) != this->F.end())
+            return true;
+        return false;
     }
 
     bool nfa::remove_final(std::string state)
@@ -167,7 +181,7 @@ namespace fsm
 
     bool nfa::change_start(std::string state)
     {
-        if(state.length()==0)
+        if (state.length() == 0)
             return false;
         if (this->Q.find(state) == this->Q.end())
             return false;
@@ -181,6 +195,18 @@ namespace fsm
         this->S.clear();
         this->delta.clear();
         this->F.clear();
+    }
+
+    std::unordered_map<std::string, std::unordered_set<std::string>> nfa::eClosure()
+    {
+        std::unordered_map<std::string, std::unordered_set<std::string>> closure;
+        for (auto state : this->Q)
+        {
+            std::unordered_set<std::string> temp;
+            closure[state] = temp;
+        }
+        
+        return closure;
     }
 
     bool nfa::simulate(std::string input)

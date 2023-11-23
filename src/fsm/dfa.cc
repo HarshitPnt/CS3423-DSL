@@ -88,10 +88,7 @@ namespace fsm
     {
         if (alphabet.length() == 0)
             return false;
-        auto it = this->S.find(alphabet);
-        bool temp = this->S.end() == this->S.erase(it);
-
-        if (temp)
+        if(this->S.find(alphabet)==this->S.end())
             return false;
 
         for (auto &d : this->delta)
@@ -102,7 +99,7 @@ namespace fsm
             }
         }
         checkValidity();
-        return !temp;
+        return true;
     }
 
     bool dfa::insert_final(std::string state)

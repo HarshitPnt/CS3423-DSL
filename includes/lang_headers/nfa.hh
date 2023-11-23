@@ -16,13 +16,18 @@ namespace fsm
         bool insert_state(std::string);
         bool remove_state(std::string);
         bool insert_alphabet(std::string, std::string);
+        std::unordered_map<std::string,std::string> get_alphabet();
         bool remove_alphabet(std::string);
         bool insert_final(std::string);
+        bool is_final(std::string);
         bool remove_final(std::string);
         bool add_transition(std::string, std::string, std::string);
         bool remove_transition(std::string, std::string, std::string);
         bool change_start(std::string);
+        std::unordered_map<std::string, std::unordered_set<std::string>> eClosure();
+        std::unordered_map<std::string, std::unordered_set<std::string>> nextClosure();
         bool simulate(std::string);
+
         void out();
         ~nfa();
         nfa();
