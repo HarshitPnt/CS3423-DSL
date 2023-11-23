@@ -325,6 +325,11 @@ namespace fsm
                 throw std::runtime_error("Invalid production: " + initial_state + " is not a non-terminal");
             production_right = std::string(production.substr(production.find("->") + 2));
             production_right = trim(production_right);
+            if (trim(production_right) == "T_\\e")
+            {
+                this->P[initial_state].push_back(trim(production_right));
+                return true;
+            }
             std::string rhs = "";
             while (production_right.length())
             {
@@ -403,7 +408,6 @@ namespace fsm
             CNF->add_P(term.first + " -> " + "${" + term.first + "}");
         }
         this->out();
-        // CNF->out();
         // add all productions
         std::unordered_map<std::string, std::string> new_nterm;
         long long int new_count = 0;
@@ -483,32 +487,54 @@ namespace fsm
                 {
                     if (rhs == "T_\\e")
                     {
+                        std::cout << production.first << std::endl;
                         // empty transition
                         CNF->P[production.first].erase(std::find(CNF->P[production.first].begin(), CNF->P[production.first].end(), rhs));
+                        int flag2 = false;
                         if (CNF->P[production.first].size() == 0)
                         {
                             // remove this non-terminal
                             CNF->remove_N(production.first);
+                            flag2 = true;
                         }
                         // find all productions which have this non-terminal in rhs
+                        std::cout << "HERE" << std::endl;
                         for (auto &production2 : CNF->P)
                         {
                             for (auto &rhs2 : production2.second)
                             {
                                 if (rhs2.find(std::string("NT_") + production.first) != std::string::npos)
                                 {
+                                    std::cout << production2.first << " " << rhs2 << std::endl;
                                     // this production has this non-terminal
                                     // check if only one non-terminal
                                     size_t first = rhs2.find_last_of("NT_");
-                                    if (first == 0)
+                                    if (first == 0 && production2.first != "@start")
                                     {
                                         // only one non-terminal
                                         CNF->_add_P(production2.first + " -> T_\\e");
                                         if (CNF->P[production.first].size() == 0)
                                         {
                                             // remove this non-terminal
-                                            CNF->remove_P(production2.first + " -> " + rhs2);
+                                            CNF->P[production2.first].erase(std::find(CNF->P[production2.first].begin(), CNF->P[production2.first].end(), rhs2));
                                         }
+                                        // if (flag2 = true)
+                                        // {
+                                        // }
+                                        flag = true;
+                                    }
+                                    else if (production2.first == "@start" && flag2)
+                                    {
+                                        // make CFG empty
+                                        CNF = new cfg();
+                                        CNF->add_N("@start");
+                                        CNF->change_start("@start");
+                                        CNF->add_P("@start -> \\e");
+                                        return *CNF;
+                                    }
+                                    else if (production2.first == "@start")
+                                    {
+                                        CNF->_add_P(production2.first + " -> T_\\e");
                                         flag = true;
                                     }
                                     else
@@ -555,6 +581,7 @@ namespace fsm
                     break;
             }
         }
+        std::cout << "Epsilon handled" << std::endl;
         CNF->out();
         // eliminate unit transitions
         // check all productions
