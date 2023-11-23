@@ -26,7 +26,7 @@ namespace fsm
         std::unordered_set<std::string> F;
 
         // input alphabet
-        std::unordered_set<std::string> S;
+        std::unordered_map<std::string, std::string> S;
 
         // Transition function : Q-input x S-input x S-stack --> Q-output x S-stack
         std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::string, std::string>>>> delta;

@@ -46,7 +46,7 @@ namespace fsm
         std::unordered_map<std::string, std::string> S;
 
         // Q : set of states
-        std::set<std::string> Q;
+        std::unordered_set<std::string> Q;
 
         // bool findState(std::string state);
         // bool findAlphabet(std::string alphabet);

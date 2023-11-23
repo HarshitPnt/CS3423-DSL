@@ -315,7 +315,7 @@ namespace fsm
         // add all non-terminals
         for (auto &nterm : this->N.set)
         {
-            CNF->N.insert(nterm);
+            CNF->add_N(nterm);
         }
         // fetch terminals
         for (auto &term : this->T)

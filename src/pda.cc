@@ -53,4 +53,13 @@ namespace fsm
         is_valid = false;
         return true;
     }
+
+    bool pda::remove_alphabet(std::string alphabet)
+    {
+        if (this->S.find(alphabet) == this->S.end())
+            return false;
+        this->S.erase(alphabet);
+        is_valid = false;
+        return true;
+    }
 }

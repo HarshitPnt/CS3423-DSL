@@ -13,11 +13,6 @@ namespace fsm
     class nfa
     {
     public:
-        std::set<std::string> Q;
-        std::unordered_map<std::string, std::string> S;
-        std::unordered_map<std::string, std::unordered_multimap<std::string, std::string>> delta;
-        std::string q0;
-        std::unordered_set<std::string> F;
         bool insert_state(std::string);
         bool remove_state(std::string);
         bool insert_alphabet(std::string, std::string);
@@ -31,6 +26,13 @@ namespace fsm
         void out();
         ~nfa();
         nfa();
+
+    private:
+        std::set<std::string> Q;
+        std::unordered_map<std::string, std::string> S;
+        std::unordered_map<std::string, std::unordered_multimap<std::string, std::string>> delta;
+        std::string q0;
+        std::unordered_set<std::string> F;
     };
 
 } // namespace fsm
