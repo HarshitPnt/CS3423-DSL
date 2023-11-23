@@ -1,5 +1,6 @@
 #include "../../includes/lang_headers/nfa.hh"
 #include <iostream>
+#include <stack>
 
 namespace fsm
 {
@@ -189,6 +190,11 @@ namespace fsm
         return true;
     }
 
+    std::string nfa::get_start()
+    {
+        return this->q0;
+    }
+
     nfa::~nfa()
     {
         this->Q.clear();
@@ -205,8 +211,50 @@ namespace fsm
             std::unordered_set<std::string> temp;
             closure[state] = temp;
         }
-        
+        for (auto state : this->Q)
+        {
+            std::unordered_set<std::string> visited;
+            std::stack<std::string> stack;
+            stack.push(state);
+            while (!stack.empty())
+            {
+                std::string current_state = stack.top();
+                stack.pop();
+                if (visited.find(current_state) != visited.end())
+                    continue;
+                visited.insert(current_state);
+                closure[state].insert(current_state);
+                auto it = this->delta[current_state].equal_range(epsilon);
+                for (auto i = it.first; i != it.second; i++)
+                {
+                    stack.push(i->second);
+                }
+            }
+        }
         return closure;
+    }
+
+    std::unordered_set<std::string> nfa::get_reachable(std::string state, std::string alphabet)
+    {
+        std::unordered_set<std::string> reachable;
+        std::unordered_set<std::string> visited;
+        std::stack<std::string> stack;
+        stack.push(state);
+        while (!stack.empty())
+        {
+            std::string current_state = stack.top();
+            stack.pop();
+            if (visited.find(current_state) != visited.end())
+                continue;
+            visited.insert(current_state);
+            auto it = this->delta[current_state].equal_range(alphabet);
+            for (auto i = it.first; i != it.second; i++)
+            {
+                stack.push(i->second);
+                reachable.insert(i->second);
+            }
+        }
+        return reachable;
     }
 
     bool nfa::simulate(std::string input)

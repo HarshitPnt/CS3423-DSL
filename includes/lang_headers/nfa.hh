@@ -24,8 +24,9 @@ namespace fsm
         bool add_transition(std::string, std::string, std::string);
         bool remove_transition(std::string, std::string, std::string);
         bool change_start(std::string);
+        std::string get_start();
         std::unordered_map<std::string, std::unordered_set<std::string>> eClosure();
-        std::unordered_map<std::string, std::unordered_set<std::string>> nextClosure();
+        std::unordered_set<std::string> get_reachable(std::string, std::string);
         bool simulate(std::string);
 
         void out();

@@ -1,4 +1,7 @@
 #include "../../includes/fsm.hh"
+#include <queue>
+#include <map>
+
 
 namespace fsm
 {
@@ -36,6 +39,8 @@ namespace fsm
     // Convert a NFA to a DFA
     dfa nfa_to_dfa(nfa n)
     {
+        // if(n.get_start() == "")
+        //     throw std::runtime_error("NFA has no start state");
         // dfa dfa;
         // std::map<std::set<std::string>, std::string> stateNames;
         // std::queue<std::set<std::string>> statesQueue;

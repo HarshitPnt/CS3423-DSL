@@ -84,6 +84,8 @@ namespace fsm
         return true;
     }
 
+    
+
     bool dfa::remove_alphabet(std::string alphabet)
     {
         if (alphabet.length() == 0)

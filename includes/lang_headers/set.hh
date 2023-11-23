@@ -15,27 +15,6 @@
 namespace fsm
 {
     template <typename T>
-    class o_set
-    {
-    public:
-        std::set<T> set;
-        int size();
-        bool find(T x);
-        void insert(T x);
-        void remove(T x);
-        bool empty();
-        void del();
-        void out();
-        ~o_set();
-        o_set();
-        o_set(std::vector<T>);
-        T operator[](size_t index) const;
-        o_set<T> operator+(o_set<T> &other);
-        o_set<T> operator-(o_set<T> &other);
-        o_set<o_set<T>> power_set(); // TODO
-    };
-
-    template <typename T>
     class u_set
     {
     public:
@@ -53,6 +32,28 @@ namespace fsm
         u_set<T> operator+(u_set<T> &other);
         u_set<T> operator-(u_set<T> &other);
         u_set<u_set<T>> power_set(); // TODO
+    };
+
+    template <typename T>
+    class o_set
+    {
+    public:
+        std::set<T> set;
+        int size();
+        bool find(T x);
+        void insert(T x);
+        void remove(T x);
+        bool empty();
+        void del();
+        void out();
+        ~o_set();
+        o_set();
+        o_set(std::vector<T>);
+        T operator[](size_t index) const;
+        o_set<T> operator+(o_set<T> &other);
+        o_set<T> operator-(o_set<T> &other);
+
+        o_set<o_set<T>> power_set(); // TODO
     };
 
     template <typename T>
@@ -174,13 +175,6 @@ namespace fsm
                 result.insert(element);
             }
         }
-        for (auto element : other.set)
-        {
-            if (!this->find(element))
-            {
-                result.insert(element);
-            }
-        }
         return result;
     }
 
@@ -285,13 +279,6 @@ namespace fsm
         for (auto element : this->set)
         {
             if (!other.find(element))
-            {
-                result.insert(element);
-            }
-        }
-        for (auto element : other.set)
-        {
-            if (!this->find(element))
             {
                 result.insert(element);
             }
