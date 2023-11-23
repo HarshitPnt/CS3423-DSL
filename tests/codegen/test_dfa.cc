@@ -74,26 +74,31 @@ int main()
     d.add_transition("q4", "c", "q3");
     d.add_transition("q2", "c", "q4");
     d.add_transition("q3", "a", "q3");
+    d.add_transition("q0", "a", "q0");
+
  //    // No out bound transition from q3..
      d.change_start("q3");
 //
-     d.out();
- //    d.remove_transition("q3", "a", "q3");
- //    d.add_transition("q3", "a", "q4");
+   //  d.out();
+     d.remove_transition("q3", "a", "q3");
+     d.add_transition("q3", "a", "q4");
 //
- //    d.remove_state("q4");
-
+     d.remove_state("q4");
+     //next 3 instruction 
+    //  d.remove_state("q3");
+    //  d.add_transition("q2","c","q2");
+    //  d.change_start("q3");
 //     // No out bound transition from q3.Only state in the dfa is q3 and q0 and q1 are not reachable from q3.
- //    d.out();
+     d.out();
 
 //     // This should throw error as we have no q5 state .
-//     cout << d.insert_final("q5") << endl;
+ //    cout << d.insert_final("q5") << endl;
 
-//     d.add_transition("q2", "c", "q2");
-//     d.insert_state("q5");
+     d.add_transition("q2", "c", "q2");
+    d.insert_state("q5");
 
 //     // insering a state that is already present.
-//     cout << d.insert_state("q5") << endl;
+     cout << d.insert_state("q5") << endl;
 
 //     // This should throw error as we have no q6 state .
 //     cout << d.add_transition("q5", "a", "q6") << endl;

@@ -4,7 +4,6 @@ obj/
 build/*
 !build/Makefile
 logs/*
-lib/*
 /Temp/
 
 # Files
@@ -32,4 +31,5 @@ prog
 *.elf
 *.bin
 
+libfsm.a
 .vscode

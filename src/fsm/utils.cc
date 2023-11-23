@@ -14,7 +14,7 @@ namespace fsm
         n.insert_state(std::to_string(state));
         while (str.length() != 0)
         {
-            // if(str[0] == '('){
+            if(str[0] == '('){
             //     int i = 1;
             //     int count = 1;
             //     while(count != 0){
@@ -32,7 +32,7 @@ namespace fsm
             //     n.insert_state(std::to_string(state));
             //     n.add_transition(std::to_string(state-1), "epsilon", std::to_string(state));
             //     state++;
-            // }
+            }
             // else if(str[0] == '*'){
             //     n.add_transition(std::to_string(state-1), "epsilon", std::to_string(state));
             //     n.add_transition(std::to_string(state), "epsilon", std::to_string(state-1));
