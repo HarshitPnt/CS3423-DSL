@@ -54,7 +54,7 @@ namespace fsm
         // get all states of dfa
         std::vector<std::string> states;
         std::vector<std::set<std::string>> state_set;
-        std::cout << len << std::endl;
+        // std::cout << len << std::endl;
         for (int i = 0; i < power(2, len); ++i)
         {
             std::string state("");
@@ -72,10 +72,10 @@ namespace fsm
             states.push_back(trim(state));
             state_set.push_back(temp);
         }
-        for (auto &s : states)
-        {
-            std::cout << s << std::endl;
-        }
+        // for (auto &s : states)
+        // {
+        //     std::cout << s << std::endl;
+        // }
         // inserting states to dfa
         for (auto &s : states)
         {
@@ -88,7 +88,7 @@ namespace fsm
         }
         // inserting initial state to dfa
         // initial state is e-closure of nfa-initial state
-        std::cout << "Printing new start state" << concatState(Eclosure[n.q0]) << std::endl;
+        // std::cout << "Printing new start state" << concatState(Eclosure[n.q0]) << std::endl;
         d->change_start(concatState(Eclosure[n.q0]));
         // inserting final states to dfa
         for (auto &s : states)
