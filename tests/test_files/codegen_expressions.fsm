@@ -12,6 +12,18 @@ bool isTrue(float_32 x)
     return true;
 }
 
+temp_fn[[T]] int_8 insert(o_set<T> x, T y)
+{
+    <!--inserts a value into the set --!> 
+    return y;
+}
+
+temp_fn[[T1]] A insert_t(o_set<T1> x, T1 y)
+{
+    <!--inserts a value into the set --!> 
+    return y;
+}
+
 int_32 main()
 {
     int_8 result=5,abcd_;

@@ -516,6 +516,12 @@ function_header: dtype ID LPAREN param_list RPAREN {
                             entry->id_list.push_back(*it);
                         }
                         fst->insert(entry);
+                        
+                        $$ = new cc_code();
+                        $$->cc = "template <" + $3->cc + std::string("> ") + std::string($5) + std::string(" ") + std::string($6) + std::string("(") + $8->cc + std::string(")");
+                        std::cout<<$$->cc<<std::endl;
+                        cc_file<<$$->cc;
+                        $$->cc = "";
                     }
                 | TEMP_FN_KW TEMP_LEFT type_list TEMP_RIGHT dtype ID LPAREN param_list RPAREN {
                     if(in_function)
@@ -601,7 +607,13 @@ function_header: dtype ID LPAREN param_list RPAREN {
                         }
                         //insert into param list
                         entry->id_list.push_back(*it);
+
                     }
+                        $$ = new cc_code();
+                        $$->cc = "template <" + $3->cc + std::string("> ") + $5->cc + std::string(" ") + std::string($6) + std::string("(") + $8->cc + std::string(")");
+                        std::cout<<$$->cc<<std::endl;
+                        cc_file<<$$->cc;
+                        $$->cc = "";
                 }
                 ;
 
@@ -2546,7 +2558,7 @@ lhs_arrow : COMMA ID
             $$ = new lhs_arrow_attr();
             $$->type = std::string("nfa");
             nfa_dfa_lhs = new std::vector<std::string>();
-            nfa_dfa_lhs->push_back("\\e");
+            nfa_dfa_lhs->push_back("\\\\e");
           }
           | COMMA LBRACE elements_PDA RBRACE
           {
@@ -2595,7 +2607,7 @@ element_PDA : LPAREN ID COMMA ID RPAREN
             {
                 $$ = new element_PDA_attr();
                 $$->state_alpha = std::string($2);
-                $$->stack = std::string("\\e");
+                $$->stack = std::string("\\\\e");
             }
             ;
 
@@ -2611,7 +2623,7 @@ elements_others : ID
                     $$ = new lhs_arrow_attr();
                     $$->type = std::string("nfa");
                     $$->lst = *(new std::vector<std::string>());
-                    $$->lst.push_back(std::string("\\e"));
+                    $$->lst.push_back(std::string("\\\\e"));
                 }
                 | elements_others COMMA ID
                 {
@@ -2629,7 +2641,7 @@ elements_others : ID
                     $$ = new lhs_arrow_attr();
                     $$->type = std::string("nfa");
                     $$->lst = $1->lst;
-                    $$->lst.push_back(std::string("\\e"));
+                    $$->lst.push_back(std::string("\\\\e"));
                 }
                 ;
 
@@ -2722,7 +2734,7 @@ cfg_rhs_ele_list : cfg_rhs_ele
                     if($1->cc!="")
                         cfg_rhs_current->push_back($1->cc);
                     else
-                        cfg_rhs_current->push_back(std::string("\\e"));
+                        cfg_rhs_current->push_back(std::string("\\\\e"));
                  }
                  | cfg_rhs_ele_list COMMA cfg_rhs_ele
                  {
@@ -2731,7 +2743,7 @@ cfg_rhs_ele_list : cfg_rhs_ele
                     if($3->cc!="")
                         cfg_rhs_current->push_back($3->cc);
                     else
-                        cfg_rhs_current->push_back(std::string("\\e"));
+                        cfg_rhs_current->push_back(std::string("\\\\e"));
                  }
                  ;
 

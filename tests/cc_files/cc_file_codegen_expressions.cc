@@ -9,6 +9,12 @@ return x ;
 bool isTrue(unsigned char x )	{
 return 1 ;
 }
+template <typename T> char insert(fsm::o_set<T> x , T y )	{
+return y ;
+}
+template <typename T1> A insert_t(fsm::o_set<T1> x , T1 y )	{
+return y ;
+}
 int main()	{
 char result = 5, abcd_;
 abcd_ +=result ;
@@ -47,7 +53,7 @@ a.change_start("A");
 a.add_P("A -> ${a}%{B}");
 a.add_P("B -> ${demo}%{A}");
 a.add_P("A -> ${a}%{A}");
-a.add_P("A -> \e");
+a.add_P("A -> \\e");
 
 fsm::dfa aaa;
 aaa.insert_state("q0");
@@ -89,8 +95,8 @@ bbb.insert_transition("A", "b", "c", "B", "a");
 bbb.insert_transition("A", "b", "c", "A", "c");
 bbb.insert_transition("B", "b", "a", "B", "a");
 bbb.insert_transition("B", "b", "c", "B", "a");
-bbb.insert_transition("B", "c", "a", "C", "\e");
-bbb.insert_transition("C", "c", "a", "C", "\e");
+bbb.insert_transition("B", "c", "a", "C", "\\e");
+bbb.insert_transition("C", "c", "a", "C", "\\e");
 bbb.insert_transition("C", "c", "a", "C", "a");
 
 bbb.change_start("A");
@@ -112,7 +118,7 @@ dd.insert_transition("q1", "b", "q2");
 dd.insert_transition("q1", "c", "q2");
 dd.insert_transition("q2", "a", "q1");
 dd.insert_transition("q2", "c", "q1");
-dd.insert_transition("q2", "\e", "q0");
+dd.insert_transition("q2", "\\e", "q0");
 
 dd.change_start("q0");
 
