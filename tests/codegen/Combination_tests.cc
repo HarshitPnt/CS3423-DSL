@@ -46,25 +46,151 @@ int main()
         d.add_transition("q2","a","q0");
 
         //Initializing transitions of dfa d1
-        cout<<"d:"<< d.__simulate("0")<<endl;
+        // cout<<"d:"<< d.__simulate("0")<<endl;
 
         d1.add_transition("q0","a","q1");
         d1.add_transition("q1","a","q2");
         d1.add_transition("q2","a","q0");
 
-        cout<<"d1:" <<d1.__simulate("0")<<endl;
+        // cout<<"d1:" <<d1.__simulate("0")<<endl;
         //Concatenating dfa d and dfa d1
 
         fsm::dfa *d2 = fsm::concat_dfa(d,d1);
 
-cout << "HELLO" << endl;
+// cout << "HELLO" << endl;
         //Printing dfa d2
-        cout<<"d2 00"<<d2->__simulate("00")<<endl;
+        // cout<<"d2 00: "<<d2->__simulate("00")<<endl;
 
-        cout<<"d2 000"<<d2->__simulate("000")<<endl;
+        // cout<<"d2 000: "<<d2->__simulate("000")<<endl;
         // cout<<d2->__simulate("aaaa")<<endl;  
 
+        //Testing Union of dfa d and dfa d1
+
+        fsm::dfa *d3 = fsm::union_dfa(d,d1);
+
+        //Printing dfa d3   
+        cout<<"d3 00: "<<d3->__simulate("00")<<endl;
+        cout<<"d3 000: "<<d3->__simulate("000")<<endl;
+        cout<<"d3 0: "<<d3->__simulate("0")<<endl;
      
+
+       //Testing Intersection of dfa d and dfa d1
+
+        fsm::dfa *d4 = fsm::intersect_dfa(d,d1);
+
+        cout<<"d4 00: "<<d4->__simulate("00")<<endl;
+        cout<<"d4 0000: "<<d4->__simulate("0000")<<endl;
+        cout<<"d4 0: "<<d4->__simulate("0")<<endl;
+
+       
+        //Testing Kleene Star of dfa d
+
+        fsm::dfa *d5 = fsm::kleene_dfa(d);
+
+        cout<<"d5 00: "<<d5->__simulate("00")<<endl;
+        cout<<"d5 0000: "<<d5->__simulate("0000")<<endl;
+
+
+        //Testing Complement of dfa d
+
+        //fsm::dfa *d6 = fsm:!d; //????????????????
+          
+        //Testing nfas
+
+        fsm::nfa n;
+        fsm::nfa n1;
+
+        //Initializing states of nfa n  
+        n.insert_state("q0");
+        n.insert_state("q1");
+        n.insert_state("q2");
+
+        //Initializing states of nfa n1
+
+        n1.insert_state("q0");
+        n1.insert_state("q1");
+        n1.insert_state("q2");
+
+        //Initializing start state of nfa n
+
+        n.change_start("q0");
+
+        //Initializing start state of nfa n1
+
+        n1.change_start("q0");
+
+        //Initializing final state of nfa n
+
+        n.insert_final("q2");
+
+        //Initializing final state of nfa n1
+
+        n1.insert_final("q2");
+
+        //Initializing alphabets of nfa n
+
+        n.insert_alphabet("a","0");
+        n.insert_alphabet("b","1");
+
+        //Initializing alphabets of nfa n1
+
+        n1.insert_alphabet("a","0");    
+        n1.insert_alphabet("b","1");
+
+        //Initializing transitions of nfa n
+
+        n.add_transition("q0","a","q1");
+        n.add_transition("q1","b","q2");
+
+        //Initializing transitions of nfa n1
+
+        n1.add_transition("q0","a","q1");
+        n1.add_transition("q1","b","q2");
+
+        //Concatenating nfa n and nfa n1
+
+        fsm::nfa *n2 = fsm::concat_nfa(n,n1);
+
+        //Printing nfa n2
+
+        cout<<"n2 00: "<<n2->simulate("00")<<endl;
+        cout<<"n2 000: "<<n2->simulate("000")<<endl;
+        cout<<"n2 0: "<<n2->simulate("0")<<endl;
+
+        //Testing Union of nfa n and nfa n1
+
+        fsm::nfa *n3 = fsm::union_nfa(n,n1);
+
+        //Printing nfa n3
+
+        cout<<"n3 00: "<<n3->simulate("00")<<endl;
+        cout<<"n3 000: "<<n3->simulate("000")<<endl;
+        cout<<"n3 0: "<<n3->simulate("0")<<endl;
+
+        //Testing Intersection of nfa n and nfa n1
+
+        fsm::nfa *n4 = fsm::intersect_nfa(n,n1);
+
+        //Printing nfa n4
+
+        cout<<"n4 00: "<<n4->simulate("00")<<endl;
+        cout<<"n4 0000: "<<n4->simulate("0000")<<endl;
+        cout<<"n4 0: "<<n4->simulate("0")<<endl;
+
+        //Testing Kleene Star of nfa n
+
+        fsm::nfa *n5 = fsm::kleene_nfa(n);
+
+        //Printing nfa n5
+
+        cout<<"n5 00: "<<n5->simulate("00")<<endl;
+        cout<<"n5 0000: "<<n5->simulate("0000")<<endl;
+       
+
+
+        //Testing Complement of nfa n
+
+
 
 
 

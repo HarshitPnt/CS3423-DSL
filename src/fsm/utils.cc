@@ -25,6 +25,7 @@ namespace fsm
         }
         return n;
     }
+    
     // Convert a NFA to a DFA
     std::string concatState(std::set<std::string> &s)
     {
