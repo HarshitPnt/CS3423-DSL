@@ -32,8 +32,8 @@ namespace fsm
         bool remove_stack_symbol(std::string);
         bool change_start(std::string);
         bool simulate(std::string);
-        bool simulate_helper(std::string, int, std::set<std::pair<int, std::string>>, std::stack<std::string>, std::vector<std::string>); //
-        bool add_transition(std::string, std::string, std::string, std::string, std::string);                                             //
+        bool simulate_helper(std::string, int, std::set<std::pair<int, std::string>> &, std::stack<std::string> &, std::vector<std::string> &); //
+        bool insert_transition(std::string, std::string, std::string, std::string, std::string);                                                //
         void out();
     };
 } // namespace fsm

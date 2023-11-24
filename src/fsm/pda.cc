@@ -189,7 +189,7 @@ namespace fsm
         return true;
     }
 
-    bool pda::add_transition(std::string state, std::string alphabet, std::string stack_top, std::string next_state, std::string stack_push)
+    bool pda::insert_transition(std::string state, std::string alphabet, std::string stack_top, std::string next_state, std::string stack_push)
     {
         if (state.length() == 0 || alphabet.length() == 0 || next_state.length() == 0 || stack_top.length() == 0 || stack_push.length() == 0)
             return false;
@@ -207,24 +207,53 @@ namespace fsm
         return true;
     }
 
-    bool pda::simulate_helper(std::string state, int index, std::set<std::pair<int, std::string>> vis, std::stack<std::string> stack, std::vector<std::string> input_vec)
+    bool pda::simulate_helper(std::string state, int index, std::set<std::pair<int, std::string>> &vis, std::stack<std::string> &stack, std::vector<std::string> &input_vec)
     {
-        if (index < 0)
-            return false;
+        std::cout << "State: " << state << " Index: " << index << " Stack Size: " << stack.size() << '\n';
+        bool ans = false;
         if (index == input_vec.size())
         {
             if (this->F.find(state) != this->F.end() && stack.empty())
                 return true;
-            return false;
+            if (this->delta.find(state) == this->delta.end())
+                return false;
+            auto d = this->delta[state];
+            for (auto it = d.begin(); it != d.end(); it++)
+            {
+                if ((*it)[0] == epsilon)
+                {
+                    if ((*it)[1] == epsilon)
+                    {
+                        if ((*it)[3] != epsilon)
+                            stack.push((*it)[3]);
+                        if (vis.find({index, (*it)[2]}) != vis.end())
+                            return false;
+                        vis.insert({index, (*it)[2]});
+                        ans = this->simulate_helper((*it)[2], index, vis, stack, input_vec);
+                        vis.erase({index, (*it)[2]});
+                        if ((*it)[3] != epsilon)
+                            stack.pop();
+                    }
+                    else if ((*it)[1] == stack.top())
+                    {
+                        if ((*it)[3] != epsilon)
+                            stack.push((*it)[3]);
+                        if (vis.find({index, (*it)[2]}) != vis.end())
+                            return false;
+                        vis.insert({index, (*it)[2]});
+                        ans = this->simulate_helper((*it)[2], index, vis, stack, input_vec);
+                        vis.erase({index, (*it)[2]});
+                        if ((*it)[3] != epsilon)
+                            stack.pop();
+                    }
+                }
+                if (ans)
+                    return true;
+            }
+            return ans;
         }
 
-        if (vis.find({index, state}) != vis.end())
-            return false;
-
-        vis.insert({index, state});
-
         auto d = this->delta[state];
-        bool ans = false;
 
         for (auto it = d.begin(); it != d.end(); it++)
         {
@@ -237,9 +266,11 @@ namespace fsm
                 {
                     if ((*it)[3] != epsilon)
                         stack.push((*it)[3]);
-
-                    ans = ans || this->simulate_helper((*it)[2], index, vis, stack, input_vec);
-
+                    if (vis.find({index, (*it)[2]}) != vis.end())
+                        return false;
+                    vis.insert({index, (*it)[2]});
+                    ans = this->simulate_helper((*it)[2], index, vis, stack, input_vec);
+                    vis.erase({index, (*it)[2]});
                     if ((*it)[3] != epsilon)
                         stack.pop();
                 }
@@ -249,20 +280,24 @@ namespace fsm
                     stack.pop();
                     if ((*it)[3] != epsilon)
                         stack.push((*it)[3]);
-
-                    ans = ans || this->simulate_helper((*it)[2], index, vis, stack, input_vec);
-
+                    if (vis.find({index, (*it)[2]}) != vis.end())
+                        return false;
+                    vis.insert({index, (*it)[2]});
+                    ans = this->simulate_helper((*it)[2], index, vis, stack, input_vec);
+                    vis.erase({index, (*it)[2]});
                     if ((*it)[3] != epsilon)
                         stack.pop();
 
                     stack.push((*it)[1]);
                 }
+                if (ans)
+                    return true;
 
                 if ((*it)[0] != epsilon)
                     index--;
             }
         }
-        vis.erase({index, state});
+
         return ans;
     }
 
@@ -284,7 +319,8 @@ namespace fsm
 
         std::stack<std::string> stack;
         std::set<std::pair<int, std::string>> vis;
-
+        std::cout << input_vec.size() << '\n';
+        vis.insert({0, this->q0});
         return this->simulate_helper(this->q0, 0, vis, stack, input_vec);
     }
 
@@ -316,7 +352,7 @@ namespace fsm
         {
             for (auto a : d.second)
             {
-                std::cout << "( " << d.first << " x " << a[0] << " x " << a[1] << ") --> ( " << a[2] << " x " << a[3] << " )\n";
+                std::cout << "( " << d.first << " x " << a[0] << " x " << a[1] << " ) --> ( " << a[2] << " x " << a[3] << " )\n";
             }
         }
 
