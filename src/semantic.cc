@@ -119,10 +119,10 @@ void initData()
     type_maps_prim.push_back("bool");
     type_maps_set.push_back("fsm::u_set");
     type_maps_set.push_back("fsm::o_set");
+    type_maps_auto.push_back("fsm::cfg");
     type_maps_auto.push_back("fsm::dfa");
     type_maps_auto.push_back("fsm::nfa");
     type_maps_auto.push_back("fsm::pda");
-    type_maps_auto.push_back("fsm::cfg");
     type_maps_sr.push_back("std::string");
 }
 

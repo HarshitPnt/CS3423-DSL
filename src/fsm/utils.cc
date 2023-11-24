@@ -33,7 +33,7 @@ namespace fsm
         for (auto &i : s)
         {
             // std::cout << i << std::endl;
-            ans += std::string(" ") + i;
+            ans += std::string("#") + i;
         }
         // std::cout << trim(ans) << std::endl;
         return trim(ans);

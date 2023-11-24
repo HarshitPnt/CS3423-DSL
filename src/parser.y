@@ -1002,7 +1002,6 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 yyerror(error.c_str());
             }
             // need to be done
-            std::cout<<$3->cc<<std::endl;
             $$->cc = std::string($1->cc) + " " +std::string($2) + std::string($3->cc);
             }
           | pseudo_ID OPER_ASN_SIMPLE rhs SEMICOLON {
@@ -1025,7 +1024,6 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 yyerror(error.c_str());
             }
             // need to be done
-            std::cout<<$3->cc<<std::endl;
             $$->cc = std::string($1->cc)+" = "+std::string($3->cc);
             }
           | pseudo_ID OPER_ASN_SIMPLE REGEX_R REGEX_LIT SEMICOLON
@@ -1273,7 +1271,7 @@ expression: LPAREN expression RPAREN {
                             std::string error = std::string("Invalid operation:")+std::string(getVTA($1->vta))+std::string(", ")+std::string(getVTA($3->vta))+std::string(" union  not defined");
                             yyerror(error.c_str());
                         }
-                    $$->cc = $1->cc + std::string(" + ") + $3->cc;
+                    $$->cc = std::string("fsm::union_dfa(")+$1->cc+std::string(", ")+$3->cc+std::string(")");
                 }
                 else
                     yyerror("Invalid operation: Addition can only be done between 'primitive' types");
@@ -2392,7 +2390,6 @@ return_statement : RETURN_KW expression SEMICOLON
                     if(inner[inner.length()-1]==' ')
                         inner = inner.substr(0,inner.length()-1);
                     
-                    // std::cout<<type->indicator<<std::endl;
                     if(!isCoherent(current_function->return_type,(trim(getType(type) + std::string(" ")+inner))))
                     {
                         std::string str = std::string("Return type mismatch, expecting ")+current_function->return_type;
@@ -2442,22 +2439,26 @@ dtype : TYPE_PRIMITIVE {
                         $$ = new type_attr();
                         $$->indicator = 3;
                         $$->vta = $1;
+                        $$->cc = type_maps_auto[$$->vta];
                       }
       | TYPE_STRING {
                         $$ = new type_attr();
                         $$->indicator = 4;
                         $$->vtsr = $1;
+                        $$->cc = type_maps_sr[$$->vtsr];
                     }
       | TYPE_REG {
                         $$ = new type_attr();
                         $$->indicator = 5;
                         $$->vtsr = $1;
+                        $$->cc = type_maps_sr[$$->vtsr];
                  }
       ;
 
 set_type : dtype {
                     $$ = new type_attr();
                     $$->inner = new inner_type($1->inner,getType($1));
+                    
                  }
          | ID {
                 $$ = new type_attr();

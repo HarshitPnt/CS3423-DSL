@@ -4,7 +4,9 @@ struct A{
 
 void main()
 {
+    dfa a,b;
     int_8 result=5,abcd_;
     abcd_+=result;
-    A a;
+    A aa;
+    dfa c = a+b;
 }
