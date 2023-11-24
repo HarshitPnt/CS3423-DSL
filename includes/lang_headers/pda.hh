@@ -1,6 +1,7 @@
 #ifndef __pda_hh__
 #define __pda_hh__
 #include <string>
+#include <stack>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -43,6 +44,7 @@ namespace fsm
         bool remove_transition(std::string, std::string, std::string, std::string, std::string);
         bool change_start(std::string);
         bool simulate(std::string);
+        bool simulate_helper(std::vector<std::string>, int, std::string, std::stack<std::string>, std::unordered_multimap<int, std::string>);
         void out();
     };
 }

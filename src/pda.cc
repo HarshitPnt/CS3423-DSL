@@ -1,5 +1,8 @@
-#include "../includes/lang_headers/pda.hh" #include "../includes/lang_headers/pda.hh"
+#include "../includes/lang_headers/pda.hh"
 #include <iostream>
+#include <stack>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace fsm
 {
@@ -207,8 +210,71 @@ namespace fsm
         return true;
     }
 
+    bool pda::simulate_helper(std::vector<std::string> input_vec, int index, std::string current_state, std::stack<std::string> current_stack, std::unordered_multimap<int, std::string> vis)
+    {
+        if (index == input_vec.size())
+        {
+            if (this->F.find(current_state) != this->F.end() && current_stack.size() == 0)
+                return true;
+            else
+                return false;
+        }
+        bool ans = false;
+        for (auto d : this->delta[current_state])
+        {
+            if ((d.first.first == input_vec[index] || d.first.first == "\e") && (d.first.second == current_stack.top() || d.first.second == "\e"))
+            {
+                if (d.first.second != "\e")
+                    current_stack.pop();
+                if (d.second.second != "\e")
+                    current_stack.push(d.second.second);
+                vis.insert({index, current_state});
+                ans = ans || simulate_helper(input_vec, index + 1, d.second.first, current_stack, vis);
+
+                auto range = vis.equal_range(index);
+
+                for (auto i = range.first; i != range.second; i++)
+                {
+                    if (i->second == current_state)
+                        vis.erase(i);
+                }
+
+                if (ans)
+                    return true;
+                if (d.second.second != "\e")
+                    current_stack.pop();
+                if (d.first.second != "\e")
+                    current_stack.push(d.first.second);
+            }
+        }
+    }
+
     bool pda::simulate(std::string input)
     {
+        if (this->q0.length() == 0)
+        {
+            return false;
+        }
+        auto current_state = this->q0;
+        std::stack<std::string> st;
+        std::vector<std::string> input_vec;
+        auto vis = new std::unordered_multimap<int, std::string>();
+        std::string temp = "";
+        for (auto i : input)
+        {
+            temp += i;
+            for (auto s : this->S)
+            {
+                if (temp == s.second)
+                {
+                    input_vec.push_back(s.first);
+                    temp = "";
+                    break;
+                }
+            }
+        }
+        if (temp.length() != 0)
+            return false;
     }
 
     void pda::out()
