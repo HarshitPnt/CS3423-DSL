@@ -6,6 +6,7 @@
 #include <fstream>
 #include <list>
 #include <iostream>
+#include <queue>
 #include <typeinfo>
 #include "../includes/st.hh"
 
@@ -20,6 +21,8 @@ extern FILE* yyin;
 extern std::fstream seq_token;
 FILE* parse_log;
 std::fstream cc_file;
+std::queue<std::queue<std::string>> st;
+std::queue<std::string> *current_queue = NULL;
 extern int yylineno;
 void terminate()
 {
@@ -140,6 +143,7 @@ struct_declaration: STRUCT_KW ID
                                         std::string error = "Struct redeclaration: "+std::string($2);
                                         yyerror(error.c_str());
                                     }
+                                    cc_file<<"struct "<<std::string($2)<<std::string(" ")<<std::string("{\n\tpublic:")<<std::endl;
                                 } 
                     LBRACE {
                                 //create a new symbol table
@@ -157,6 +161,7 @@ struct_declaration: STRUCT_KW ID
                         if(vstl->remove())
                             yyerror("Internal Error");
                         current_vst = vstl->getTop();
+                        cc_file<<std::string("};")<<std::endl;
                     }
                 ;
 
@@ -193,6 +198,7 @@ struct_member: dtype id_list_decl SEMICOLON
                         }
                     }
                 }
+                cc_file<<$1->cc<<$2->cc<<";"<<std::endl;
             }
             | ID id_list_decl SEMICOLON
             {
@@ -214,6 +220,7 @@ struct_member: dtype id_list_decl SEMICOLON
                         yyerror("Internal Error");
                     }
                 }
+                cc_file<<std::string($1)<<$2->cc<<";"<<std::endl;
             }
             ;
 
@@ -232,6 +239,7 @@ id_list_decl: ID
                 type_attr *type = new type_attr();
                 type->indicator = 0;
                 $$->lst.push_back(std::make_pair(entry,type));
+                $$->cc = std::string(" ")+std::string($1);
             }
             | id_list_decl COMMA ID
             {
@@ -249,6 +257,7 @@ id_list_decl: ID
                 type->indicator = 0;
                 $$->lst = $1->lst;
                 $$->lst.push_back(std::make_pair(entry,type));
+                $$->cc = $1->cc + std::string(", ") + std::string($3);
             }
             ;
 
@@ -256,6 +265,15 @@ expression_list: expression
                 {
                     $$ = new expr_list_attr();
                     $$->inner = getType($1);
+                    if(current_queue==NULL)
+                    {
+                        current_queue = new std::queue<std::string>();
+                        current_queue->push($1->cc);
+                    }
+                    else
+                    {
+                        current_queue->push($1->cc);
+                    }
                 }
                | expression_list COMMA expression
                {
@@ -266,6 +284,7 @@ expression_list: expression
                  }
                 $$ = new expr_list_attr();
                 $$->inner = $1->inner;
+                current_queue->push($3->cc);
                }
                ;
 
@@ -297,7 +316,6 @@ function_declaration: function_header LBRACE
                         //     }
                         // }
                         isTemplateFn = 0;
-                        std::cout<<"Here "<<current_function->name<<std::endl;
                         current_function = NULL;
                         cc_file<<std::string("}")<<std::endl;
                     }
@@ -759,7 +777,7 @@ statements: variable_declaration {
             printlog("Assignment");
             $$ = new cc_code();
             $$->cc = $1->cc;
-            cc_file<<$$->cc<<";"<<std::endl;
+            cc_file<<$$->cc<<std::endl;
             }
           | if_statement
           {
@@ -836,7 +854,51 @@ variable_declaration: dtype id_list SEMICOLON
                                 {
                                     yyerror("Internal Error");
                                 }
+
                             }
+                            if($1->indicator!=2)
+                            {
+                                cc_file<<$1->cc + std::string(" ") + $2->cc +std::string(";")<<std::endl;
+                            }  
+                            else
+                            {
+                                int i = 0;
+                                bool flag = false;
+                                for(auto it=$2->lst.begin();it!=$2->lst.end();it++)
+                                {
+                                   if(it->second->indicator!=6 && i)
+                                   {
+                                     cc_file<<std::string(" ,")<<it->first->name;
+                                     ++i;
+                                     flag = false;
+                                   }
+                                   else if(it->second->indicator!=6)
+                                   {
+                                     cc_file<<$1->cc+ std::string(" ");
+                                     cc_file<<std::string(" ")<<it->first->name;
+                                     ++i;
+                                     flag = false;
+                                   }
+                                   else
+                                   {
+                                    std::queue<std::string> stk;
+                                    stk = st.front();
+                                    cc_file<<";\n"<<$1->cc + std::string(" ")<<it->first->name<<";"<<std::endl;
+                                    st.pop();
+                                    i=0;
+                                    while(!stk.empty())
+                                    {
+                                        // add inserts
+                                        std::string str = stk.front();
+                                        stk.pop();
+                                        cc_file<<it->first->name<<".insert("<<str<<");"<<std::endl;
+                                    }
+                                    flag = true;    
+                                   }
+                                } 
+                                if(!flag)
+                                    cc_file<<";"<<std::endl;
+                            }    
                         }
                         else
                         {
@@ -848,8 +910,8 @@ variable_declaration: dtype id_list SEMICOLON
                                     yyerror("Internal Error");
                                 }
                             }
+                            cc_file<<$1->cc + std::string(" ") + $2->cc +std::string(";")<<std::endl;
                         }
-                        cc_file<<$1->cc + std::string(" ") + $2->cc +std::string(";")<<std::endl;
                     }
                     | ID id_list SEMICOLON
                     {
@@ -1022,7 +1084,7 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 yyerror(error.c_str());
             }
             // need to be done
-            $$->cc = std::string($1->cc) + " " +std::string($2) + std::string($3->cc);
+            $$->cc = std::string($1->cc) + " " +std::string($2) + std::string($3->cc)+std::string(" ;");
             }
           | pseudo_ID OPER_ASN_SIMPLE rhs SEMICOLON {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
@@ -1044,8 +1106,24 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 yyerror(error.c_str());
             }
             // need to be done
-            $$->cc = std::string($1->cc)+" = "+std::string($3->cc);
+            if($3->indicator==6)
+            {
+                //set initialization
+                std::queue<std::string> stk;
+                stk = st.front();
+                st.pop();
+                $$->cc = "";
+                while(!stk.empty())
+                {
+                    // add inserts
+                    std::string str = stk.front();
+                    stk.pop();
+                    cc_file<<$1->cc<<".insert("<<str<<");"<<std::endl;
+                }
             }
+            else
+                $$->cc = std::string($1->cc)+" = "+std::string($3->cc) + std::string(" ;");
+            }    
           | pseudo_ID OPER_ASN_SIMPLE REGEX_R REGEX_LIT SEMICOLON
           {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
@@ -1207,6 +1285,8 @@ rhs: expression
      $$->indicator = 6;
      //based on the type of the element set inner type
      $$->inner = genInnerType($2->inner);
+     st.push(*current_queue);
+     current_queue = NULL;
    }
    | REGEX_R REGEX_LIT
    {

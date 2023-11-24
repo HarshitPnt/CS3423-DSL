@@ -21,8 +21,9 @@ void main()
     dfa c = a+b;
     o_set<int_8> x;
     o_set<o_set<int_64>> y;
-    o_set<u_set<A>> z;
-
+    o_set<u_set<A>> z,xxxxx;
+    o_set<int_8> xxx = {1,2,3}, yyy={12,12.0,134};
+    xxx = {4,5,6};
     abcd_ = func(result,result) + result;
     if(isTrue(result))
     {
