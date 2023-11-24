@@ -86,6 +86,7 @@ class param_list_attr
 {
 public:
     std::vector<std::string> lst;
+    std::string cc;
     int num;
 };
 
@@ -93,6 +94,7 @@ class arg_list_attr
 {
 public:
     std::vector<std::string> lst;
+    std::string cc;
 };
 
 class expr_list_attr
@@ -105,6 +107,7 @@ class state_list_attr
 {
 public:
     std::list<std::string> lst;
+    std::string cc;
 };
 
 class rhs_automata_attr
@@ -130,5 +133,9 @@ class cc_code
 {
 public:
     std::string cc;
+    cc_code()
+    {
+        cc = std::string("");
+    }
 };
 #endif

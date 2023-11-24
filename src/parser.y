@@ -24,6 +24,7 @@ extern int yylineno;
 void terminate()
 {
     fclose(yyin);
+    cc_file.close();
     exit(1);
 }
 
@@ -102,7 +103,7 @@ FunctionSymbolTableEntry *current_function;
 %nterm<expr> expression
 %nterm<id> pseudo_ID param
 %nterm<type> rhs dtype set_type return_statement call
-%nterm<id_lst> id_list id_list_decl
+%nterm<id_lst> id_list id_list_decl 
 %nterm<para> param_list next_param
 %nterm<arg> argument_list arg_list_next
 %nterm<expr_lst> expression_list
@@ -110,7 +111,7 @@ FunctionSymbolTableEntry *current_function;
 %nterm<rules> rule rules_list
 %nterm<lhs_arrow> rhs_arrow lhs_arrow elements_others 
 %nterm<rhs_automata> rhs_automata
-%nterm<c> assignment statements
+%nterm<c> assignment statements function_header
 %start program
 %%
 
@@ -274,6 +275,7 @@ function_declaration: function_header LBRACE
                         VarSymbolTable *new_st = new VarSymbolTable();
                         vstl->insert(new_st);
                         current_vst = new_st;
+                        cc_file<<$1->cc<<std::string("\t")<<std::string("{")<<std::endl;
                     }    
                     function_body RBRACE 
                     {
@@ -295,7 +297,9 @@ function_declaration: function_header LBRACE
                         //     }
                         // }
                         isTemplateFn = 0;
+                        std::cout<<"Here "<<current_function->name<<std::endl;
                         current_function = NULL;
+                        cc_file<<std::string("}")<<std::endl;
                     }
                     ;
 
@@ -340,9 +344,12 @@ function_header: dtype ID LPAREN param_list RPAREN {
                             }
                         }
                         fst->insert(entry);
+                        $$ = new cc_code();
+                        $$->cc = $1->cc + std::string(" ") + std::string($2) + std::string("(") + $4->cc + std::string(")");
                     }
                 | ID ID LPAREN param_list RPAREN {
                         //check if function exists
+
                         if(fst->lookup(std::string($2)))
                         {
                             std::string error = "Function redeclaration: "+std::string($2);
@@ -377,6 +384,9 @@ function_header: dtype ID LPAREN param_list RPAREN {
                             }
                         }
                         fst->insert(entry);
+                        std::string str = std::string($1) + std::string(" ") + std::string($2) + std::string("(") + $4->cc + std::string(")");
+                        // $$->cc = str;
+                        cc_file<<str;
                     }
                 | TEMP_FN_KW TEMP_LEFT type_list TEMP_RIGHT ID ID LPAREN param_list RPAREN {
                         // struct return type
@@ -581,6 +591,7 @@ type_list : ID
             StructSymbolTableEntry *entry_struct = new StructSymbolTableEntry(std::string($1),table);
             entry_struct->isTemplate = true;
             sst->insert(entry_struct);
+
           }
           | type_list COMMA ID
           {
@@ -613,6 +624,7 @@ param_list:
                 VarSymbolTable *new_st = new VarSymbolTable();
                 current_vst = new_st;
                 vstl->insert(new_st);
+                $$->cc = std::string("");
             }
           | param next_param
           {
@@ -651,6 +663,7 @@ param_list:
             $$->num = num_params;
             $$->lst = $2->lst;
             $$->lst.push_back($1->name);
+            $$->cc = $1->cc + std::string(" ") + $2->cc;
           }
           ;
 
@@ -667,6 +680,7 @@ param: dtype ID
             inner = inner.substr(0,inner.length()-1);
         $$->inner = inner;
         ++num_params;
+        $$->cc = $1->cc + std::string(" ") + std::string($2);
      }
      | ID ID
      {
@@ -680,6 +694,7 @@ param: dtype ID
         $$->vtsr = TYPE_STRU;
         $$->ifStruct = std::string($1);
         ++num_params;
+        $$->cc = std::string($1) + std::string(" ") + std::string($2);
      }
      ;
 
@@ -691,6 +706,7 @@ next_param :
 
                 VarSymbolTable *new_st = new VarSymbolTable();
                 current_vst = new_st;
+                $$->cc = std::string("");
             }
            | COMMA param next_param
            {
@@ -727,6 +743,7 @@ next_param :
                     }
                     current_vst->insert(entry);
                 }
+                $$->cc = std::string(", ")+$2->cc + std::string(" ") + $3->cc;
            }
            ;
 
@@ -740,15 +757,18 @@ statements: variable_declaration {
             }
           | assignment {
             printlog("Assignment");
+            $$ = new cc_code();
             $$->cc = $1->cc;
-            cc_file<<$$->cc<<";\n";
+            cc_file<<$$->cc<<";"<<std::endl;
             }
           | if_statement
           {
+            $$ = new cc_code();
             $$->cc = std::string("");
           }
           | while_statement
           {
+            $$ = new cc_code();
             $$->cc = std::string("");
           }
           | return_statement {printlog("Return");}
@@ -829,7 +849,7 @@ variable_declaration: dtype id_list SEMICOLON
                                 }
                             }
                         }
-                        cc_file<<$1->cc + std::string(" ") + $2->cc +std::string(";\n");
+                        cc_file<<$1->cc + std::string(" ") + $2->cc +std::string(";")<<std::endl;
                     }
                     | ID id_list SEMICOLON
                     {
@@ -850,7 +870,7 @@ variable_declaration: dtype id_list SEMICOLON
                             }
                         }
                         // before backpatching check if rhs are variables of same struct type (to be done)
-                        cc_file<<"struct "<<std::string($1)<<" "<<$2->cc<<";\n";
+                        cc_file<<"struct "<<std::string($1)<<" "<<$2->cc<<";"<<std::endl;
                     }
                     ;
 
@@ -1259,23 +1279,39 @@ expression: LPAREN expression RPAREN {
                 else if($1->indicator==3 && $3->indicator==3)
                 {
                     if(($1->vta == TYPE_NFA && $3->vta == TYPE_DFA) || ($3->vta == TYPE_NFA && $1->vta == TYPE_DFA) || ($1->vta == TYPE_NFA && $3->vta == TYPE_NFA))
-                        $$->vta = TYPE_NFA;
-                    else if($1->vta == TYPE_DFA && $3->vta == TYPE_DFA)
+                    {
                         $$->vta = TYPE_DFA;
-                    else if($1->vta == TYPE_PDA && $3->vta == TYPE_PDA)
-                        $$->vta = TYPE_PDA;
-                    else if($1->vta == TYPE_CFG && $3->vta == TYPE_CFG)
-                        $$->vta = TYPE_CFG;
-                    else 
+                        if($1->vta==TYPE_NFA && $3->vta ==TYPE_NFA)
+                            $$->cc = std::string("(*fsm::union_nfa(")+$1->cc+std::string(", ")+$3->cc+std::string("))");
+                        else
                         {
-                            std::string error = std::string("Invalid operation:")+std::string(getVTA($1->vta))+std::string(", ")+std::string(getVTA($3->vta))+std::string(" union  not defined");
-                            yyerror(error.c_str());
+                            $$->vta = TYPE_NFA;
+                            $$->cc = std::string("(*fsm::union_nfa_dfa(")+$1->cc+std::string(", ")+$3->cc+std::string("))");
                         }
-                    $$->cc = std::string("fsm::union_dfa(")+$1->cc+std::string(", ")+$3->cc+std::string(")");
+                    }
+                    else if($1->vta == TYPE_DFA && $3->vta == TYPE_DFA)
+                    {
+                        $$->vta = TYPE_DFA;
+                        $$->cc = std::string("(*fsm::union_dfa(")+$1->cc+std::string(", ")+$3->cc+std::string("))");
+                    }
+                    else if($1->vta == TYPE_PDA && $3->vta == TYPE_PDA)
+                    {
+                        $$->vta = TYPE_PDA;
+                        $$->cc = std::string("(*fsm::union_pda(")+$1->cc+std::string(", ")+$3->cc+std::string("))");
+                    }
+                    else if($1->vta == TYPE_CFG && $3->vta == TYPE_CFG)
+                    {
+                        $$->vta = TYPE_CFG;
+                        $$->cc = std::string("(*fsm::union_cfg(")+$1->cc+std::string(", ")+$3->cc+std::string("))");
+                    }
+                    else 
+                    {
+                        std::string error = std::string("Invalid operation:")+std::string(getVTA($1->vta))+std::string(", ")+std::string(getVTA($3->vta))+std::string(" union  not defined");
+                        yyerror(error.c_str());
+                    }
                 }
                 else
                     yyerror("Invalid operation: Addition can only be done between 'primitive' types");
-                
           }
           | expression OPER_MINUS expression
           {
@@ -1305,6 +1341,7 @@ expression: LPAREN expression RPAREN {
                         else if($$->val->type==CCHAR)
                             $$->val->ccchar = getConst($1)-getConst($3);
                     }
+                $$->cc = $1->cc + std::string(" - ") + $3->cc;
                 }
                 else if($1->indicator==2 && $3->indicator==2)
                 {
@@ -1321,10 +1358,10 @@ expression: LPAREN expression RPAREN {
                     {
                         $$->vts = TYPE_OSET;
                     }
+                    $$->cc = $1->cc + std::string(" - ") + $3->cc;
                 }
                 else
                     yyerror("Invalid operation: Subtrction can only be done between 'primitive' and 'set' types");
-                $$->cc = $1->cc + std::string(" - ") + $3->cc;
           }
           | expression OPER_MUL expression
           {
@@ -1868,7 +1905,7 @@ expression: LPAREN expression RPAREN {
                         $$->vtsr = $1->vtsr;
                         $$->ifStruct = $1->ifStruct;
                     }
-                    
+                    $$->cc = $1->cc;
                  }
           ;
 
@@ -1952,6 +1989,7 @@ call : ID LPAREN argument_list RPAREN
             yyerror("Too few arguments");
         else if(it_arg_list!=$3->lst.end())
             yyerror("Too many arguments");
+        $$->cc = std::string($1) + std::string("(") + $3->cc + std::string(")");
      }
      | ID TEMP_LEFT type_list_call TEMP_RIGHT LPAREN argument_list RPAREN
      {
@@ -2068,6 +2106,7 @@ argument_list:
              {
                 //argument list is empty
                 $$ = new arg_list_attr();
+                $$->cc = std::string("");
              }
              | expression arg_list_next
              {
@@ -2090,12 +2129,14 @@ argument_list:
                 else if($1->indicator ==7)
                     type=std::string($1->ifStruct);
                 $$->lst.push_back(type);
+                $$->cc = $1->cc + $2->cc;
              }
              ;
 
 arg_list_next:
              {
                 $$ = new arg_list_attr();
+                $$->cc = std::string("");
              }
              | COMMA expression arg_list_next
              {
@@ -2118,6 +2159,7 @@ arg_list_next:
                 else if($2->indicator ==7)
                     type=std::string($2->ifStruct);
                 $$->lst.push_back(type);
+                $$->cc = std::string(", ")+$2->cc + $3->cc;
              }
 
 rhs_automata: LBRACE alphabet_list RBRACE
@@ -2288,12 +2330,14 @@ if_statement : ifexp LBRACE
                  VarSymbolTable *table = new VarSymbolTable();
                  vstl->insert(table);
                  current_vst = table;
+                 cc_file<<"\t{"<<std::endl;
                }
                control_body RBRACE
                {
                     //delete the symbol table
                     vstl->remove();
                     current_vst = vstl->getTop();
+                    cc_file<<"}"<<std::endl;
                } 
                elif_statement else_statement
              ;
@@ -2302,6 +2346,7 @@ ifexp : IF_KW LPAREN expression RPAREN {
         if($3->indicator!=1)
             yyerror("Invalid expression in if statement");
         printlog("If");
+        cc_file<<"if("<<$3->cc<<")"<<std::endl;
         }
       ;
 
@@ -2311,12 +2356,14 @@ elif_statement : elif LBRACE
                     VarSymbolTable *table = new VarSymbolTable();
                     vstl->insert(table);
                     current_vst = table;
+                    cc_file<<"\t{"<<std::endl;
                 }
                 control_body RBRACE
                 {
                     //delete the symbol table
                     vstl->remove();
                     current_vst = vstl->getTop();
+                    cc_file<<"}"<<std::endl;
                 }
                |
                ;
@@ -2326,6 +2373,7 @@ elif : ELIF_KW LPAREN expression RPAREN
         if($3->indicator!=1)
             yyerror("Invalid expression in elif statement");
         printlog("Elif");
+        cc_file<<"else if("<<$3->cc<<")"<<std::endl;
        }
        ;
 
@@ -2336,11 +2384,13 @@ else_statement : ELSE_KW LBRACE
                     vstl->insert(table);
                     current_vst = table;
                     printlog("Else");
+                    cc_file<<"else \t{"<<std::endl;
                 } control_body RBRACE
                 {
                     //delete the symbol table
                     vstl->remove();
                     current_vst = vstl->getTop();
+                    cc_file<<"}"<<std::endl;
                 }
                |
                ;
@@ -2370,6 +2420,9 @@ whileexp : WHILE_KW LPAREN expression RPAREN
          ;
 
 call_statement : call SEMICOLON
+                {
+                    cc_file<<$1->cc<<" ;"<<std::endl;
+                }
                ;
 
 return_statement : RETURN_KW expression SEMICOLON
@@ -2401,6 +2454,7 @@ return_statement : RETURN_KW expression SEMICOLON
                     $$->vtp = $2->vtp;
                     $$->vta = $2->vta;
                     $$->vts = $2->vts;
+                   cc_file<<"return "<<$2->cc<<" ;"<<std::endl;
                  }
                  | RETURN_KW SEMICOLON
                  {
@@ -2413,13 +2467,23 @@ return_statement : RETURN_KW expression SEMICOLON
                     }
                     $$ = new type_attr();
                     $$->indicator = 0;
+                    cc_file<<"return ;"<<std::endl;
+
                  }
                  ;
 
-break_statement : BREAK_KW SEMICOLON {if(!in_loop) yyerror("Break statement outside loop");}
+break_statement : BREAK_KW SEMICOLON {
+                                    if(!in_loop) 
+                                        yyerror("Break statement outside loop");
+                                    cc_file<<"break ;"<<std::endl;
+                                    }
                 ;
 
-continue_statement : CONTINUE_KW SEMICOLON {if(!in_loop) yyerror("Continue statement outside loop");}
+continue_statement : CONTINUE_KW SEMICOLON {
+                                            if(!in_loop) 
+                                                yyerror("Continue statement outside loop");
+                                            cc_file<<"continue ;"<<std::endl;
+                                            }
                    ;
 
 dtype : TYPE_PRIMITIVE { 
@@ -2434,6 +2498,7 @@ dtype : TYPE_PRIMITIVE {
                                             $$->vts = $1; 
                                             // start from here 
                                             $$->inner = $3->inner;
+                                            $$->cc = type_maps_set[$$->vts] +"<"+$3->cc+">";
                                           }
       | TYPE_AUTOMATA {
                         $$ = new type_attr();
@@ -2458,11 +2523,13 @@ dtype : TYPE_PRIMITIVE {
 set_type : dtype {
                     $$ = new type_attr();
                     $$->inner = new inner_type($1->inner,getType($1));
-                    
+                    $$->cc = $1->cc;
+
                  }
          | ID {
                 $$ = new type_attr();
                 $$->inner = new inner_type(NULL,std::string($1));
+                $$->cc = std::string($1);
               }
          ;
 
@@ -2510,6 +2577,7 @@ int main(int argc, char **argv) {
     char *cc_file_name = (char*)malloc(sizeof(char)*(strlen(path)+50));
     sprintf(cc_file_name,"%s/cc_files/cc_file_%s.cc",path,filename);
     cc_file.open(cc_file_name,std::ios::out);
+    cc_file<<"#include \"../../includes/fsm.hh\"\n";
     // tokens file path
     
     if(argc==3)

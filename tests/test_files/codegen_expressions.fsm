@@ -2,6 +2,16 @@ struct A{
     int_8 type;
 };
 
+int_8 func(int_8 x,float_32 y)
+{
+    return x;
+}
+
+bool isTrue(float_32 x)
+{
+    return true;
+}
+
 void main()
 {
     dfa a,b;
@@ -9,4 +19,14 @@ void main()
     abcd_+=result;
     A aa;
     dfa c = a+b;
+    o_set<int_8> x;
+    o_set<o_set<int_64>> y;
+    o_set<u_set<A>> z;
+
+    abcd_ = func(result,result) + result;
+    if(isTrue(result))
+    {
+        <!-- Here are some comments --!>
+        int_8 yy = abcd_ + result;
+    }
 }
