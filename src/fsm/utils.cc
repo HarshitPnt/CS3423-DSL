@@ -136,7 +136,7 @@ namespace fsm
                 d->add_transition(concatState(s), alpha.first, next);
             }
         }
-        d->out();
+        // d->out();
         return d;
     }
 
