@@ -13,16 +13,65 @@ namespace fsm
     }
     // Convert a regular expression to a DFA
 
-    nfa reg_to_nfa(regex reg, int state = 0)
+    nfa *reg_to_nfa(regex reg, int state = 0)
     {
         if (reg.is_valid() == false)
             throw std::runtime_error("Invalid regex");
-        std::string str = reg.str;
-        nfa n;
-        n.insert_state(std::to_string(state));
-        while (str.length() != 0)
-        {
-        }
+        nfa *n = new nfa;
+        // std::string str = reg.str;
+        // for (auto c : str)
+        //     n->insert_alphabet(std::string(1, c), std::string(1, c));
+        // std::stack<nfa *> st;
+
+        // // First find the alphabet
+        // for (auto c : str)
+        // {
+        //     if (c != '*' && c != '|' && c != '(' && c != ')')
+        //         n->insert_alphabet(std::string(1, c), std::string(1, c));
+        // }
+
+        // for (auto c : str)
+        // {
+        //     if (c == '*')
+        //     {
+        //         nfa *n1 = st.top();
+        //         st.pop();
+        //         nfa *n2 = kleene_nfa(*n1);
+        //         delete n1;
+        //         st.push(n2);
+        //     }
+        //     else if (c == '|')
+        //     {
+        //         nfa *n1 = st.top();
+        //         st.pop();
+        //         nfa *n2 = st.top();
+        //         st.pop();
+        //         nfa *n3 = union_nfa(*n1, *n2);
+        //         delete n1;
+        //         delete n2;
+        //         st.push(n3);
+        //     }
+        //     else if (c == '(')
+        //     {
+        //     }
+        //     else if (c == ')')
+        //     {
+        //     }
+        //     else
+        //     {
+        //     }
+        // }
+        // while(st.size() != 1){
+        //     nfa *n1 = st.top();
+        //     st.pop();
+        //     nfa *n2 = st.top();
+        //     st.pop();
+        //     nfa *n3 = concat_nfa(*n1, *n2);
+        //     delete n1;
+        //     delete n2;
+        //     st.push(n3);
+        // }
+        // n = st.top();
         return n;
     }
 
@@ -143,8 +192,10 @@ namespace fsm
 
     dfa *reg_to_dfa(regex reg)
     {
-        nfa n = reg_to_nfa(reg);
-        return nfa_to_dfa(n);
+        nfa *n = reg_to_nfa(reg);
+        dfa *d = nfa_to_dfa(*n);
+        delete n;
+        return d;
     }
 
     pda cfg_to_pda(cfg c)
@@ -326,8 +377,10 @@ namespace fsm
         dfa *d2c = !d2;
 
         dfa *dc = union_dfa(*d1c, *d2c);
-        dfa *d = new dfa();
-        d = !*dc;
+        dfa *d = !*dc;
+        delete d1c;
+        delete d2c;
+        delete dc;
         return d;
     }
 
@@ -510,8 +563,17 @@ namespace fsm
         nfa *n2c = !n2;
 
         nfa *nc = union_nfa(*n1c, *n2c);
-        nfa *n = new nfa();
-        n = !*nc;
+        nfa *n = !*nc;
+        delete n1c;
+        delete n2c;
+        delete nc;
         return n;
+    }
+
+    bool nfa::simulate(std::string s)
+    {
+        dfa *d = nfa_to_dfa(*this);
+        int ans = d->simulate(s);
+        delete d;
     }
 } // namespace fsm

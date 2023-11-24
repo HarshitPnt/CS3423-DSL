@@ -16,6 +16,7 @@ namespace fsm
         bool valid;
         bool simulate(const std::string);
         bool is_valid();
+        std::string to_postfix();
         ~regex();
         regex(const std::string);
     };

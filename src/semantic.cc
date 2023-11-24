@@ -195,7 +195,7 @@ VTYPE_SR getSRType(const char *type)
 bool checkRegex(std::string reg)
 {
     regex_t regex;
-    int reti = regcomp(&regex, reg.c_str(), 0);
+    int reti = regcomp(&regex, reg.c_str(), REG_EXTENDED);
     if (reti != 0)
         return false;
     int len = reg.length();
