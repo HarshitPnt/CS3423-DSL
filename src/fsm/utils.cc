@@ -4,6 +4,13 @@
 #include <bitset>
 namespace fsm
 {
+
+    std::string &trim(std::string &s, const char *t = " \t\n\r\f\v")
+    {
+        s.erase(0, s.find_first_not_of(t));
+        s.erase(s.find_last_not_of(t) + 1);
+        return s;
+    }
     // Convert a regular expression to a DFA
 
     nfa reg_to_nfa(regex reg, int state = 0)
@@ -19,13 +26,121 @@ namespace fsm
         return n;
     }
     // Convert a NFA to a DFA
-    dfa nfa_to_dfa(nfa n)
+    std::string concatState(std::set<std::string> &s)
     {
-        dfa d;
+        std::string ans("");
+        // std::cout << "Printing" << std::endl;
+        for (auto &i : s)
+        {
+            // std::cout << i << std::endl;
+            ans += std::string(" ") + i;
+        }
+        // std::cout << trim(ans) << std::endl;
+        return trim(ans);
+    }
+    long long int power(int a, int b)
+    {
+        long long int ans = 1;
+        for (int i = 0; i < b; i++)
+            ans *= a;
+        return ans;
+    }
+    dfa *nfa_to_dfa(nfa n)
+    {
+        dfa *d = new dfa();
+        int len = n.Q.size();
+        // calculated epsilon closure
         auto Eclosure = n.eClosure();
+        // get all states of dfa
+        std::vector<std::string> states;
+        std::vector<std::set<std::string>> state_set;
+        std::cout << len << std::endl;
+        for (int i = 0; i < power(2, len); ++i)
+        {
+            std::string state("");
+            std::set<std::string> temp;
+            int j = 0;
+            for (auto &s : n.Q)
+            {
+                if ((i / (power(2, j))) % 2 == 1)
+                {
+                    temp.insert(s);
+                }
+                j++;
+            }
+            state = concatState(temp);
+            states.push_back(trim(state));
+            state_set.push_back(temp);
+        }
+        for (auto &s : states)
+        {
+            std::cout << s << std::endl;
+        }
+        // inserting states to dfa
+        for (auto &s : states)
+        {
+            d->insert_state(s);
+        }
+        // inserting alphabet to dfa
+        for (auto &a : n.S)
+        {
+            d->insert_alphabet(a.first, a.second);
+        }
+        // inserting initial state to dfa
+        // initial state is e-closure of nfa-initial state
+        std::cout << "Printing new start state" << concatState(Eclosure[n.q0]) << std::endl;
+        d->change_start(concatState(Eclosure[n.q0]));
+        // inserting final states to dfa
+        for (auto &s : states)
+        {
+            for (auto &f : n.F)
+            {
+                if (s.find(f) != std::string::npos)
+                {
+                    d->insert_final(s);
+                    break;
+                }
+            }
+        }
+        // inserting transitions to dfa
+        for (auto &s : state_set)
+        {
+            for (auto &alpha : n.S)
+            {
+                std::set<std::string> next_state;
+                for (auto &i : s)
+                {
+                    std::set<std::string> eps = Eclosure[i];
+                    // for all elements in epsilon closure of i add j to next_state such that i , a-> j exists
+                    for (auto &ep : eps)
+                    {
+                        auto it = n.delta[ep].equal_range(alpha.first);
+                        for (auto itr = it.first; itr != it.second; ++itr)
+                        {
+                            next_state.insert(itr->second);
+                        }
+                    }
+                }
+                // now check where you can reach using epsilon transitions from j
+                for (auto &i : next_state)
+                {
+                    std::set<std::string> eps = Eclosure[i];
+                    for (auto &ep : eps)
+                    {
+                        next_state.insert(ep);
+                    }
+                }
+                if (next_state.size() == 0)
+                    continue;
+                std::string next = concatState(next_state);
+                d->add_transition(concatState(s), alpha.first, next);
+            }
+        }
+        d->out();
+        return d;
     }
 
-    dfa reg_to_dfa(regex reg)
+    dfa *reg_to_dfa(regex reg)
     {
         nfa n = reg_to_nfa(reg);
         return nfa_to_dfa(n);
@@ -94,7 +209,7 @@ namespace fsm
         {
             n.add_transition("1@" + q, "\\e", "2@" + d2.q0);
         }
-        return nfa_to_dfa(n);
+        return *nfa_to_dfa(n);
     }
 
     // Union of 2 dfa's
@@ -156,7 +271,7 @@ namespace fsm
             }
         }
 
-        return nfa_to_dfa(n);
+        return *nfa_to_dfa(n);
     }
 
     // Kleene closure of a dfa
@@ -190,7 +305,7 @@ namespace fsm
         {
             n.add_transition(q, "\\e", d1.q0);
         }
-        return nfa_to_dfa(n);
+        return *nfa_to_dfa(n);
     }
 
     // Concat 2 nfa's

@@ -203,17 +203,17 @@ namespace fsm
         this->F.clear();
     }
 
-    std::unordered_map<std::string, std::unordered_set<std::string>> nfa::eClosure()
+    std::unordered_map<std::string, std::set<std::string>> nfa::eClosure()
     {
-        std::unordered_map<std::string, std::unordered_set<std::string>> closure;
+        std::unordered_map<std::string, std::set<std::string>> closure;
         for (auto state : this->Q)
         {
-            std::unordered_set<std::string> temp;
+            std::set<std::string> temp;
             closure[state] = temp;
         }
         for (auto state : this->Q)
         {
-            std::unordered_set<std::string> visited;
+            std::set<std::string> visited;
             std::stack<std::string> stack;
             stack.push(state);
             while (!stack.empty())
