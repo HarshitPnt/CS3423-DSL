@@ -310,7 +310,7 @@ namespace fsm
 
     dfa* dfa::operator!()
     {
-        dfa *d;
+        dfa *d = new dfa();
         d->Q = this->Q;
         d->S = this->S;
         d->q0 = this->q0;
