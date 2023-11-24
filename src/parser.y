@@ -6,6 +6,7 @@
 #include <fstream>
 #include <list>
 #include <iostream>
+#include <typeinfo>
 #include "../includes/st.hh"
 
 
@@ -67,6 +68,7 @@ FunctionSymbolTableEntry *current_function;
     rules_attr *rules;
     rhs_automata_attr *rhs_automata;
     lhs_arrow_attr *lhs_arrow;
+    cc_code *c;
 
     VTYPE_PRIMITIVE dtype_primitive;
     VTYPE_AUTOMATA dtype_automata;
@@ -108,6 +110,7 @@ FunctionSymbolTableEntry *current_function;
 %nterm<rules> rule rules_list
 %nterm<lhs_arrow> rhs_arrow lhs_arrow elements_others 
 %nterm<rhs_automata> rhs_automata
+%nterm<c> assignment statements
 %start program
 %%
 
@@ -732,10 +735,22 @@ function_body: function_body statements
              |
              ;
 
-statements: variable_declaration {printlog("Variable declaration");}
-          | assignment {printlog("Assignment");}
+statements: variable_declaration {
+            printlog("Variable declaration");
+            }
+          | assignment {
+            printlog("Assignment");
+            $$->cc = $1->cc;
+            cc_file<<$$->cc<<";\n";
+            }
           | if_statement
+          {
+            $$->cc = std::string("");
+          }
           | while_statement
+          {
+            $$->cc = std::string("");
+          }
           | return_statement {printlog("Return");}
           | break_statement {printlog("Break");}
           | continue_statement {printlog("Continue");}
@@ -758,6 +773,7 @@ statements: variable_declaration {printlog("Variable declaration");}
 variable_declaration: dtype id_list SEMICOLON
                     {
                         // backpatch id_list with dtype
+
                         for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                         {
                             if(it->second->indicator)
@@ -813,6 +829,7 @@ variable_declaration: dtype id_list SEMICOLON
                                 }
                             }
                         }
+                        cc_file<<$1->cc + std::string(" ") + $2->cc +std::string(";\n");
                     }
                     | ID id_list SEMICOLON
                     {
@@ -833,6 +850,7 @@ variable_declaration: dtype id_list SEMICOLON
                             }
                         }
                         // before backpatching check if rhs are variables of same struct type (to be done)
+                        cc_file<<"struct "<<std::string($1)<<" "<<$2->cc<<";\n";
                     }
                     ;
 
@@ -858,6 +876,7 @@ id_list: ID {
                 type_attr *type = new type_attr();
                 type->indicator = 0;
                 $$->lst.push_back(std::make_pair(entry,type));
+                $$->cc = std::string($1);
             }
        | ID OPER_ASN_SIMPLE rhs
        {
@@ -887,6 +906,7 @@ id_list: ID {
             if(!current_function && !$3->isConst)
                 yyerror("Cannot initialize global variable with a non-constant value");
             $$->lst.push_back(std::make_pair(entry,type));
+            $$->cc = std::string($1) + std::string(" = ") + std::string($3->cc);
        }
        | id_list COMMA ID
        {
@@ -904,6 +924,7 @@ id_list: ID {
             //append to list
             $$->lst = $1->lst;
             $$->lst.push_back(std::make_pair(entry,type));
+            $$->cc = $1->cc + std::string(", ") + std::string($3);
        }
        | id_list COMMA ID OPER_ASN_SIMPLE rhs
        {
@@ -924,6 +945,7 @@ id_list: ID {
             //append to list
             $$->lst = $1->lst;
             $$->lst.push_back(std::make_pair(entry,type));
+            $$->cc = $1->cc + std::string(", ") + std::string($3) + std::string(" = ") + $5->cc;
        }
        ;
 
@@ -940,18 +962,20 @@ pseudo_ID: pseudo_ID LBRACK expression RBRACK
                 $$->name = std::string($1->name)+std::string("[")+std::to_string($3->val->ccint)+std::string("]");
             else //first need to build expression
                 $$->name = std::string($1->name)+std::string("[")+std::string("_expr_")+std::string("]");
+            $$->cc = $1->cc + "[" + $3->cc + "]";
          }
          | pseudo_ID DOT pseudo_ID
          {
             //accessing the inner member
             $$ = new id_attr();
             $$->name = std::string($1->name)+std::string(".")+std::string($3->name);
+            $$->cc = $1->cc + "." + $3->cc;
          }
          | ID {
                 //check if ID exists
                 $$ = new id_attr();
                 $$->name = $1;
-                
+                $$->cc = std::string($1);
               }
          ;
 
@@ -977,6 +1001,9 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
                 yyerror(error.c_str());
             }
+            // need to be done
+            std::cout<<$3->cc<<std::endl;
+            $$->cc = std::string($1->cc) + " " +std::string($2) + std::string($3->cc);
             }
           | pseudo_ID OPER_ASN_SIMPLE rhs SEMICOLON {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
@@ -997,6 +1024,9 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
                 yyerror(error.c_str());
             }
+            // need to be done
+            std::cout<<$3->cc<<std::endl;
+            $$->cc = std::string($1->cc)+" = "+std::string($3->cc);
             }
           | pseudo_ID OPER_ASN_SIMPLE REGEX_R REGEX_LIT SEMICOLON
           {
@@ -1142,6 +1172,7 @@ rhs: expression
             else if($$->val->type==CCHAR)
                 $$->val->ccchar = getConst($1);
         }
+        $$->cc = std::string($1->cc);
     }
    | LBRACE expression_list RBRACE
    {
@@ -1280,7 +1311,18 @@ expression: LPAREN expression RPAREN {
                 else if($1->indicator==2 && $3->indicator==2)
                 {
                     $$->indicator = 2;
-                    $$->vts = TYPE_OSET;
+                    if($1->vts==TYPE_OSET || $3->vts==TYPE_OSET)
+                    {
+                        $$->vts = TYPE_OSET;
+                    }
+                    else if($1->vts==TYPE_USET || $3->vts==TYPE_USET)
+                    {
+                        $$->vts = TYPE_USET;
+                    }
+                    else
+                    {
+                        $$->vts = TYPE_OSET;
+                    }
                 }
                 else
                     yyerror("Invalid operation: Subtrction can only be done between 'primitive' and 'set' types");
@@ -1318,10 +1360,22 @@ expression: LPAREN expression RPAREN {
                 else if($1->indicator ==2 && $3->indicator ==2)
                 {
                     $$->indicator = 2;
-                    $$->vts = TYPE_OSET;
+                    if($1->vts==TYPE_OSET || $3->vts==TYPE_OSET)
+                    {
+                        $$->vts = TYPE_OSET;
+                    }
+                    else if($1->vts==TYPE_USET || $3->vts==TYPE_USET)
+                    {
+                        $$->vts = TYPE_USET;
+                    }
+                    else
+                    {
+                        $$->vts = TYPE_OSET;
+                    }
                 }
                 else
                     yyerror("Invalid operation: Multiplication can only be done between 'primitive' and 'set' types");
+                $$->cc = $1->cc + std::string(" * ") + $3->cc;
           }
           | expression OPER_DIV expression
           {
@@ -1353,6 +1407,7 @@ expression: LPAREN expression RPAREN {
                 else if($$->val->type==CCHAR)
                     $$->val->ccchar = getConst($1)/getConst($3);
             }
+            $$->cc = $1->cc + std::string(" / ") + $3->cc;
           }
           | expression OPER_MOD expression
           {
@@ -1372,6 +1427,7 @@ expression: LPAREN expression RPAREN {
                 if($$->val->type==CINT)
                     $$->val->ccint = $1->val->ccint % $3->val->ccint;
             }
+            $$->cc = $1->cc + std::string(" % ") + $3->cc;
           }
           | expression OPER_COMP expression
           {
@@ -1422,6 +1478,7 @@ expression: LPAREN expression RPAREN {
                     $$->val->ccbool = getConst($1)!=getConst($3);
                 }
             }
+            $$->cc = $1->cc + comp + $3->cc;
           }
           | expression OPER_POWER
           {
@@ -1431,6 +1488,7 @@ expression: LPAREN expression RPAREN {
             $$->indicator = 2;
             $$->vts = TYPE_OSET;
             $$->isConst = false;
+            $$->cc = $1->cc+std::string(".power_set()");
           }
           | expression AT_THE_RATE expression 
           {
@@ -1450,6 +1508,7 @@ expression: LPAREN expression RPAREN {
             else
                 yyerror("Invalid operation: Automata can only be concatenated with Automata");
             $$->isConst = false;
+            // codegen required
           }
           | expression OPER_OR expression
           {
@@ -1488,6 +1547,7 @@ expression: LPAREN expression RPAREN {
                     $$->val->ccbool = true;
                 }
             }
+            $$->cc = $1->cc + std::string(" || ") + $3->cc;
           }
           | expression OPER_AND expression
           {
@@ -1524,6 +1584,7 @@ expression: LPAREN expression RPAREN {
                     $$->val->ccbool = false;
                 }
             }
+            $$->cc = $1->cc + std::string(" && ") + $3->cc;
           }
           | expression COMP_GT expression
           {
@@ -1543,6 +1604,7 @@ expression: LPAREN expression RPAREN {
                 $$->val->type = CBOOL;
                 $$->val->ccbool = getConst($1)>getConst($3);
             }
+            $$->cc = $1->cc + std::string(" > ") + $3->cc;
           }
           | expression COMP_LT expression 
           {
@@ -1562,6 +1624,7 @@ expression: LPAREN expression RPAREN {
                 $$->val->type = CBOOL;
                 $$->val->ccbool = getConst($1)<getConst($3);
             }
+            $$->cc = $1->cc + std::string(" < ") + $3->cc;
           }
           | OPER_NOT expression { 
             $$ = new expr_attr();
@@ -1593,6 +1656,7 @@ expression: LPAREN expression RPAREN {
             }
             else if($2->indicator == 3)
                 {$$->vta = $2->vta; $$->isConst = false;}
+            $$->cc = std::string("!")+($2->cc);
 
           }
           | expression OPER_HASH { 
@@ -1602,6 +1666,7 @@ expression: LPAREN expression RPAREN {
             $$->indicator = 3;
             $$->vta = $1->vta;
             $$->isConst = false;
+            //codegen required
           }
           | OPER_MINUS expression { 
                                     $$ = new expr_attr();
@@ -1629,6 +1694,7 @@ expression: LPAREN expression RPAREN {
                                                     break;
                                         }
                                     }
+                                    $$->cc = std::string("-")+($2->cc);
                                 }
           | OPER_PLUS expression { 
                                   $$ = new expr_attr();
@@ -1638,6 +1704,7 @@ expression: LPAREN expression RPAREN {
                                   $$->vts = $2->vts;
                                   $$->isConst = $2->isConst;
                                   $$->val = $2->val;
+                                  $$->cc = std::string("+")+($2->cc);
                                  }
           | INT_CONST { 
                         $$ = new expr_attr();
@@ -1647,6 +1714,7 @@ expression: LPAREN expression RPAREN {
                         $$->val->ccint = $1;
                         $$->val->type = CINT;
                         $$->isConst = true;
+                        $$->cc = std::to_string($1);
                       }
           | FLOAT_CONST { 
                           $$ = new expr_attr();
@@ -1656,6 +1724,7 @@ expression: LPAREN expression RPAREN {
                           $$->val->ccfloat = $1;
                           $$->val->type = CFLOAT;
                           $$->isConst = true;
+                          $$->cc = std::to_string($1);
                         }
           | BOOL_CONST { 
                          $$ = new expr_attr();
@@ -1665,6 +1734,7 @@ expression: LPAREN expression RPAREN {
                          $$->val->ccbool = $1;
                          $$->val->type = CBOOL;
                          $$->isConst = true;
+                        $$->cc = std::to_string($1);
                        }
           | CHAR_CONST { 
                         $$ = new expr_attr();
@@ -1674,6 +1744,7 @@ expression: LPAREN expression RPAREN {
                         $$->val->ccchar = $1;
                         $$->val->type = CBOOL;
                         $$->isConst = true;
+                        $$->cc = std::string(1,$1);
                        }
           | pseudo_ID { 
                         $$ = new expr_attr();
@@ -1774,8 +1845,8 @@ expression: LPAREN expression RPAREN {
                                 $$->vtsr = TYPE_STRU;
                                 $$->ifStruct = type;
                             }
-                            //structs (to be done)
                         }
+                        $$->cc = $1->cc;
                       }
           | call {
                     // To be handled (to be done)
@@ -2358,6 +2429,7 @@ dtype : TYPE_PRIMITIVE {
                         $$ = new type_attr();
                         $$->indicator = 1;
                         $$->vtp = $1;
+                        $$->cc = type_maps_prim[$$->vtp];
                       }
       | TYPE_SET COMP_LT set_type COMP_GT {
                                             $$ = new type_attr();
@@ -2409,7 +2481,7 @@ int main(int argc, char **argv) {
     //      yydebug = 1;
     // #endif
     initST();
-
+    initData();
     yyin = fopen(argv[1],"r");
     char *filename = (char*)malloc(sizeof(char)*strlen(argv[1]));
      //position of last '.' in file name
@@ -2452,5 +2524,4 @@ int main(int argc, char **argv) {
     fclose(parse_log);
     cc_file.close();
     return 0;
-
 }

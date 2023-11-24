@@ -6,7 +6,10 @@ FunctionSymbolTable *fst;
 VarSymbolTable *global_vst;
 StructSymbolTable *sst;
 VarSymbolTable *current_vst;
-
+std::vector<std::string> type_maps_prim;
+std::vector<std::string> type_maps_auto;
+std::vector<std::string> type_maps_set;
+std::vector<std::string> type_maps_sr;
 void StructSymbolTable::init()
 {
     // insert nterm, term, alphabets, productions, states, start, accept
@@ -98,6 +101,29 @@ void initST()
     sst->init();
     current_vst = global_vst;
     vstl->insert(global_vst);
+}
+
+void initData()
+{
+    type_maps_prim.push_back("char");
+    type_maps_prim.push_back("short");
+    type_maps_prim.push_back("int");
+    type_maps_prim.push_back("long int");
+    type_maps_prim.push_back("unsigned char");
+    type_maps_prim.push_back("unsigned short");
+    type_maps_prim.push_back("unsigned int");
+    type_maps_prim.push_back("unsigned long int");
+    type_maps_prim.push_back("float");
+    type_maps_prim.push_back("double");
+    type_maps_prim.push_back("char");
+    type_maps_prim.push_back("bool");
+    type_maps_set.push_back("fsm::u_set");
+    type_maps_set.push_back("fsm::o_set");
+    type_maps_auto.push_back("fsm::dfa");
+    type_maps_auto.push_back("fsm::nfa");
+    type_maps_auto.push_back("fsm::pda");
+    type_maps_auto.push_back("fsm::cfg");
+    type_maps_sr.push_back("std::string");
 }
 
 VTYPE_PRIMITIVE getPrimitiveType(const char *type)

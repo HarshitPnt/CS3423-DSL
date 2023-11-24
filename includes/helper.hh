@@ -3,6 +3,7 @@
 #include "types.hh"
 #include "attr.hh"
 #include <utility>
+#include <vector>
 bool isInteger(VTYPE_PRIMITIVE vtp);
 bool isFloat(VTYPE_PRIMITIVE vtp);
 std::string getType(type_attr *t_attr);
@@ -13,4 +14,8 @@ std::string getType(expr_attr *t_attr);
 std::string getType(id_attr *t_attr);
 std::string stripFound(std::string ret);
 std::string trim(std::string str);
+extern std::vector<std::string> type_maps_prim;
+extern std::vector<std::string> type_maps_auto;
+extern std::vector<std::string> type_maps_set;
+extern std::vector<std::string> type_maps_sr;
 #endif

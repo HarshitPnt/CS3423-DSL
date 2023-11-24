@@ -1,0 +1,10 @@
+struct A{
+    int_8 type;
+};
+
+void main()
+{
+    int_8 result=5,abcd_;
+    abcd_+=result;
+    A a;
+}

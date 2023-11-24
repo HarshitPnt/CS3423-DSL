@@ -25,7 +25,7 @@ struct id_attr
     VTYPE_SR vtsr;
     int indicator;
     std::string ifStruct;
-    std::string inner;
+    std::string inner, cc;
     constant *val;
     id_attr()
     {
@@ -42,7 +42,7 @@ public:
     VTYPE_SR vtsr;
     bool isConst;
     constant *val;
-    std::string ifStruct;
+    std::string ifStruct, cc;
     int indicator;
     inner_type *inner = NULL;
 };
@@ -51,6 +51,7 @@ class id_list_attr
 {
 public:
     std::vector<std::pair<VarSymbolTableEntry *, type_attr *>> lst;
+    std::string cc;
     id_list_attr()
     {
         lst.clear();
@@ -123,5 +124,11 @@ class lhs_arrow_attr
 {
 public:
     std::string type;
+};
+
+class cc_code
+{
+public:
+    std::string cc;
 };
 #endif

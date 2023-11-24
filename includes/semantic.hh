@@ -10,6 +10,7 @@
 bool checkValidID(char *);
 bool checkRegex(std::string);
 void initST();
+void initData();
 
 extern VarSymbolTableList *vstl;
 extern FunctionSymbolTable *fst;

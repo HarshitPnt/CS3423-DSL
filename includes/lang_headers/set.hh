@@ -47,8 +47,13 @@ namespace fsm
         T operator[](size_t index) const;
         o_set<T> operator+(o_set<T> &other);
         o_set<T> operator-(o_set<T> &other);
+        // intersection? (* operator)
+        o_set<T> operator*(o_set<T> &other);
+        o_set<T> operator*(u_set<T> &other);
         o_set<T> operator+(u_set<T> &other);
+        o_set<T> operator-(u_set<T> &other);
         o_set<o_set<T>> power_set(); // TODO
+
         friend bool operator<(const o_set &lhs, const o_set &rhs)
         {
             return lhs.set < rhs.set;
@@ -114,6 +119,10 @@ namespace fsm
         u_set(std::vector<T>);
         u_set<T> operator+(u_set<T> &other);
         u_set<T> operator-(u_set<T> &other);
+        // intersection? (* operator)
+        u_set<T> operator*(u_set<T> &other);
+        o_set<T> operator*(o_set<T> &other);
+        o_set<T> operator-(o_set<T> &other);
         o_set<T> operator+(o_set<T> &other);
         u_set<u_set<T>> power_set(); // TODO
     };
