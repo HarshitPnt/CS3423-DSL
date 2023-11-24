@@ -26,7 +26,7 @@ namespace fsm
         std::unordered_map<std::string, std::string> T;
 
         // Transition function : Q-input x S-input x S-stack --> Q-output x S-stack
-        std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_map<std::string, std::string>>>> delta;
+        std::unordered_map<std::string, std::unordered_multimap<std::pair<std::string, std::string>, std::pair<std::string, std::string>>> delta;
 
     public:
         pda();
