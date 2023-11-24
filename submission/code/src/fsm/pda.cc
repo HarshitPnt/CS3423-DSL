@@ -207,13 +207,23 @@ namespace fsm
         return true;
     }
 
-    bool pda::simulate_helper(std::string state, int index, std::set<std::pair<int, std::string>> &vis, std::stack<std::string> &stack, std::vector<std::string> &input_vec)
+    bool pda::simulate_helper(std::string state, int index, std::set<std::pair<int, std::string>> &vis, std::stack<std::string> &st, std::vector<std::string> &input_vec)
     {
-        std::cout << "State: " << state << " Index: " << index << " Stack Size: " << stack.size() << '\n';
+        // std::cout << "State: " << state << " Index: " << index << " st Size: " << st.size() << '\n';
+        // std::stack<std::string> tempStack = st;
+
+        // Print the elements of the st without modifying it
+        // std::cout << "st elements: ";
+        // while (!tempStack.empty())
+        // {
+        //     std::cout << tempStack.top() << " ";
+        //     tempStack.pop();
+        // }
+        // std::cout << std::endl;
         bool ans = false;
         if (index == input_vec.size())
         {
-            if (this->F.find(state) != this->F.end() && stack.empty())
+            if (this->F.find(state) != this->F.end() && st.empty())
                 return true;
             if (this->delta.find(state) == this->delta.end())
                 return false;
@@ -225,26 +235,29 @@ namespace fsm
                     if ((*it)[1] == epsilon)
                     {
                         if ((*it)[3] != epsilon)
-                            stack.push((*it)[3]);
+                            st.push((*it)[3]);
                         if (vis.find({index, (*it)[2]}) != vis.end())
                             return false;
                         vis.insert({index, (*it)[2]});
-                        ans = this->simulate_helper((*it)[2], index, vis, stack, input_vec);
+                        ans = this->simulate_helper((*it)[2], index, vis, st, input_vec);
                         vis.erase({index, (*it)[2]});
                         if ((*it)[3] != epsilon)
-                            stack.pop();
+                            st.pop();
                     }
-                    else if ((*it)[1] == stack.top())
+                    else if ((*it)[1] == st.top())
                     {
+                        st.pop();
                         if ((*it)[3] != epsilon)
-                            stack.push((*it)[3]);
+                            st.push((*it)[3]);
+
                         if (vis.find({index, (*it)[2]}) != vis.end())
                             return false;
                         vis.insert({index, (*it)[2]});
-                        ans = this->simulate_helper((*it)[2], index, vis, stack, input_vec);
+                        ans = this->simulate_helper((*it)[2], index, vis, st, input_vec);
                         vis.erase({index, (*it)[2]});
                         if ((*it)[3] != epsilon)
-                            stack.pop();
+                            st.pop();
+                        st.push((*it)[1]);
                     }
                 }
                 if (ans)
@@ -265,30 +278,30 @@ namespace fsm
                 if ((*it)[1] == epsilon)
                 {
                     if ((*it)[3] != epsilon)
-                        stack.push((*it)[3]);
+                        st.push((*it)[3]);
                     if (vis.find({index, (*it)[2]}) != vis.end())
                         return false;
                     vis.insert({index, (*it)[2]});
-                    ans = this->simulate_helper((*it)[2], index, vis, stack, input_vec);
+                    ans = this->simulate_helper((*it)[2], index, vis, st, input_vec);
                     vis.erase({index, (*it)[2]});
                     if ((*it)[3] != epsilon)
-                        stack.pop();
+                        st.pop();
                 }
 
-                else if ((*it)[1] == stack.top())
+                else if ((*it)[1] == st.top())
                 {
-                    stack.pop();
+                    st.pop();
                     if ((*it)[3] != epsilon)
-                        stack.push((*it)[3]);
+                        st.push((*it)[3]);
                     if (vis.find({index, (*it)[2]}) != vis.end())
                         return false;
                     vis.insert({index, (*it)[2]});
-                    ans = this->simulate_helper((*it)[2], index, vis, stack, input_vec);
+                    ans = this->simulate_helper((*it)[2], index, vis, st, input_vec);
                     vis.erase({index, (*it)[2]});
                     if ((*it)[3] != epsilon)
-                        stack.pop();
+                        st.pop();
 
-                    stack.push((*it)[1]);
+                    st.push((*it)[1]);
                 }
                 if (ans)
                     return true;
@@ -317,11 +330,10 @@ namespace fsm
         if (temp.length() != 0)
             return false;
 
-        std::stack<std::string> stack;
+        std::stack<std::string> st;
         std::set<std::pair<int, std::string>> vis;
-        std::cout << input_vec.size() << '\n';
         vis.insert({0, this->q0});
-        return this->simulate_helper(this->q0, 0, vis, stack, input_vec);
+        return this->simulate_helper(this->q0, 0, vis, st, input_vec);
     }
 
     void pda::out()
@@ -347,7 +359,7 @@ namespace fsm
             std::cout << f << " ";
         std::cout << '\n';
 
-        std::cout << "\nTransition Function : ( Q x Alphabet x Stack-Pop ) -> ( Q x Stack-Push )\n";
+        std::cout << "\nTransition Function : ( Q x Alphabet x st-Pop ) -> ( Q x st-Push )\n";
         for (auto d : this->delta)
         {
             for (auto a : d.second)
