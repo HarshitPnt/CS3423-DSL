@@ -318,4 +318,21 @@ namespace fsm
         }
     }
 
+    nfa* nfa::operator!()
+    {
+        nfa *temp = new nfa();
+        temp->Q = this->Q;
+        temp->S = this->S;
+        temp->q0 = this->q0;
+        temp->F = this->F;
+        for (auto i : this->delta)
+        {
+            for (auto j : i.second)
+            {
+                temp->delta[j.second].insert({j.first, i.first});
+            }
+        }
+        return temp;
+    }
+
 } // namespace fsm

@@ -25,6 +25,7 @@ namespace fsm
         }
         return n;
     }
+
     // Convert a NFA to a DFA
     std::string concatState(std::set<std::string> &s)
     {
@@ -54,7 +55,7 @@ namespace fsm
         // get all states of dfa
         std::vector<std::string> states;
         std::vector<std::set<std::string>> state_set;
-        std::cout << len << std::endl;
+        // std::cout << len << std::endl;
         for (int i = 0; i < power(2, len); ++i)
         {
             std::string state("");
@@ -72,10 +73,10 @@ namespace fsm
             states.push_back(trim(state));
             state_set.push_back(temp);
         }
-        for (auto &s : states)
-        {
-            std::cout << s << std::endl;
-        }
+        // for (auto &s : states)
+        // {
+        //     std::cout << s << std::endl;
+        // }
         // inserting states to dfa
         for (auto &s : states)
         {
@@ -88,7 +89,7 @@ namespace fsm
         }
         // inserting initial state to dfa
         // initial state is e-closure of nfa-initial state
-        std::cout << "Printing new start state" << concatState(Eclosure[n.q0]) << std::endl;
+        // std::cout << "Printing new start state" << concatState(Eclosure[n.q0]) << std::endl;
         d->change_start(concatState(Eclosure[n.q0]));
         // inserting final states to dfa
         for (auto &s : states)
@@ -136,6 +137,7 @@ namespace fsm
                 d->add_transition(concatState(s), alpha.first, next);
             }
         }
+        // d->out();
         return d;
     }
 
@@ -307,6 +309,28 @@ namespace fsm
         return nfa_to_dfa(n);
     }
 
+    // Intersection of 2 dfa's
+    dfa *intersect_dfa(dfa &d1, dfa &d2)
+    {
+        if (d1.S.size() != d2.S.size())
+            throw std::runtime_error("Ambiguous alphabets");
+        for (auto a : d1.S)
+        {
+            if (d2.S.find(a.first) == d2.S.end())
+                throw std::runtime_error("Ambiguous alphabets");
+            if (d1.S[a.first] != d2.S[a.first])
+                throw std::runtime_error("Ambiguous alphabets");
+        }
+
+        dfa *d1c = !d1;
+        dfa *d2c = !d2;
+
+        dfa *dc = union_dfa(*d1c, *d2c);
+        dfa *d = new dfa();
+        d = !*dc;
+        return d;
+    }
+
     // Concat 2 nfa's
     nfa *concat_nfa(nfa &n1, nfa &n2)
     {
@@ -466,6 +490,28 @@ namespace fsm
         {
             n->add_transition(q, "\\e", n1.q0);
         }
+        return n;
+    }
+
+    // Intersection of 2 nfa's
+    nfa *intersect_nfa(nfa &n1, nfa &n2)
+    {
+        if (n1.S.size() != n2.S.size())
+            throw std::runtime_error("Ambiguous alphabets");
+        for (auto a : n1.S)
+        {
+            if (n2.S.find(a.first) == n2.S.end())
+                throw std::runtime_error("Ambiguous alphabets");
+            if (n1.S[a.first] != n2.S[a.first])
+                throw std::runtime_error("Ambiguous alphabets");
+        }
+
+        nfa *n1c = !n1;
+        nfa *n2c = !n2;
+
+        nfa *nc = union_nfa(*n1c, *n2c);
+        nfa *n = new nfa();
+        n = !*nc;
         return n;
     }
 } // namespace fsm
