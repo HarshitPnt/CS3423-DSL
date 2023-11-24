@@ -260,12 +260,27 @@ namespace fsm
     }
 
     template <typename T>
+    void recursive_power_set(o_set<o_set<T>> &res, o_set<T> &set, int index, o_set<T> &curr){
+        if (index == set.size())
+        {
+            res.insert(curr);
+            return;
+        }
+        recursive_power_set(res, set, index + 1, curr);
+        curr.insert(set[index]);
+        recursive_power_set(res, set, index + 1, curr);
+        curr.remove(set[index]);
+    }
+
+    template <typename T>
     o_set<o_set<T>> o_set<T>::power_set()
     {
         o_set<o_set<T>> result;
         o_set<T> empty;
         result.insert(empty);
+        o_set<T> curr;
         // Find all subsets of the set
+        recursive_power_set(result, *this, 0, curr);
         return result;
     }
 
@@ -368,12 +383,27 @@ namespace fsm
     }
 
     template <typename T>
+    void recursive_power_set(u_set<u_set<T>> &res, u_set<T> &set, int index, u_set<T> &curr){
+        if (index == set.size())
+        {
+            res.insert(curr);
+            return;
+        }
+        recursive_power_set(res, set, index + 1, curr);
+        curr.insert(set[index]);
+        recursive_power_set(res, set, index + 1, curr);
+        curr.remove(set[index]);
+    }
+
+    template <typename T>
     u_set<u_set<T>> u_set<T>::power_set()
     {
         u_set<u_set<T>> result;
         u_set<T> empty;
         result.insert(empty);
+        u_set<T> curr;
         // Find all subsets of the set
+        recursive_power_set(result, *this, 0, curr);
         return result;
     }
 }

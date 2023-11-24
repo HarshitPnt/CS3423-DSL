@@ -34,64 +34,20 @@ namespace fsm
         }
         return n;
     }
-
     // Convert a NFA to a DFA
     dfa nfa_to_dfa(nfa n)
     {
-        // if(n.get_start() == "")
-        //     throw std::runtime_error("NFA has no start state");
-        // dfa dfa;
-        // std::map<std::set<std::string>, std::string> stateNames;
-        // std::queue<std::set<std::string>> statesQueue;
-
-        // std::set<std::string> startState = {n.get_start()};
-        // statesQueue.push(startState);
-        // stateNames[startState] = "q0";
-        // dfa.insert_state("q0");
-        // dfa.change_start("q0");
-
-        // while (!statesQueue.empty())
-        // {
-        //     std::set<std::string> currentState = statesQueue.front();
-        //     statesQueue.pop();
-
-        //     for (auto &symbol : n.get_alphabet())
-        //     {
-        //         std::set<std::string> newState;
-        //         for (auto &state : currentState)
-        //         {
-        //             std::set<std::string> reachable = n.get_reachable(state, symbol);
-        //             newState.insert(reachable.begin(), reachable.end());
-        //         }
-
-        //         if (!newState.empty() && stateNames.find(newState) == stateNames.end())
-        //         {
-        //             std::string newStateName = "q" + std::to_string(stateNames.size());
-        //             stateNames[newState] = newStateName;
-        //             dfa.insert_state(newStateName);
-        //             statesQueue.push(newState);
-
-        //             if (n.is_final(*newState.begin()))
-        //             {
-        //                 dfa.insert_final(newStateName);
-        //             }
-        //         }
-
-        //         if (!newState.empty())
-        //         {
-        //             dfa.add_transition(stateNames[currentState], symbol, stateNames[newState]);
-        //         }
-        //     }
-        // }
-
-        // return dfa;
+        dfa d;
+        int len = n.Q.size();
+        
+        auto Eclosure = n.eClosure();
+        
     }
 
     dfa reg_to_dfa(regex reg)
     {
-        std::string str = reg.str;
-        // nfa n = reg_to_nfa(reg);
-        // return nfa_to_dfa(n);
+        nfa n = reg_to_nfa(reg);
+        return nfa_to_dfa(n);
     }
 
     pda cfg_to_pda(cfg c)

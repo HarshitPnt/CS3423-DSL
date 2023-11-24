@@ -33,7 +33,7 @@ namespace fsm
         ~nfa();
         nfa();
 
-    private:
+    // private:
         std::set<std::string> Q;
         std::unordered_map<std::string, std::string> S;
         std::unordered_map<std::string, std::unordered_multimap<std::string, std::string>> delta;

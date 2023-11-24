@@ -259,29 +259,63 @@ namespace fsm
 
     bool nfa::simulate(std::string input)
     {
-        if (this->q0.length() == 0)
-            return false;
-        std::unordered_set<std::string> current_states;
-        std::unordered_set<std::string> next_states;
-        current_states.insert(this->q0);
-        for (auto i : input)
-        {
-            for (auto state : current_states)
-            {
-                auto it = this->delta[state].equal_range(std::string(1, i));
-                for (auto j = it.first; j != it.second; j++)
-                {
-                    next_states.insert(j->second);
-                }
-            }
-            current_states = next_states;
-            next_states.clear();
-        }
-        for (auto i : current_states)
-        {
-            if (this->F.find(i) != this->F.end())
-                return true;
-        }
-        return false;
+        // if (this->q0.length() == 0)
+        //     return false;
+        // std::unordered_set<std::string> current_states;
+        // std::unordered_set<std::string> next_states;
+        // current_states.insert(this->q0);
+        // for (auto i : input)
+        // {
+        //     for (auto state : current_states)
+        //     {
+        //         auto it = this->delta[state].equal_range(std::string(1, i));
+        //         for (auto j = it.first; j != it.second; j++)
+        //         {
+        //             next_states.insert(j->second);
+        //         }
+        //     }
+        //     current_states = next_states;
+        //     next_states.clear();
+        // }
+        // for (auto i : current_states)
+        // {
+        //     if (this->F.find(i) != this->F.end())
+        //         return true;
+        // }
+        // return false;
     }
+
+    void nfa::out()
+    {
+        std::cout << "Q : ";
+        for (auto i : this->Q)
+        {
+            std::cout << i << " ";
+        }
+        std::cout << "\n";
+        std::cout << "S : ";
+        for (auto i : this->S)
+        {
+            std::cout << i.first << " ";
+        }
+        std::cout << "\n";
+        std::cout << "q0 : " << this->q0 << "\n";
+        std::cout << "F : ";
+        for (auto i : this->F)
+        {
+            std::cout << i << " ";
+        }
+        std::cout << "\n";
+        std::cout << "delta : \n";
+        for (auto i : this->delta)
+        {
+            std::cout << i.first << " : ";
+            for (auto j : i.second)
+            {
+                std::cout << "(" << j.first << "," << j.second << ") ";
+            }
+            std::cout << "\n";
+        }
+    }
+
 } // namespace fsm

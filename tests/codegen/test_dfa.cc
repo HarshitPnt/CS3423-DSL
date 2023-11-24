@@ -146,6 +146,7 @@ int main()
         cout<<d.insert_alphabet("a","1")<<endl;
     cout<<d.insert_alphabet("b","0")<<endl;
 
-
+     fsm::dfa dcomp = !d;
+     dcomp.out();
 //     return 0;
 }

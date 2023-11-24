@@ -84,13 +84,11 @@ namespace fsm
         return true;
     }
 
-    
-
     bool dfa::remove_alphabet(std::string alphabet)
     {
         if (alphabet.length() == 0)
             return false;
-        if(this->S.find(alphabet)==this->S.end())
+        if (this->S.find(alphabet) == this->S.end())
             return false;
 
         for (auto &d : this->delta)
@@ -106,7 +104,7 @@ namespace fsm
 
     bool dfa::insert_final(std::string state)
     {
-        if(state.length()==0)
+        if (state.length() == 0)
             return false;
         if (this->Q.find(state) == this->Q.end())
             return false;
@@ -118,7 +116,7 @@ namespace fsm
 
     bool dfa::remove_final(std::string state)
     {
-        if(state.length()==0)
+        if (state.length() == 0)
             return false;
         if (this->F.find(state) == this->F.end())
             return false;
@@ -128,7 +126,7 @@ namespace fsm
 
     bool dfa::add_transition(std::string state, std::string alphabet, std::string next_state)
     {
-        if(state.length()==0 || alphabet.length()==0 || next_state.length()==0)
+        if (state.length() == 0 || alphabet.length() == 0 || next_state.length() == 0)
             return false;
         if ((this->Q.find(state) == this->Q.end()) || (this->Q.find(next_state) == this->Q.end()) || (this->S.find(alphabet) == this->S.end()))
             return false;
@@ -150,13 +148,13 @@ namespace fsm
 
     bool dfa::remove_transition(std::string state, std::string alphabet, std::string next_state)
     {
-        if(state.length()==0 || alphabet.length()==0 || next_state.length()==0 || this->Q.find(state) == this->Q.end() || this->Q.find(next_state) == this->Q.end() || this->S.find(alphabet) == this->S.end())
+        if (state.length() == 0 || alphabet.length() == 0 || next_state.length() == 0 || this->Q.find(state) == this->Q.end() || this->Q.find(next_state) == this->Q.end() || this->S.find(alphabet) == this->S.end())
             return false;
         else
         {
             if (this->delta[state].find(alphabet) == this->delta[state].end())
                 return false;
-            else if(this->delta[state][alphabet]!=next_state)
+            else if (this->delta[state][alphabet] != next_state)
                 return false;
             if (this->delta[state].size() == 1)
                 this->delta.erase(state);
@@ -169,7 +167,7 @@ namespace fsm
 
     bool dfa::change_start(std::string state)
     {
-        if(state.length()==0)
+        if (state.length() == 0)
             return false;
         if (this->Q.find(state) == this->Q.end())
             return false;
@@ -273,5 +271,36 @@ namespace fsm
         }
         std::cout << "\n";
         std::cout << "-----------------\n";
+    }
+
+    dfa dfa::operator!()
+    {
+        dfa d;
+        d.Q = this->Q;
+        d.S = this->S;
+        d.q0 = this->q0;
+        d.F = this->Q;
+        for (auto f : this->F)
+        {
+            d.F.erase(f);
+        }
+        d.delta = this->delta;
+        return d;
+    }
+
+    dfa dfa::operator+(dfa &other)
+    {
+        dfa d;
+        for (auto q : this->Q)
+        {
+            insert_state("1@" + q);
+            for (auto q : other.Q)
+            {
+                insert_state("2@" + q);
+            }
+            for (auto s : this->S)
+            {
+            }
+        }
     }
 }
