@@ -15,16 +15,16 @@ namespace fsm
     pda cfg_to_pda(cfg);
 
     // Add 2 dfa's
-    dfa concat_dfa(dfa &, dfa &);
+    dfa *concat_dfa(dfa &, dfa &);
     // Concatenate 2 dfa's
-    dfa union_dfa(dfa &, dfa &);
+    dfa *union_dfa(dfa &, dfa &);
     // Kleene star of a dfa
-    dfa kleene_dfa(dfa &);
+    dfa *kleene_dfa(dfa &);
 
     // Add 2 nfa's
-    nfa concat_nfa(nfa &, nfa &);
+    nfa *concat_nfa(nfa &, nfa &);
     // Concatenate 2 nfa's
-    nfa union_nfa(nfa &, nfa &);
+    nfa *union_nfa(nfa &, nfa &);
     // Kleene star of a nfa
-    nfa kleene_nfa(nfa &);
+    nfa *kleene_nfa(nfa &);
 } // namespace fsm
