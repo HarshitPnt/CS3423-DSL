@@ -18,6 +18,7 @@ void yyerror(char const* str);
 extern FILE* yyin;
 extern std::fstream seq_token;
 FILE* parse_log;
+std::fstream cc_file;
 extern int yylineno;
 void terminate()
 {
@@ -1178,11 +1179,12 @@ expression: LPAREN expression RPAREN {
                                         $$->isConst = true;
                                         $$->val = $2->val;
                                       }
+                                      $$->cc = std::string("(")+$2->cc+std::string(")");
                                      }
           | expression OPER_PLUS expression 
           {
                 $$ = new expr_attr();
-                if($1->indicator ==1 || $3->indicator==1)
+                if($1->indicator ==1 && $3->indicator==1)
                 {
                     $$->indicator = 1;
                     if($1->vtp==TYPE_FLOAT_64 || $3->vtp==TYPE_FLOAT_64)
@@ -1206,13 +1208,26 @@ expression: LPAREN expression RPAREN {
                         else if($$->val->type==CCHAR)
                             $$->val->ccchar = getConst($1)+getConst($3);
                     }
+                    $$->cc = $1->cc + std::string(" + ") + $3->cc;
                 }
-                else if($1->indicator ==2 || $3->indicator==2)
+                else if($1->indicator ==2 && $3->indicator==2)
                 {
                     $$->indicator = 2;
-                    $$->vts = TYPE_OSET;
+                    if($1->vts==TYPE_OSET || $3->vts==TYPE_OSET)
+                    {
+                        $$->vts = TYPE_OSET;
+                    }
+                    else if($1->vts==TYPE_USET || $3->vts==TYPE_USET)
+                    {
+                        $$->vts = TYPE_USET;
+                    }
+                    else
+                    {
+                        $$->vts = TYPE_OSET;
+                    }
+                    $$->cc = $1->cc + std::string(" + ") + $3->cc;
                 }
-                else if($1->indicator ==3 || $3->indicator==3)
+                else if($1->indicator==3 && $3->indicator==3)
                 {
                     if(($1->vta == TYPE_NFA && $3->vta == TYPE_DFA) || ($3->vta == TYPE_NFA && $1->vta == TYPE_DFA) || ($1->vta == TYPE_NFA && $3->vta == TYPE_NFA))
                         $$->vta = TYPE_NFA;
@@ -1227,6 +1242,7 @@ expression: LPAREN expression RPAREN {
                             std::string error = std::string("Invalid operation:")+std::string(getVTA($1->vta))+std::string(", ")+std::string(getVTA($3->vta))+std::string(" union  not defined");
                             yyerror(error.c_str());
                         }
+                    $$->cc = $1->cc + std::string(" + ") + $3->cc;
                 }
                 else
                     yyerror("Invalid operation: Addition can only be done between 'primitive' types");
@@ -1268,11 +1284,12 @@ expression: LPAREN expression RPAREN {
                 }
                 else
                     yyerror("Invalid operation: Subtrction can only be done between 'primitive' and 'set' types");
+                $$->cc = $1->cc + std::string(" - ") + $3->cc;
           }
           | expression OPER_MUL expression
           {
                 $$ = new expr_attr();
-                //Kleene star and intersection
+                //intersection
                 $$->isConst = false;
                 if($1->indicator ==1 && $3->indicator ==1)
                 {
@@ -2417,7 +2434,9 @@ int main(int argc, char **argv) {
     char *parser_log = (char*)malloc(sizeof(char)*(strlen(path)+50));
     sprintf(seq,"%s/logs/seq_tokens_%s.tok",path,filename);
     sprintf(parser_log,"%s/logs/parser_log_%s.log",path,filename);
-
+    char *cc_file_name = (char*)malloc(sizeof(char)*(strlen(path)+50));
+    sprintf(cc_file_name,"%s/cc_files/cc_file_%s.cc",path,filename);
+    cc_file.open(cc_file_name,std::ios::out);
     // tokens file path
     
     if(argc==3)
@@ -2431,6 +2450,7 @@ int main(int argc, char **argv) {
     fclose(yyin);
     seq_token.close();
     fclose(parse_log);
+    cc_file.close();
     return 0;
 
 }

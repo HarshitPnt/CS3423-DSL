@@ -1,0 +1,6 @@
+int_8 main()
+{
+    int_8 x;
+    cfg y;
+    int_8 result = x+y;
+}

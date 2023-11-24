@@ -69,6 +69,7 @@ public:
     std::string ifStruct;
     int isConst;
     int isVar;
+    std::string cc;
     inner_type *inner;
 };
 

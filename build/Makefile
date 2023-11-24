@@ -22,7 +22,7 @@ lexer: ${SRC}/lexer.l
 semantic: ${SRC}/semantic.cc
 	${COMPILER} ${VERSION} -c ${SRC}/semantic.cc
 
-compile:clean parser lexer semantic library
+compile:clean parser lexer semantic
 	${COMPILER} -o prog parser.o lexer.o semantic.o
 
 library:

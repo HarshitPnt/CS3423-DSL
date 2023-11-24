@@ -63,9 +63,10 @@ int main()
     ord_s5.insert(1);
     ord_s5.insert(2);
     ord_s5.insert(3);
-    
+
     fsm::o_set<fsm::o_set<int>> ord_s6 = ord_s5.power_set();
-    ord_s6.out();    
+    std::cout << "Printing power set" << std::endl;
+    ord_s6.out();
 
     // // Test for u_set
     fsm::u_set<int> unord_s;
@@ -119,8 +120,8 @@ int main()
     unord_s5.insert(2);
     unord_s5.insert(3);
 
-    fsm::u_set<fsm::u_set<int>> unord_s6 = unord_s5.power_set();
-    unord_s6.out();
+    // fsm::u_set<fsm::u_set<int>> unord_s6 = unord_s5.power_set();
+    // unord_s6.out();
 
     // Test 9: Addition of two sets of different types
     fsm::u_set<int> unord_s7;
@@ -132,7 +133,6 @@ int main()
     ord_s7.insert(1);
     ord_s7.insert(6);
     ord_s7.insert(2);
-
     fsm::o_set<int> ord_s8 = ord_s7 + unord_s7;
     ord_s8.out();
 

@@ -2,7 +2,6 @@
 #include <queue>
 #include <map>
 
-
 namespace fsm
 {
     // Convert a regular expression to a DFA
