@@ -31,4 +31,6 @@ namespace fsm
     nfa *kleene_nfa(nfa &);
     // Intersection of 2 nfa's
     nfa *intersect_nfa(nfa &, nfa &);
+
+    
 } // namespace fsm

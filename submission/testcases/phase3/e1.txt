@@ -1,0 +1,5 @@
+o_set<int_8> foo(int_8 x,o_set<int_8> y)
+{
+    o_set<float_32> z;
+    return z;
+}

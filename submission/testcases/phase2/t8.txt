@@ -1,0 +1,19 @@
+struct A{
+    int_8 x;
+};
+
+struct B{
+ o_set<o_set<A>> y;
+};
+
+struct C{
+    B z;
+};
+
+void main()
+{
+    C c;
+    c.z.y[0][0].x = 5;
+    o_set<o_set<A>> b;
+    b[0][0].x = 5;
+}

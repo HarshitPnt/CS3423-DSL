@@ -1,0 +1,7 @@
+struct A{
+    int_8 x;
+    float_64 y,z;
+};
+
+A a;
+a.b = 10; <!-- Struct A has no member b --!>

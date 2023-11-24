@@ -1,0 +1,100 @@
+<!-- Testing with Composite Data Types --!>
+
+<!-- Strings --!>
+
+string _test_identifier123;
+_test_identifier123 = "\"Test Strin\"g 12@#412^&\"";
+char a = _test_identifier123[1];
+
+<!-- Sets --!>
+
+o_set<int_8> a;
+u_set<float_64>b = {1,2,3,4};
+
+<!-- Structs --!>
+
+struct Point {
+    int_8 x;
+    int_8 y;
+    float_64 z;
+    string name;
+};
+
+struct Points {
+    o_set<Point> coords;
+};
+
+<!-- Regular Expressions --!>
+
+regex alphabet = r'[a-z]';
+regex Letter = r'{alphabet}';
+regex Digit = r'[0-9]';
+regex _1 = r'[ab]{2}';
+regex _2 = r'{a}*';
+regex _3 = r'(ab)+';
+regex _4 = r'^[ab]';
+regex _4 = r'*{a}$';
+regex _5 = r'{a}|(b)*';
+regex _6 = r'\(ab\)';
+regex _7 = r'(a)?';
+
+<!-- Context Free Grammars --!>
+
+cfg a;
+
+a.T := {a:"a", demo:"b"};
+a.N := {A, B};
+a.S := A;
+a.P := {
+    A -> ${a}B,
+    B -> ${demo}A,
+    A -> {${a}A,\e}
+};
+
+<!-- DFA --!>
+
+dfa a;
+
+a.Q := {q0, q1, q2};
+a.Sigma := {a:"0",b:"1",c:"2"};
+a.delta := {
+    (q0, a -> q1),
+    (q0, b -> q1),
+    (q1, {b,c} -> q2),
+    (q2, {a,b} -> q1)
+};
+
+a.q0 := q0;
+a.F := {q1,q2};
+
+<!-- NFA --!>
+
+nfa a;
+
+a.Q := {q0, q1, q2};
+a.Sigma := {a:"0",b:"1",c:"2"};
+a.delta := {
+    (q0, a -> {q1, q2}),
+    (q0 , b -> q1),
+    (q1 , {b,c} -> q2),
+    (q2, {a,c} -> q1),
+    (q2, \e -> q0)
+};
+a.q0 := q0;
+a.F := {q1,q2};
+
+<!-- PDA --!>
+
+pda a;
+a.Q := {A, B, C};
+a.S := {a:"a", b:"b", c:"c"};
+a.G := {a:"a", b:"b", c:"d"};
+a.delta := {
+    (A, (a, a) -> (A, a)),
+    (A, {(b, a),(b, c)} -> {(B, a), (A, c)}),
+    (B, {(b, a), (b, c)} -> (B, a)),
+    (B, (c, a) -> (C, \e)),
+    (C, (c, a) -> {(C, \e), (C, a)})
+};
+a.q0 := A;
+a.F := {C};

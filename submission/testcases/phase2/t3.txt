@@ -1,0 +1,86 @@
+struct Point {
+    int_64 x, y;
+};
+
+int_8 foo(int_8 x, float_64 y)
+{
+    return x;
+}
+
+void main()
+{
+    <!-- EXPRESSIONS --!>
+
+    int_8 a,b;
+    a = 10;
+    b=20;
+
+    <!-- Arithmetic Operators --!>
+    int_8 result = a + b; <!-- Initialization of global variable with non-constant(kind of) --!>
+    result = a - b;
+    result = a*b;
+    result = a/b;
+    result = a%b;
+    result = (a+b)*2/(a-b+a)%result;
+
+    result+=b;
+    result-=a+b;
+    result*=result;
+    result/=(a*b);
+    result%=10;
+
+    <!-- Comparision and Logical Operators --!>
+
+    bool a_bool = true, b_bool = false;
+    a_bool = a>b;
+    b_bool = a<b;
+    a_bool = a>=b;
+    b_bool = a<=b;
+    a_bool = a==b;
+    b_bool = a!=b;
+
+    a_bool = a_bool && b_bool;
+    b_bool = a_bool || b_bool;
+    a_bool = !a_bool;
+    a_bool = (a_bool && b_bool) || (a!=b);
+    a_bool &=b_bool;
+    a_bool |=b_bool;
+
+    <!-- Set Operators --!>
+
+    o_set<int_8> set = {1,2,3};
+    o_set<int_8> set2 = {4,5,6};
+
+    o_set<int_8> results;
+
+    result = set + set2;
+    result = set - set2;
+    result = set*set2;
+    result = set^2;
+
+    <!-- Automaton Operators --!>
+
+    dfa a_dfa;
+    dfa b_dfa;
+
+    dfa result_dfa;
+    result_dfa = a_dfa#;
+    result_dfa = a_dfa+b_dfa;
+    result_dfa = !a_dfa;
+    result_dfa = a_dfa@b_dfa;
+
+    <!-- Misc Operators --!>
+
+
+
+    Point p;
+
+    p.x = 2;
+    p.y = 3;
+
+    result = set[1];
+
+    float_64 t = 10;
+    x = foo(x,t);
+}
+

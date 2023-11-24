@@ -1,0 +1,8 @@
+<!-- Structs --!>
+
+struct Point {
+    int_8 x;
+    int_8 y = 12;
+    float_64 z;
+    string name;
+};

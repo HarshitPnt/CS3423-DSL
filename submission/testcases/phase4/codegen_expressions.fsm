@@ -1,0 +1,96 @@
+struct A{
+    int_8 type;
+};
+
+int_8 func(int_8 x,float_32 y)
+{
+    return x;
+}
+
+bool isTrue(float_32 x)
+{
+    return true;
+}
+
+temp_fn[[T]] int_8 insert(o_set<T> x, T y)
+{
+    <!--inserts a value into the set --!> 
+    return y;
+}
+
+temp_fn[[T1]] A insert_t(o_set<T1> x, T1 y)
+{
+    <!--inserts a value into the set --!> 
+    return y;
+}
+
+int_32 main()
+{
+    int_8 result=5,abcd_;
+    abcd_+=result;
+    A aa;
+    o_set<int_8> x;
+    o_set<o_set<int_64>> y;
+    o_set<u_set<A>> z,xxxxx;
+    o_set<int_8> xxx = {1,2,3}, yyy={12,12.0,134};
+    xxx = {4,5,6};
+    abcd_ = func(result,result) + result;
+    if(isTrue(result))
+    {
+        <!-- Here are some comments --!>
+        int_8 yy = abcd_ + result;
+    }
+
+    cfg a;
+
+    a.T := {a:"a", demo:"b"};
+    a.N := {A, B};
+    a.S := A;
+    a.P := {
+        A -> ${a}%{B},
+        B -> ${demo}%{A},
+        A -> {${a}%{A},\e}
+    };
+
+    dfa aaa;
+
+    aaa.Q := {q0, q1, q2};
+    aaa.S := {a:"0",b:"1",c:"2"};
+    aaa.delta := {
+        (q0, a -> q1),
+        (q1, b -> q3),
+        (q1, b -> q2),
+        (q2, {a,b} -> q1)
+    };
+
+    aaa.q0 := q0;
+    aaa.F := {q1,q2};
+
+    pda bbb;
+    bbb.Q := {A, B, C};
+    bbb.S := {a:"a", b:"b", c:"c"};
+    bbb.G := {a:"a", b:"b", c:"d"};
+    bbb.delta := {
+        (A, (a, a) -> (A, a)),
+        (A, {(b, a),(b, c)} -> {(B, a), (A, c)}),
+        (B, {(b, a), (b, c)} -> (B, a)),
+        (B, (c, a) -> (C, \e)),
+        (C, (c, a) -> {(C, \e), (C, a)})
+    };
+    bbb.q0 := A;
+    bbb.F := {C};
+
+    nfa dd;
+
+    dd.Q := {q0, q1, q2};
+    dd.S := {a:"0",b:"1",c:"2"};
+    dd.delta := {
+        (q0, a -> {q1, q2}),
+        (q1 , b -> q2),
+        (q1 ,c -> q2),
+        (q2, {a,c} -> q1),
+        (q2, \e -> q0)
+    };
+    dd.q0 := q0;
+    dd.F := {q1,q2};
+}

@@ -1,0 +1,41 @@
+void main()
+{
+    cfg a;
+    a.T := {A,B,C};
+    a.N := {a:"a",b:"demo"};
+    a.S := A;
+    a.P := {
+        A -> ${a}B,
+        B -> ${b}A,
+        A -> {${a}A,\e}
+    };
+
+    dfa b;
+    b.Q := {A,B,C};
+    b.q0 := A;
+    b.S := {a:"demo",demo:"demo"};
+    b.F := {B};
+    b.delta := {
+        (A, a -> B),
+        (B, {a,b} -> C)
+    };
+
+    nfa c;
+    c.Q := {A,B,C};
+    c.q0 := A;
+    c.S := {a:"demo",demo:"demo"};
+    c.F := {B};
+    c.delta := {
+        (A , a -> B),
+        (B, {a,b} -> C)
+    };
+
+    pda d;
+    d.Q := {A,B,C};
+    d.q0 := A;
+    d.S := {a:"demo",demo:"demo"};
+    d.G := {a:"demo",demo:"demo"};
+    d.delta := {
+        (B, (a,demo) -> (A,a))
+    };
+}

@@ -1,0 +1,95 @@
+struct Point {
+    int_64 x, y;
+    string name;
+};
+
+struct Grid {
+    o_set<Point> set;
+};
+
+float_64 abs(float_64 x)
+{
+    if(x>0)
+    {
+        return x;
+    }
+    else
+    {
+        return -x;
+    }
+}
+
+
+float_64 root_newton_raphson(float_64 num, float_64 precision)
+{
+    float_64 curr = num/2;
+    float_64 new_guess;
+
+    while(true)
+    {
+        new_guess = curr - (curr*curr - num)/(2*curr);
+        if(abs(new_guess-curr)<precision)
+        {    
+            return new_guess;
+        }
+    }
+}
+
+float_64 distance(Point a, Point b)
+{
+    float_64 dist = root_newton_raphson((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y),0.0001);
+    return dist;
+}
+
+float_32 size(o_set<Point> y)
+{
+    float_32 x;
+    return x;
+}
+
+void insert(o_set<float_64> xx, float_64 y)
+{
+    return;
+}
+
+o_set<float_64> findEuclideanDistance(Grid grid1)
+{
+    int_8 s = size(grid1.set);
+    o_set<float_64> return_values;
+
+    int_8 i = 0;
+    while(i<s)
+    {
+        int_8 j = i+1;
+        while(j<s)
+        {
+            insert(return_values, distance(grid1.set[i],grid1.set[j]));
+            j+=1;
+        }
+        i+=1;
+    }
+    return return_values;
+}
+
+Point p1,p2,p3,p4;
+Grid grid;
+grid.set = {p1,p2,p3,p4};
+int_8 i = 0;
+while(i<3)
+{
+    grid.set[i].x = i;
+    grid.set[i].y = i*i;
+    i+=1;
+}
+
+inp(p4.x);
+inp(p4.y);
+
+o_set<float_64> distances = findEuclideanDistance(grid);
+
+i = 0;
+while(i<6)
+{
+    out(distances[i]);
+    i+=1;
+}

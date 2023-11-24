@@ -1,0 +1,20 @@
+struct Point{
+    float_64 x,y,z;
+};
+
+struct Line {
+    o_set<Point> Points;
+};
+
+struct Plane{
+    o_set<Line> Lines;
+};
+
+Plane plane;
+int_8 i,j;
+
+void main()
+{
+    plane.Lines[i].Points[i].x = 10;
+    plane.Lines[i].Points[0].y = 20;
+}

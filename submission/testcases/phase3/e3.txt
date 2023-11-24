@@ -1,0 +1,5 @@
+struct A{
+    int_8 x;
+    float_64 y;
+    A a; <!-- Not allowed --!>
+};
