@@ -21,14 +21,14 @@ namespace fsm
         bool insert_final(std::string);
         bool is_final(std::string);
         bool remove_final(std::string);
-        bool add_transition(std::string, std::string, std::string);
+        bool insert_alphabetransition(std::string, std::string, std::string);
         bool remove_transition(std::string, std::string, std::string);
         bool change_start(std::string);
         std::string get_start();
         std::unordered_map<std::string, std::set<std::string>> eClosure();
         std::unordered_set<std::string> get_reachable(std::string, std::string);
         bool simulate(std::string);
-        nfa* operator!();
+        nfa *operator!();
 
         void out();
         ~nfa();

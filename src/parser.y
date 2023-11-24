@@ -23,6 +23,8 @@ FILE* parse_log;
 std::fstream cc_file;
 std::queue<std::queue<std::string>> st;
 std::queue<std::string> *current_queue = NULL;
+std::vector<std::string> *current_states = NULL;
+std::vector<std::pair<std::string,std::string>> *current_alphabets = NULL;
 extern int yylineno;
 void terminate()
 {
@@ -1181,6 +1183,17 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 std::string error = std::string("Error: Invalid type conversion from")+($4->type=="transitions"?(std::string("transitions_")+$4->automata_type):"alphabets")+std::string(" to ")+type;
                 yyerror(error.c_str());
             }
+            //codegen
+            if(type=="alphabets")
+            {
+                std::string str = $1->cc.substr(0,$1->cc.find_last_of("."));
+                for(auto it = current_alphabets->begin(); it!=current_alphabets->end();it++)
+                {
+                    cc_file<<str<<".insert_alphabet("<<(*it).first<<", "<<(*it).second<<");"<<std::endl;
+                }
+                current_alphabets = NULL;
+            }
+          $$->cc = std::string("");
           }
           | pseudo_ID COLON OPER_ASN_SIMPLE cfg_rules SEMICOLON
           {
@@ -1218,6 +1231,25 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 std::string error = std::string("Error: Invalid type conversion from list of states to ")+type;
                 yyerror(error.c_str());
             }
+            if(type=="states")
+            {
+                std::string str = $1->cc.substr(0,$1->cc.find_last_of("."));
+                for(auto &it: *current_states)
+                {
+                    cc_file<<str<<".insert_state("<<it<<");"<<std::endl;
+                }
+                current_states = NULL;
+            }
+            if(type=="accept")
+            {
+                std::string str = $1->cc.substr(0,$1->cc.find_last_of("."));
+                for(auto &it: *current_states)
+                {
+                    cc_file<<str<<".insert_final("<<it<<");"<<std::endl;
+                }
+                current_states = NULL;
+            }
+            $$->cc = std::string("");
           }
           ;
 
@@ -1226,6 +1258,9 @@ states_list: ID
                 //need to accumulate IDs which will be used as states and non-terminals
                 $$ = new state_list_attr();
                 $$->lst.push_back(std::string($1));
+                if(current_states==NULL)
+                    current_states = new std::vector<std::string>();
+                current_states->push_back("\""+std::string($1)+"\"");
 
            }
            | states_list COMMA ID
@@ -1233,6 +1268,9 @@ states_list: ID
                 $$ = new state_list_attr();
                 $$->lst = $1->lst;
                 $$->lst.push_back(std::string($3));
+                if(current_states==NULL)
+                    current_states = new std::vector<std::string>();
+                current_states->push_back("\""+std::string($3)+"\"");
            }
            ;
 
@@ -2261,6 +2299,11 @@ alphabet_list: alphabet
            ;
 
 alphabet : ID COLON STRING_CONST
+         {
+            if(current_alphabets==NULL)
+                current_alphabets = new std::vector<std::pair<std::string,std::string>>();
+            current_alphabets->push_back(std::make_pair(std::string("\"")+std::string($1)+std::string("\""),std::string($3)));
+         }
          ;
 
 rules_list : rule

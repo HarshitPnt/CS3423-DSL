@@ -5,26 +5,26 @@ int main()
     // Testing cfg
     fsm::cfg cfg_obj;
 
-    bool flag = cfg_obj.add_T("a", "a");
+    bool flag = cfg_obj.insert_alphabet("a", "a");
     // cfg_obj.out();
-    flag = cfg_obj.add_T("demo", "b");
+    flag = cfg_obj.insert_alphabet("demo", "b");
     // cfg_obj.out();
     // add duplicate
-    // flag = cfg_obj.add_T("demo", "b");
+    // flag = cfg_obj.insert_alphabet("demo", "b");
     // cfg_obj.out();
-    // flag = cfg_obj.add_T("demo", "c");
+    // flag = cfg_obj.insert_alphabet("demo", "c");
     // cfg_obj.out();
-    // flag = cfg_obj.add_T("ok", "aa");
+    // flag = cfg_obj.insert_alphabet("ok", "aa");
     // cfg_obj.out();
     // prefix
 
-    // testing add_N
-    flag = cfg_obj.add_N("S");
+    // testing insert_state
+    flag = cfg_obj.insert_state("S");
     // cfg_obj.out();
-    flag = cfg_obj.add_N("A");
+    flag = cfg_obj.insert_state("A");
     // cfg_obj.out();
     // duplicate non-terminal
-    // flag = cfg_obj.add_N("A");
+    // flag = cfg_obj.insert_state("A");
     // cfg_obj.out();
     // adding productions
     flag = cfg_obj.add_P("S -> %{A}");
@@ -68,7 +68,7 @@ int main()
     // try to remove non-existant non-terminal
     flag = cfg_obj.remove_N("S");
     flag = cfg_obj.add_P("S -> %{A}");
-    flag = cfg_obj.add_N("B");
+    flag = cfg_obj.insert_state("B");
     flag = cfg_obj.add_P("A -> %{B}");
     flag = cfg_obj.add_P("B -> ${demo}");
     flag = cfg_obj.add_P("B -> ${demo}%{B}");

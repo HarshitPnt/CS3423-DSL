@@ -11,8 +11,8 @@ namespace fsm
     {
     public:
         // non-terminals, terminals, start, productions
-        bool add_T(std::string, std::string);
-        bool add_N(std::string);
+        bool insert_alphabet(std::string, std::string);
+        bool insert_state(std::string);
         bool add_P(std::string);
         bool change_start(std::string);
         bool remove_T(std::string);

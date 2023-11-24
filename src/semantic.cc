@@ -55,8 +55,8 @@ void StructSymbolTable::init()
     sst->insert(sste_transitions_pda);
     // insert cfg
     VarSymbolTable *cfg = new VarSymbolTable();
-    cfg->insert(new VarSymbolTableEntry("N", "alphabets", NULL));
-    cfg->insert(new VarSymbolTableEntry("T", "states", NULL));
+    cfg->insert(new VarSymbolTableEntry("N", "states", NULL));
+    cfg->insert(new VarSymbolTableEntry("T", "alphabets", NULL));
     cfg->insert(new VarSymbolTableEntry("P", "productions", NULL));
     cfg->insert(new VarSymbolTableEntry("S", "start", NULL));
     StructSymbolTableEntry *sste_cfg = new StructSymbolTableEntry("cfg", cfg);

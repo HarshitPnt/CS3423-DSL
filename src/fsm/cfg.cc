@@ -29,7 +29,7 @@ namespace fsm
         this->T_vals.~o_set();
     }
 
-    bool cfg::add_T(std::string alias, std::string val)
+    bool cfg::insert_alphabet(std::string alias, std::string val)
     {
         if (val.length() == 0)
         {
@@ -67,7 +67,7 @@ namespace fsm
         }
     }
 
-    bool cfg::add_N(std::string nt)
+    bool cfg::insert_state(std::string nt)
     {
         if (this->is_non_terminal(nt))
         {
@@ -387,18 +387,18 @@ namespace fsm
     {
         // fetch all the productions and add non-terminals for terminals
         CNF = new cfg();
-        CNF->add_N("@start");
+        CNF->insert_state("@start");
         CNF->change_start("@start");
         // add all non-terminals
         for (auto &nterm : this->N.set)
         {
-            CNF->add_N(nterm);
+            CNF->insert_state(nterm);
         }
         // fetch terminals
         for (auto &term : this->T)
         {
-            CNF->add_N(term.first);
-            CNF->add_T(term.first, term.second);
+            CNF->insert_state(term.first);
+            CNF->insert_alphabet(term.first, term.second);
         }
         // add start production
         CNF->add_P(CNF->start + " -> " + "%{" + this->start + "}");
@@ -527,7 +527,7 @@ namespace fsm
                                     {
                                         // make CFG empty
                                         CNF = new cfg();
-                                        CNF->add_N("@start");
+                                        CNF->insert_state("@start");
                                         CNF->change_start("@start");
                                         CNF->add_P("@start -> \\e");
                                         return *CNF;

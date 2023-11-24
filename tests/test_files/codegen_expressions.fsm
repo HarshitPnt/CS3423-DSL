@@ -14,11 +14,9 @@ bool isTrue(float_32 x)
 
 void main()
 {
-    dfa a,b;
     int_8 result=5,abcd_;
     abcd_+=result;
     A aa;
-    dfa c = a+b;
     o_set<int_8> x;
     o_set<o_set<int_64>> y;
     o_set<u_set<A>> z,xxxxx;
@@ -30,4 +28,15 @@ void main()
         <!-- Here are some comments --!>
         int_8 yy = abcd_ + result;
     }
+
+    cfg a;
+
+    a.T := {a:"a", demo:"b"};
+    a.N := {A, B};
+    a.S := A;
+    a.P := {
+        A -> ${a}B,
+        B -> ${demo}A,
+        A -> {${a}A,\e}
+    };
 }
