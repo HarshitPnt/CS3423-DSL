@@ -22,6 +22,7 @@ namespace fsm
         bool remove_transition(std::string, std::string, std::string);
         bool change_start(std::string);
         bool simulate(std::string);
+        bool __simulate(std::string);
         void out();
         dfa operator!();
         ~dfa();

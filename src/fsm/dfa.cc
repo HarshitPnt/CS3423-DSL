@@ -209,6 +209,41 @@ namespace fsm
         return true;
     }
 
+    bool dfa::__simulate(std::string input)
+    {
+        std::string curr_state = this->q0;
+        std::string val = "";
+        std::string alphabet = "";
+        for (auto c : input)
+        {
+            val += c;
+            for (auto a : this->S)
+            {
+                if (a.second == val)
+                {
+                    alphabet = a.first;
+                    break;
+                }
+            }
+            if (!alphabet.empty())
+            {
+                if (this->delta.find(curr_state) == this->delta.end())
+                    return false;
+                else if (this->delta[curr_state].find(alphabet) == this->delta[curr_state].end())
+                    return false;
+                curr_state = this->delta[curr_state][alphabet];
+                val = "";
+                alphabet = "";
+            }
+        }
+        if (!val.empty())
+            return false;
+
+        if (this->F.find(curr_state) == this->F.end())
+            return false;
+        return true;
+    }
+
     void dfa::checkValidity()
     {
         if (this->Q.empty() || this->S.empty() || this->F.empty() || this->q0.empty() || this->delta.size() != this->Q.size())
