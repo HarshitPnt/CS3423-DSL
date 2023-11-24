@@ -308,18 +308,18 @@ namespace fsm
         std::cout << "-----------------\n";
     }
 
-    dfa dfa::operator!()
+    dfa* dfa::operator!()
     {
-        dfa d;
-        d.Q = this->Q;
-        d.S = this->S;
-        d.q0 = this->q0;
-        d.F = this->Q;
+        dfa *d;
+        d->Q = this->Q;
+        d->S = this->S;
+        d->q0 = this->q0;
+        d->F = this->Q;
         for (auto f : this->F)
         {
-            d.F.erase(f);
+            d->F.erase(f);
         }
-        d.delta = this->delta;
+        d->delta = this->delta;
         return d;
     }
 }

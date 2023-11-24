@@ -24,7 +24,7 @@ namespace fsm
         bool simulate(std::string);
         bool __simulate(std::string);
         void out();
-        dfa operator!();
+        dfa* operator!();
         ~dfa();
         dfa();
 

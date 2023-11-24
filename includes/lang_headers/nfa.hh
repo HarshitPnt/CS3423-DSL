@@ -28,6 +28,7 @@ namespace fsm
         std::unordered_map<std::string, std::set<std::string>> eClosure();
         std::unordered_set<std::string> get_reachable(std::string, std::string);
         bool simulate(std::string);
+        nfa* operator!();
 
         void out();
         ~nfa();

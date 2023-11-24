@@ -321,12 +321,12 @@ namespace fsm
                 throw std::runtime_error("Ambiguous alphabets");
         }
 
-        dfa d1c = !d1;
-        dfa d2c = !d2;
+        dfa *d1c = !d1;
+        dfa *d2c = !d2;
 
-        dfa *dc = union_dfa(d1c, d2c);
+        dfa *dc = union_dfa(*d1c, *d2c);
         dfa *d = new dfa();
-        *d = !*dc;
+        d = !*dc;
         return d;
     }
 
@@ -489,6 +489,28 @@ namespace fsm
         {
             n->add_transition(q, "\\e", n1.q0);
         }
+        return n;
+    }
+
+    // Intersection of 2 nfa's
+    nfa *intersect_nfa(nfa &n1, nfa &n2)
+    {
+        if (n1.S.size() != n2.S.size())
+            throw std::runtime_error("Ambiguous alphabets");
+        for (auto a : n1.S)
+        {
+            if (n2.S.find(a.first) == n2.S.end())
+                throw std::runtime_error("Ambiguous alphabets");
+            if (n1.S[a.first] != n2.S[a.first])
+                throw std::runtime_error("Ambiguous alphabets");
+        }
+
+        nfa *n1c = !n1;
+        nfa *n2c = !n2;
+
+        nfa *nc = union_nfa(*n1c, *n2c);
+        nfa *n = new nfa();
+        n = !*nc;
         return n;
     }
 } // namespace fsm

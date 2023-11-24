@@ -29,4 +29,6 @@ namespace fsm
     nfa *union_nfa(nfa &, nfa &);
     // Kleene star of a nfa
     nfa *kleene_nfa(nfa &);
+    // Intersection of 2 nfa's
+    nfa *intersect_nfa(nfa &, nfa &);
 } // namespace fsm
