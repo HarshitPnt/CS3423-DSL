@@ -16,16 +16,16 @@ int main(){
 
     n.insert_final("q3");
 
-    n.insert_alphabetransition("q0", "a", "q1");
-    n.insert_alphabetransition("q0", "b", "q0");
-    n.insert_alphabetransition("q1", "a", "q2");
-    n.insert_alphabetransition("q1", "b", "q1");
-    n.insert_alphabetransition("q2", "b", "q2");
-    n.insert_alphabetransition("q2", "c", "q3");
-    n.insert_alphabetransition("q3", "a", "q1");
-    n.insert_alphabetransition("q3", "c", "q4");
-    n.insert_alphabetransition("q4", "a", "q4");
-    n.insert_alphabetransition("q4", "b", "q4");
+    n.insert_transitions("q0", "a", "q1");
+    n.insert_transitions("q0", "b", "q0");
+    n.insert_transitions("q1", "a", "q2");
+    n.insert_transitions("q1", "b", "q1");
+    n.insert_transitions("q2", "b", "q2");
+    n.insert_transitions("q2", "c", "q3");
+    n.insert_transitions("q3", "a", "q1");
+    n.insert_transitions("q3", "c", "q4");
+    n.insert_transitions("q4", "a", "q4");
+    n.insert_transitions("q4", "b", "q4");
 
     n.change_start("q0");
 
@@ -46,12 +46,12 @@ int main(){
     d1.insert_final("q2");
     d1.insert_final("q1");
 
-    d1.insert_alphabetransition("q0", "a", "q1");
-    d1.insert_alphabetransition("q0", "b", "q0");
-    d1.insert_alphabetransition("q1", "a", "q2");
-    d1.insert_alphabetransition("q1", "b", "q1");
-    d1.insert_alphabetransition("q2", "b", "q2");
-    d1.insert_alphabetransition("q2", "a", "q1");
+    d1.insert_transitions("q0", "a", "q1");
+    d1.insert_transitions("q0", "b", "q0");
+    d1.insert_transitions("q1", "a", "q2");
+    d1.insert_transitions("q1", "b", "q1");
+    d1.insert_transitions("q2", "b", "q2");
+    d1.insert_transitions("q2", "a", "q1");
 
     d1.change_start("q0");
 
@@ -67,12 +67,12 @@ int main(){
 
     d2.insert_final("x2");
 
-    d2.insert_alphabetransition("x0", "a", "x1");
-    d2.insert_alphabetransition("x0", "b", "x0");
-    d2.insert_alphabetransition("x1", "a", "x2");
-    d2.insert_alphabetransition("x1", "b", "x1");
-    d2.insert_alphabetransition("x2", "b", "x2");
-    d2.insert_alphabetransition("x2", "a", "x1");
+    d2.insert_transitions("x0", "a", "x1");
+    d2.insert_transitions("x0", "b", "x0");
+    d2.insert_transitions("x1", "a", "x2");
+    d2.insert_transitions("x1", "b", "x1");
+    d2.insert_transitions("x2", "b", "x2");
+    d2.insert_transitions("x2", "a", "x1");
 
     d2.change_start("x0");
 

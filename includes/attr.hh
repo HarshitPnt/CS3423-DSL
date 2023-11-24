@@ -127,6 +127,7 @@ class lhs_arrow_attr
 {
 public:
     std::string type;
+    std::vector<std::string> lst;
 };
 
 class cc_code
@@ -137,5 +138,26 @@ public:
     {
         cc = std::string("");
     }
+};
+
+class cfg_rule_attr
+{
+public:
+    std::string init;
+    std::string alpha;
+    std::string final_state;
+};
+
+class element_PDA_attr
+{
+public:
+    std::string state_alpha;
+    std::string stack;
+};
+
+class elements_PDA_attr
+{
+public:
+    std::vector<element_PDA_attr *> lst;
 };
 #endif

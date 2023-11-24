@@ -35,8 +35,22 @@ void main()
     a.N := {A, B};
     a.S := A;
     a.P := {
-        A -> ${a}B,
-        B -> ${demo}A,
-        A -> {${a}A,\e}
+        A -> ${a}%{B},
+        B -> ${demo}%{A},
+        A -> {${a}%{A},\e}
     };
+
+    dfa aaa;
+
+    aaa.Q := {q0, q1, q2};
+    aaa.S := {a:"0",b:"1",c:"2"};
+    aaa.delta := {
+        (q0, a -> q1),
+        (q1, b -> q3),
+        (q1, b -> q2),
+        (q2, {a,b} -> q1)
+    };
+
+    aaa.q0 := q0;
+    aaa.F := {q1,q2};
 }

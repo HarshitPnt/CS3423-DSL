@@ -18,7 +18,7 @@ namespace fsm
         bool remove_alphabet(std::string);
         bool insert_final(std::string);
         bool remove_final(std::string);
-        bool insert_alphabetransition(std::string, std::string, std::string);
+        bool insert_transitions(std::string, std::string, std::string);
         bool remove_transition(std::string, std::string, std::string);
         bool change_start(std::string);
         bool simulate(std::string);

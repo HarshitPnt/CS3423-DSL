@@ -124,7 +124,7 @@ namespace fsm
         return true;
     }
 
-    bool dfa::insert_alphabetransition(std::string state, std::string alphabet, std::string next_state)
+    bool dfa::insert_transitions(std::string state, std::string alphabet, std::string next_state)
     {
         if (state.length() == 0 || alphabet.length() == 0 || next_state.length() == 0)
             return false;

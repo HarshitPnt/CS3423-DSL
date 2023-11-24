@@ -131,7 +131,7 @@ namespace fsm
         return true;
     }
 
-    bool nfa::insert_alphabetransition(std::string state, std::string alphabet, std::string next_state)
+    bool nfa::insert_transitions(std::string state, std::string alphabet, std::string next_state)
     {
         if (this->Q.find(state) == this->Q.end())
             return false;
