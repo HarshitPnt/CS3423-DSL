@@ -141,7 +141,7 @@ namespace fsm
         return true;
     }
 
-    bool pda::insert_transitions(std::string state, std::string alphabet, std::string stack, std::string next_state, std::string next_stack)
+    bool pda::insert_transition(std::string state, std::string alphabet, std::string stack, std::string next_state, std::string next_stack)
     {
         if (this->Q.find(state) == this->Q.end() || this->Q.find(next_state) == this->Q.end() || this->S.find(alphabet) == this->S.end() || this->T.find(stack) == this->T.end() || this->T.find(next_stack) == this->T.end())
             return false;

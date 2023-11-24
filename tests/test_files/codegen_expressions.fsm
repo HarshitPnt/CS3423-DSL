@@ -12,7 +12,7 @@ bool isTrue(float_32 x)
     return true;
 }
 
-void main()
+int_32 main()
 {
     int_8 result=5,abcd_;
     abcd_+=result;
@@ -53,4 +53,32 @@ void main()
 
     aaa.q0 := q0;
     aaa.F := {q1,q2};
+
+    pda bbb;
+    bbb.Q := {A, B, C};
+    bbb.S := {a:"a", b:"b", c:"c"};
+    bbb.G := {a:"a", b:"b", c:"d"};
+    bbb.delta := {
+        (A, (a, a) -> (A, a)),
+        (A, {(b, a),(b, c)} -> {(B, a), (A, c)}),
+        (B, {(b, a), (b, c)} -> (B, a)),
+        (B, (c, a) -> (C, \e)),
+        (C, (c, a) -> {(C, \e), (C, a)})
+    };
+    bbb.q0 := A;
+    bbb.F := {C};
+
+    nfa dd;
+
+    dd.Q := {q0, q1, q2};
+    dd.S := {a:"0",b:"1",c:"2"};
+    dd.delta := {
+        (q0, a -> {q1, q2}),
+        (q1 , b -> q2),
+        (q1 ,c -> q2),
+        (q2, {a,c} -> q1),
+        (q2, \e -> q0)
+    };
+    dd.q0 := q0;
+    dd.F := {q1,q2};
 }

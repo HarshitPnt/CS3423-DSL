@@ -9,9 +9,9 @@ int main()
     n.insert_alphabet("b", "b");
     n.change_start("q1");
     n.insert_final("q3");
-    n.insert_transitions("q1", "\\e", "q2");
-    n.insert_transitions("q2", "a", "q1");
-    n.insert_transitions("q2", "b", "q3");
-    n.insert_transitions("q3", "\\e", "q1");
+    n.insert_transition("q1", "\\e", "q2");
+    n.insert_transition("q2", "a", "q1");
+    n.insert_transition("q2", "b", "q3");
+    n.insert_transition("q3", "\\e", "q1");
     fsm::dfa *d = fsm::nfa_to_dfa(n);
 }

@@ -27,11 +27,11 @@ std::vector<std::string> *current_states = NULL;
 std::vector<std::pair<std::string,std::string>> *current_alphabets = NULL;
 std::vector<std::string> *cfg_rhs_current = NULL;
 std::vector<std::vector<std::string>> *cfg_prods = NULL;
-std::vector<vector<std::string>> *transition = NULL;
+std::vector<std::vector<std::string>> *transition = NULL;
 std::vector<std::pair<std::string,std::string>> *pda_lhs = NULL;
 std::vector<std::pair<std::string,std::string>> *pda_rhs = NULL;
-std::vector<std::vector<std::string>> *nfa_dfa_rhs = NULL;
-std::vector<std::vector<std::string>> *nfa_dfa_lhs = NULL;
+std::vector<std::string> *nfa_dfa_rhs = NULL;
+std::vector<std::string> *nfa_dfa_lhs = NULL;
 int current_automata = 0;
 extern int yylineno;
 void terminate()
@@ -625,7 +625,7 @@ type_list : ID
             StructSymbolTableEntry *entry_struct = new StructSymbolTableEntry(std::string($1),table);
             entry_struct->isTemplate = true;
             sst->insert(entry_struct);
-
+            $$->cc = "typename " + std::string($1);
           }
           | type_list COMMA ID
           {
@@ -647,6 +647,7 @@ type_list : ID
             StructSymbolTableEntry *entry_struct = new StructSymbolTableEntry(std::string($3),table);
             entry_struct->isTemplate = true;
             sst->insert(entry_struct);
+            $$->cc = $1->cc + std::string(", typename ") + std::string($3);
           }
           ;
 
@@ -1165,6 +1166,7 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
                 yyerror(error.c_str());
             }
+            $$->cc = std::string($1->cc)+" = "+std::string($3)+std::string(" ;");
           }
           | pseudo_ID COLON OPER_ASN_SIMPLE rhs_automata SEMICOLON
           {
@@ -1209,17 +1211,33 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
             }
             if(type=="transitions_nfa")
             {
-                ;
+                std::string str = $1->cc.substr(0,$1->cc.find_last_of("."));
+                for(auto it = transition->begin(); it!=transition->end();it++)
+                {
+                    cc_file<<str<<".insert_transition(\""<<(*it)[0]<<"\", \""<<(*it)[1]<<"\", \""<<(*it)[2]<<"\");"<<std::endl;
+                }
+                transition = NULL;
             }
             if(type=="transitions_dfa")
             {
-                ;
+                std::string str = $1->cc.substr(0,$1->cc.find_last_of("."));
+                for(auto it = transition->begin(); it!=transition->end();it++)
+                {
+                    cc_file<<str<<".insert_transition(\""<<(*it)[0]<<"\", \""<<(*it)[1]<<"\", \""<<(*it)[2]<<"\");"<<std::endl;
+                }
+                transition = NULL;
             }
             if(type=="transitions_pda")
             {
-                ;
+                std::string str = $1->cc.substr(0,$1->cc.find_last_of("."));
+                for(auto it = transition->begin(); it!=transition->end();it++)
+                {
+                    cc_file<<str<<".insert_transition(\""<<(*it)[0]<<"\", \""<<(*it)[1]<<"\", \""<<(*it)[2]<<"\", \""<<(*it)[3]<<"\", \""<<(*it)[4]<<"\");"<<std::endl;
+                }
+                transition = NULL;
             }
           $$->cc = std::string("");
+          current_automata = 0;
           }
           | pseudo_ID COLON OPER_ASN_SIMPLE cfg_rules SEMICOLON
           {
@@ -2391,9 +2409,9 @@ rule :LPAREN ID lhs_arrow ARROW rhs_arrow RPAREN
             $$->type = std::string("nfa");
         else
             yyerror("Invalid rule: All rules must be of same type");
-        if($3->type=="dfa" && ($5->type!="nfa" || $5->type!="dfa"))
+        if($3->type=="dfa" && ($5->type!="nfa" && $5->type!="dfa"))
             yyerror("Invalid rule");
-        if($3->type=="nfa" && ($5->type!="nfa" || $5->type!="dfa"))
+        if($3->type=="nfa" && ($5->type!="nfa" && $5->type!="dfa"))
             yyerror("Invalid rule");
         if($3->type=="pda" && ($5->type!="pda"))
             yyerror("Invalid rule");
@@ -2415,7 +2433,7 @@ rule :LPAREN ID lhs_arrow ARROW rhs_arrow RPAREN
                     {
                         std::string alphabet = it;
                         std::string fin = it2;
-                        std::string init = std::string($1);
+                        std::string init = std::string($2);
                         std::vector<std::string> *temp;
                         temp = new std::vector<std::string>();
                         temp->push_back(init);
@@ -2424,6 +2442,8 @@ rule :LPAREN ID lhs_arrow ARROW rhs_arrow RPAREN
                         transition->push_back(*temp);
                     }
                 }
+                nfa_dfa_lhs = NULL;
+                nfa_dfa_rhs = NULL;
             }
             if(current_automata==3)
             {
@@ -2436,7 +2456,7 @@ rule :LPAREN ID lhs_arrow ARROW rhs_arrow RPAREN
                         std::string stack = it.second;
                         std::string state_alpha2 = it2.first;
                         std::string stack2 = it2.second;
-                        std::string init = std::string($1);
+                        std::string init = std::string($2);
                         std::vector<std::string> *temp;
                         temp = new std::vector<std::string>();
                         temp->push_back(init);
@@ -2447,12 +2467,60 @@ rule :LPAREN ID lhs_arrow ARROW rhs_arrow RPAREN
                         transition->push_back(*temp);
                     }
                 }
+                pda_lhs = NULL;
+                pda_rhs = NULL;
             }
         }
         else 
         {
             if((current_automata==1 || current_automata==2) && (($3->type=="dfa" || $3->type=="nfa") && ($5->type=="dfa" || $5->type=="nfa")))
-            
+            {
+                if($3->type=="nfa" || $5->type=="nfa")
+                    current_automata = 2;
+                for(auto &it: *nfa_dfa_lhs)
+                {
+                    for(auto &it2: *nfa_dfa_rhs)
+                    {
+                        std::string alphabet = it;
+                        std::string fin = it2;
+                        std::string init = std::string($2);
+                        std::vector<std::string> *temp;
+                        temp = new std::vector<std::string>();
+                        temp->push_back(init);
+                        temp->push_back(alphabet);
+                        temp->push_back(fin);
+                        transition->push_back(*temp);
+                    }
+                }
+                nfa_dfa_lhs = NULL;
+                nfa_dfa_rhs = NULL;
+            }
+            else if(current_automata==3 && $3->type=="pda" && $5->type=="pda")
+            {
+                for(auto &it: *pda_lhs)
+                {
+                    for(auto &it2: *pda_rhs)
+                    {
+                        std::string state_alpha = it.first;
+                        std::string stack = it.second;
+                        std::string state_alpha2 = it2.first;
+                        std::string stack2 = it2.second;
+                        std::string init = std::string($2);
+                        std::vector<std::string> *temp;
+                        temp = new std::vector<std::string>();
+                        temp->push_back(init);
+                        temp->push_back(state_alpha);
+                        temp->push_back(stack);
+                        temp->push_back(state_alpha2);
+                        temp->push_back(stack2);
+                        transition->push_back(*temp);
+                    }
+                }
+                pda_lhs = NULL;
+                pda_rhs = NULL;
+            }
+            else
+                yyerror("Invalid set of rules");
         }
      }
      ;
@@ -2470,7 +2538,7 @@ lhs_arrow : COMMA ID
             $$->type = std::string("pda");
             pda_lhs = new std::vector<std::pair<std::string,std::string>>();
             std::pair<std::string,std::string> str;
-            str.make_pair($1->state_alpha,$1->stack);
+            str = std::make_pair($2->state_alpha,$2->stack);
             pda_lhs->push_back(str);
           }
           | COMMA EPSILON
@@ -2485,10 +2553,10 @@ lhs_arrow : COMMA ID
             $$ = new lhs_arrow_attr();
             $$->type = std::string("pda");
             pda_lhs = new std::vector<std::pair<std::string,std::string>>();
-            for(auto &it: $3->lst)
+            for(auto &it: *($3->lst))
             {
                 std::pair<std::string,std::string> str;
-                str.make_pair((*it)->state_alpha,(*it)->stack);
+                str = std::make_pair(it->state_alpha,it->stack);
                 pda_lhs->push_back(str);
             }
           }
@@ -2507,7 +2575,7 @@ lhs_arrow : COMMA ID
 elements_PDA : element_PDA
              {
                 $$ = new elements_PDA_attr();
-                $$->lst = new std::vector<lhs_arrow_attr*>();
+                $$->lst = new std::vector<element_PDA_attr*>();
                 $$->lst->push_back($1);
              }
              | elements_PDA COMMA element_PDA
@@ -2535,15 +2603,15 @@ elements_others : ID
                 {
                     $$ = new lhs_arrow_attr();
                     $$->type = std::string("dfa");
-                    $$->lst = new std::vector<std::string>();
-                    $$->lst->push_back(std::string($1));
+                    $$->lst = *(new std::vector<std::string>());
+                    $$->lst.push_back(std::string($1));
                 }
                 | EPSILON
                 {
                     $$ = new lhs_arrow_attr();
                     $$->type = std::string("nfa");
-                    $$->lst = new std::vector<std::string>();
-                    $$->lst->push_back(std::string("\\e"));
+                    $$->lst = *(new std::vector<std::string>());
+                    $$->lst.push_back(std::string("\\e"));
                 }
                 | elements_others COMMA ID
                 {
@@ -2553,7 +2621,7 @@ elements_others : ID
                     else
                         $$->type = std::string("nfa");
                     $$->lst = $1->lst;
-                    $$->lst->push_back(std::string($3));
+                    $$->lst.push_back(std::string($3));
 
                 }
                 | elements_others COMMA EPSILON
@@ -2561,7 +2629,7 @@ elements_others : ID
                     $$ = new lhs_arrow_attr();
                     $$->type = std::string("nfa");
                     $$->lst = $1->lst;
-                    $$->lst->push_back(std::string("\\e"));
+                    $$->lst.push_back(std::string("\\e"));
                 }
                 ;
 
@@ -2588,7 +2656,7 @@ rhs_arrow : ID
             $$->type = std::string("pda");
             pda_rhs = new std::vector<std::pair<std::string,std::string>>();
             std::pair<std::string,std::string> str;
-            str.make_pair($1->state_alpha,$1->stack);
+            str=std::make_pair($1->state_alpha,$1->stack);
             pda_rhs->push_back(str);
           }
           | LBRACE elements_PDA RBRACE
@@ -2596,10 +2664,10 @@ rhs_arrow : ID
             $$ = new lhs_arrow_attr();
             $$->type = std::string("pda");
             pda_rhs = new std::vector<std::pair<std::string,std::string>>();
-            for(auto &it: $2->lst)
+            for(auto &it: *($2->lst))
             {
                 std::pair<std::string,std::string> str;
-                str.make_pair((*it)->state_alpha,(*it)->stack);
+                str = std::make_pair(it->state_alpha,it->stack);
                 pda_rhs->push_back(str);
             }
           }

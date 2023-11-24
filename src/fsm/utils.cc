@@ -183,7 +183,7 @@ namespace fsm
                 if (next_state.size() == 0)
                     continue;
                 std::string next = concatState(next_state);
-                d->insert_transitions(concatState(s), alpha.first, next);
+                d->insert_transition(concatState(s), alpha.first, next);
             }
         }
         // d->out();
@@ -241,7 +241,7 @@ namespace fsm
             {
                 if (d1.delta[q].find(a.first) != d1.delta[q].end())
                 {
-                    n.insert_transitions("1@" + q, a.first, "1@" + d1.delta[q][a.first]);
+                    n.insert_transition("1@" + q, a.first, "1@" + d1.delta[q][a.first]);
                 }
             }
         }
@@ -252,14 +252,14 @@ namespace fsm
             {
                 if (d2.delta[q].find(a.first) != d2.delta[q].end())
                 {
-                    n.insert_transitions("2@" + q, a.first, "2@" + d2.delta[q][a.first]);
+                    n.insert_transition("2@" + q, a.first, "2@" + d2.delta[q][a.first]);
                 }
             }
         }
 
         for (auto q : d1.F)
         {
-            n.insert_transitions("1@" + q, "\\e", "2@" + d2.q0);
+            n.insert_transition("1@" + q, "\\e", "2@" + d2.q0);
         }
         return nfa_to_dfa(n);
     }
@@ -298,8 +298,8 @@ namespace fsm
 
         n.insert_state("q0");
         n.change_start("q0");
-        n.insert_transitions("q0", "\\e", "1@" + d1.q0);
-        n.insert_transitions("q0", "\\e", "2@" + d2.q0);
+        n.insert_transition("q0", "\\e", "1@" + d1.q0);
+        n.insert_transition("q0", "\\e", "2@" + d2.q0);
 
         for (auto q : d1.Q)
         {
@@ -307,7 +307,7 @@ namespace fsm
             {
                 if (d1.delta[q].find(a.first) != d1.delta[q].end())
                 {
-                    n.insert_transitions("1@" + q, a.first, "1@" + d1.delta[q][a.first]);
+                    n.insert_transition("1@" + q, a.first, "1@" + d1.delta[q][a.first]);
                 }
             }
         }
@@ -318,7 +318,7 @@ namespace fsm
             {
                 if (d2.delta[q].find(a.first) != d2.delta[q].end())
                 {
-                    n.insert_transitions("2@" + q, a.first, "2@" + d2.delta[q][a.first]);
+                    n.insert_transition("2@" + q, a.first, "2@" + d2.delta[q][a.first]);
                 }
             }
         }
@@ -342,20 +342,20 @@ namespace fsm
         n.insert_state("@q0");
         n.change_start("@q0");
         n.insert_final("@q0");
-        n.insert_transitions("@q0", "\\e", d1.q0);
+        n.insert_transition("@q0", "\\e", d1.q0);
         for (auto q : d1.Q)
         {
             for (auto a : d1.S)
             {
                 if (d1.delta[q].find(a.first) != d1.delta[q].end())
                 {
-                    n.insert_transitions(q, a.first, d1.delta[q][a.first]);
+                    n.insert_transition(q, a.first, d1.delta[q][a.first]);
                 }
             }
         }
         for (auto q : d1.F)
         {
-            n.insert_transitions(q, "\\e", d1.q0);
+            n.insert_transition(q, "\\e", d1.q0);
         }
         return nfa_to_dfa(n);
     }
@@ -422,7 +422,7 @@ namespace fsm
                 auto it = n1.delta[q].equal_range(a.first);
                 for (auto i = it.first; i != it.second; i++)
                 {
-                    n->insert_transitions("1@" + q, a.first, "1@" + i->second);
+                    n->insert_transition("1@" + q, a.first, "1@" + i->second);
                 }
             }
         }
@@ -434,14 +434,14 @@ namespace fsm
                 auto it = n2.delta[q].equal_range(a.first);
                 for (auto i = it.first; i != it.second; i++)
                 {
-                    n->insert_transitions("2@" + q, a.first, "2@" + i->second);
+                    n->insert_transition("2@" + q, a.first, "2@" + i->second);
                 }
             }
         }
 
         for (auto q : n1.F)
         {
-            n->insert_transitions("1@" + q, "\\e", "2@" + n2.q0);
+            n->insert_transition("1@" + q, "\\e", "2@" + n2.q0);
         }
 
         return n;
@@ -481,8 +481,8 @@ namespace fsm
 
         n->insert_state("q0");
         n->change_start("q0");
-        n->insert_transitions("q0", "\\e", "1@" + n1.q0);
-        n->insert_transitions("q0", "\\e", "2@" + n2.q0);
+        n->insert_transition("q0", "\\e", "1@" + n1.q0);
+        n->insert_transition("q0", "\\e", "2@" + n2.q0);
 
         for (auto q : n1.Q)
         {
@@ -491,7 +491,7 @@ namespace fsm
                 auto it = n1.delta[q].equal_range(a.first);
                 for (auto i = it.first; i != it.second; i++)
                 {
-                    n->insert_transitions("1@" + q, a.first, "1@" + i->second);
+                    n->insert_transition("1@" + q, a.first, "1@" + i->second);
                 }
             }
         }
@@ -503,7 +503,7 @@ namespace fsm
                 auto it = n2.delta[q].equal_range(a.first);
                 for (auto i = it.first; i != it.second; i++)
                 {
-                    n->insert_transitions("2@" + q, a.first, "2@" + i->second);
+                    n->insert_transition("2@" + q, a.first, "2@" + i->second);
                 }
             }
         }
@@ -527,7 +527,7 @@ namespace fsm
         n->insert_state("@q0");
         n->change_start("@q0");
         n->insert_final("@q0");
-        n->insert_transitions("@q0", "\\e", n1.q0);
+        n->insert_transition("@q0", "\\e", n1.q0);
         for (auto q : n1.Q)
         {
             for (auto a : n1.S)
@@ -535,13 +535,13 @@ namespace fsm
                 auto it = n1.delta[q].equal_range(a.first);
                 for (auto i = it.first; i != it.second; i++)
                 {
-                    n->insert_transitions(q, a.first, i->second);
+                    n->insert_transition(q, a.first, i->second);
                 }
             }
         }
         for (auto q : n1.F)
         {
-            n->insert_transitions(q, "\\e", n1.q0);
+            n->insert_transition(q, "\\e", n1.q0);
         }
         return n;
     }

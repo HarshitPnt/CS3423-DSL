@@ -21,7 +21,7 @@ namespace fsm
         bool insert_final(std::string);
         bool is_final(std::string);
         bool remove_final(std::string);
-        bool insert_transitions(std::string, std::string, std::string);
+        bool insert_transition(std::string, std::string, std::string);
         bool remove_transition(std::string, std::string, std::string);
         bool change_start(std::string);
         std::string get_start();

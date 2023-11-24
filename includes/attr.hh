@@ -158,6 +158,6 @@ public:
 class elements_PDA_attr
 {
 public:
-    std::vector<element_PDA_attr *> lst;
+    std::vector<element_PDA_attr *> *lst;
 };
 #endif
