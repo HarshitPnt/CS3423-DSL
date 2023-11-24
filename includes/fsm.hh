@@ -20,6 +20,8 @@ namespace fsm
     dfa *union_dfa(dfa &, dfa &);
     // Kleene star of a dfa
     dfa *kleene_dfa(dfa &);
+    // Intersection of 2 dfa's
+    dfa *intersect_dfa(dfa &, dfa &);
 
     // Add 2 nfa's
     nfa *concat_nfa(nfa &, nfa &);

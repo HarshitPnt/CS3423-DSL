@@ -78,15 +78,17 @@ int main(){
 
     d2.out();
 
-    fsm::dfa n1 = fsm::concat_dfa(d1, d2);
+    fsm::dfa *n1 = fsm::concat_dfa(d1, d2);
 
-    n1.out();
+    n1->out();
 
-    fsm::dfa n2 = fsm::union_dfa(d1, d2);
+    fsm::dfa *n2 = fsm::union_dfa(d1, d2);
 
-    n2.out();
+    n2->out();
 
-    fsm::dfa n3 = fsm::kleene_dfa(d1);
+    fsm::dfa *n3 = fsm::kleene_dfa(d1);
 
-    n3.out();
+    n3->out();
+
+    fsm::dfa *n4 = fsm::intersect_dfa(d1, d2);
 }

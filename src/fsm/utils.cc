@@ -308,6 +308,28 @@ namespace fsm
         return nfa_to_dfa(n);
     }
 
+    // Intersection of 2 dfa's
+    dfa *intersect_dfa(dfa &d1, dfa &d2)
+    {
+        if (d1.S.size() != d2.S.size())
+            throw std::runtime_error("Ambiguous alphabets");
+        for (auto a : d1.S)
+        {
+            if (d2.S.find(a.first) == d2.S.end())
+                throw std::runtime_error("Ambiguous alphabets");
+            if (d1.S[a.first] != d2.S[a.first])
+                throw std::runtime_error("Ambiguous alphabets");
+        }
+
+        dfa d1c = !d1;
+        dfa d2c = !d2;
+
+        dfa *dc = union_dfa(d1c, d2c);
+        dfa *d = new dfa();
+        *d = !*dc;
+        return d;
+    }
+
     // Concat 2 nfa's
     nfa *concat_nfa(nfa &n1, nfa &n2)
     {
