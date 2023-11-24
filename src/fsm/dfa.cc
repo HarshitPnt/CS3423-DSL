@@ -287,20 +287,4 @@ namespace fsm
         d.delta = this->delta;
         return d;
     }
-
-    dfa dfa::operator+(dfa &other)
-    {
-        dfa d;
-        for (auto q : this->Q)
-        {
-            insert_state("1@" + q);
-            for (auto q : other.Q)
-            {
-                insert_state("2@" + q);
-            }
-            for (auto s : this->S)
-            {
-            }
-        }
-    }
 }

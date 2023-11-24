@@ -23,8 +23,6 @@ namespace fsm
         bool change_start(std::string);
         bool simulate(std::string);
         void out();
-        dfa operator+(dfa &other);
-        dfa operator-(dfa &other);
         dfa operator!();
         ~dfa();
         dfa();
