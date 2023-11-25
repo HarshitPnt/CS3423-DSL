@@ -5,15 +5,16 @@
 #include "lang_headers/reg.hh"
 #include "lang_headers/set.hh"
 
+#ifndef __fsm_hh__
 // Some useful functions
-
+#define __fsm_hh__
 namespace fsm
 {
     dfa *reg_to_dfa(regex);
     nfa *reg_to_nfa(regex, int);
     dfa *nfa_to_dfa(nfa);
+    dfa *nfa_to_dfa(nfa);
     pda cfg_to_pda(cfg);
-
     // Add 2 dfa's
     dfa *concat_dfa(dfa &, dfa &);
     // Concatenate 2 dfa's
@@ -32,5 +33,5 @@ namespace fsm
     // Intersection of 2 nfa's
     nfa *intersect_nfa(nfa &, nfa &);
 
-    
 } // namespace fsm
+#endif

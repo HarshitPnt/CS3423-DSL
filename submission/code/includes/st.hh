@@ -53,8 +53,6 @@ public:
     void print();
     VarSymbolTableEntry(std::string name);
     VarSymbolTableEntry(std::string name, std::string type, inner_type *inner);
-    VarSymbolTableEntry(std::string name, bool isTemplate);
-    VarSymbolTableEntry(std::string name, std::string type, inner_type *inner, bool isTemplate);
 };
 
 class VarSymbolTable

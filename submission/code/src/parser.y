@@ -6,6 +6,7 @@
 #include <fstream>
 #include <list>
 #include <iostream>
+#include <set>
 #include <queue>
 #include <typeinfo>
 #include "../includes/st.hh"
@@ -19,6 +20,7 @@ extern int yylex();
 void yyerror(char const* str);
 extern FILE* yyin;
 extern std::fstream seq_token;
+extern std::set<std::string> *set_funcs;
 FILE* parse_log;
 std::fstream cc_file;
 std::queue<std::queue<std::string>> st;
@@ -48,7 +50,7 @@ int isTemplateFn = 0;
 FunctionSymbolTableEntry *current_function;
 
 #define printlog(a) fprintf(parse_log,"%s declaration at line no: %d\n",a,yylineno)
-#define getVTA(a) (a==TYPE_NFA?"NFA":(a==TYPE_DFA?"DFA":(a==TYPE_PDA?"PDA":(a==TYPE_CFG?"CFG":""))))
+#define getVTA(a) (a==TYPE_NFA?"nfa":(a==TYPE_DFA?"dfa":(a==TYPE_PDA?"pda":(a==TYPE_CFG?"cfg":""))))
 #define getConst(a) (a->val->type==CINT?a->val->ccint:(a->val->type==CFLOAT?a->val->ccfloat:(a->val->type==CBOOL?a->val->ccbool:a->val->ccchar)))
 #define getCTYPE(a) ((a->vtp==TYPE_INT_64 || a->vtp==TYPE_INT_32 || a->vtp==TYPE_INT_16 || a->vtp==TYPE_INT_8)?CINT:((a->vtp==TYPE_FLOAT_64 || a->vtp==TYPE_FLOAT_32)?CFLOAT:((a->vtp==TYPE_BOOL)?CBOOL:CCHAR)))
 #define getVTP(a) (a==TYPE_INT_64?"int_64":(a==TYPE_INT_32?"int_32":(a==TYPE_INT_16?"int_16":(a==TYPE_INT_8?"int_8":(a==TYPE_FLOAT_64?"float_64":(a==TYPE_FLOAT_32?"float_32":(a==TYPE_BOOL?"bool":"char")))))))
@@ -102,8 +104,8 @@ FunctionSymbolTableEntry *current_function;
 %left <dtype_set> TYPE_SET
 %left <dtype_automata> TYPE_AUTOMATA
 %token <cint> INT_CONST <cfloat> FLOAT_CONST <cstring> STRING_CONST <cchar> CHAR_CONST <cbool> BOOL_CONST
-%left REGEX_R REGEX_LIT
-%left <identifier> ID
+%left REGEX_R
+%left <identifier> ID REGEX_LIT
 %token IF_KW ELIF_KW ELSE_KW WHILE_KW BREAK_KW STRUCT_KW RETURN_KW CONTINUE_KW TEMP_FN_KW
 %token ARROW COLON
 %left COMMA DOT SEMICOLON DOLLAR
@@ -127,7 +129,7 @@ FunctionSymbolTableEntry *current_function;
 %nterm<rules> rule rules_list
 %nterm<lhs_arrow> rhs_arrow lhs_arrow elements_others 
 %nterm<rhs_automata> rhs_automata
-%nterm<c> assignment statements function_header cfg_rhs_ele
+%nterm<c> assignment statements function_header cfg_rhs_ele type_call
 %nterm<cfg_rule> cfg_rule
 %nterm<ele_pda> element_PDA
 %nterm<eles_pda> elements_PDA
@@ -840,7 +842,6 @@ statements: variable_declaration {
 variable_declaration: dtype id_list SEMICOLON
                     {
                         // backpatch id_list with dtype
-
                         for(auto it = $2->lst.begin();it!=$2->lst.end();it++)
                         {
                             if(it->second->indicator)
@@ -898,6 +899,8 @@ variable_declaration: dtype id_list SEMICOLON
                                    if(it->second->indicator!=6 && i)
                                    {
                                      cc_file<<std::string(" ,")<<it->first->name;
+                                     if(it->second->indicator)
+                                        cc_file<<std::string(" = ")<<it->second->cc;
                                      ++i;
                                      flag = false;
                                    }
@@ -905,6 +908,8 @@ variable_declaration: dtype id_list SEMICOLON
                                    {
                                      cc_file<<$1->cc+ std::string(" ");
                                      cc_file<<std::string(" ")<<it->first->name;
+                                        if(it->second->indicator)
+                                            cc_file<<std::string(" = ")<<it->second->cc;
                                      ++i;
                                      flag = false;
                                    }
@@ -1014,6 +1019,8 @@ id_list: ID {
             type->vtp = $3->vtp;
             type->vta = $3->vta;
             type->vts = $3->vts;
+            type->inner = $3->inner;
+            type->cc = $3->cc;
             if(!current_function && !$3->isConst)
                 yyerror("Cannot initialize global variable with a non-constant value");
             $$->lst.push_back(std::make_pair(entry,type));
@@ -1053,6 +1060,8 @@ id_list: ID {
             type->vtp = $5->vtp;
             type->vta = $5->vta;
             type->vts = $5->vts;
+            type->inner = $5->inner;
+            type->cc = $5->cc;
             //append to list
             $$->lst = $1->lst;
             $$->lst.push_back(std::make_pair(entry,type));
@@ -1100,6 +1109,12 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
             std::string type_rhs = getType($3);
             if(type_rhs[type_rhs.length()-1]==' ')
                     type_rhs=type_rhs.substr(0,type_rhs.length()-1);
+            if(type_rhs=="string" || type_rhs=="regex" || type_lhs=="" || type_lhs=="regex")
+            {
+                //error
+                std::string error = std::string("Invalid operation: Cannot use operator +=/-=/*=//=/%= on ")+type_lhs+std::string(" and ")+type_rhs;
+                yyerror(error.c_str());
+            }
             if(!isPrimitive(type_rhs) || !isPrimitive(type_lhs))
             {   
                 //error
@@ -1129,30 +1144,36 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 if(type_rhs[type_rhs.length()-1]==' ')
                     type_rhs=type_rhs.substr(0,type_rhs.length()-1);
             }
-            if(!isCoherent(type_lhs,type_rhs))
-            {
-                std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
-                yyerror(error.c_str());
-            }
-            // need to be done
-            if($3->indicator==6)
-            {
-                //set initialization
-                std::queue<std::string> stk;
-                stk = st.front();
-                st.pop();
-                $$->cc = "";
-                while(!stk.empty())
-                {
-                    // add inserts
-                    std::string str = stk.front();
-                    stk.pop();
-                    cc_file<<$1->cc<<".insert("<<str<<");"<<std::endl;
-                }
+            if(type_rhs=="string" && type_lhs=="string"){
+                $$->cc = std::string($1->cc) + " = " + std::string($3->cc)+std::string(" ;");
             }
             else
-                $$->cc = std::string($1->cc)+" = "+std::string($3->cc) + std::string(" ;");
-            }    
+            {
+                if(!isCoherent(type_lhs,type_rhs))
+                {
+                    std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
+                    yyerror(error.c_str());
+                }
+                // need to be done
+                if($3->indicator==6)
+                {
+                    //set initialization
+                    std::queue<std::string> stk;
+                    stk = st.front();
+                    st.pop();
+                    $$->cc = "";
+                    while(!stk.empty())
+                    {
+                        // add inserts
+                        std::string str = stk.front();
+                        stk.pop();
+                        cc_file<<$1->cc<<".insert("<<str<<");"<<std::endl;
+                    }
+                }
+                else
+                    $$->cc = std::string($1->cc)+" = "+std::string($3->cc) + std::string(" ;");
+            }
+        }    
           | pseudo_ID OPER_ASN_SIMPLE REGEX_R REGEX_LIT SEMICOLON
           {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
@@ -1165,21 +1186,24 @@ assignment: pseudo_ID OPER_ASN rhs SEMICOLON
                 std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
                 yyerror(error.c_str());
             }
+            std::string lit($4);
+            lit = lit.substr(1,lit.length()-2);
+            $$->cc = std::string($1->cc)+" = " + "*(new fsm::regex(\""+lit+"\"));\n";
           }
-          | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON
-          {
-            std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
-            if(!ret.first)
-                yyerror(ret.second.c_str());
-            std::string type_lhs = ret.second.substr(ret.second.find(" ")+1);
-            std::string type_rhs("string");
-            if(!isCoherent(type_lhs,type_rhs))
-            {
-                std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
-                yyerror(error.c_str());
-            }
-            $$->cc = std::string($1->cc)+" = "+std::string($3)+std::string(" ;");
-          }
+        //   | pseudo_ID OPER_ASN_SIMPLE STRING_CONST SEMICOLON
+        //   {
+        //     std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
+        //     if(!ret.first)
+        //         yyerror(ret.second.c_str());
+        //     std::string type_lhs = ret.second.substr(ret.second.find(" ")+1);
+        //     std::string type_rhs("string");
+        //     if(!isCoherent(type_lhs,type_rhs))
+        //     {
+        //         std::string error = std::string("Error: Invalid type conversion from ")+type_rhs+std::string(" to ")+type_lhs;
+        //         yyerror(error.c_str());
+        //     }
+        //     $$->cc = std::string($1->cc)+" = "+std::string($3)+std::string(" ;");
+        //   }
           | pseudo_ID COLON OPER_ASN_SIMPLE rhs_automata SEMICOLON
           {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,$1->name,"");
@@ -1367,7 +1391,6 @@ cfg_rule : pseudo_ID ARROW cfg_rhs
                         cfg_prods = new std::vector<std::vector<std::string>>();
                     cfg_prods->push_back(*temp);
                 }
-                // std::cout<<"HERE"<<std::endl;
                 cfg_rhs_current = NULL;
                 
             }
@@ -1420,6 +1443,13 @@ rhs: expression
     $$ = new type_attr();
     $$->indicator = 5;
     $$->vtsr = TYPE_REGEX;
+   }
+   | STRING_CONST
+   {
+    $$ = new type_attr();
+    $$->indicator = 4;
+    $$->vtsr = TYPE_STR;
+    $$->cc = std::string($1);
    }
    ;
 
@@ -1481,6 +1511,13 @@ expression: LPAREN expression RPAREN {
                     {
                         $$->vts = TYPE_OSET;
                     }
+                    if(trim($1->inner->print())!=trim($3->inner->print()))
+                    {
+                        std::string error = std::string("Invalid operation: Cannot add sets of different types: ")+$1->inner->print()+std::string(" and ")+$3->inner->print();
+                        yyerror(error.c_str());
+                    }
+                    else
+                        $$->inner = $1->inner;
                     $$->cc = $1->cc + std::string(" + ") + $3->cc;
                 }
                 else if($1->indicator==3 && $3->indicator==3)
@@ -1565,6 +1602,13 @@ expression: LPAREN expression RPAREN {
                     {
                         $$->vts = TYPE_OSET;
                     }
+                    if(trim($1->inner->print())!=trim($3->inner->print()))
+                    {
+                        std::string error = std::string("Invalid operation: Cannot subtract sets of different types: ")+$1->inner->print()+std::string(" and ")+$3->inner->print();
+                        yyerror(error.c_str());
+                    }
+                    else
+                        $$->inner = $1->inner;
                     $$->cc = $1->cc + std::string(" - ") + $3->cc;
                 }
                 else
@@ -1614,6 +1658,13 @@ expression: LPAREN expression RPAREN {
                     {
                         $$->vts = TYPE_OSET;
                     }
+                    if(trim($1->inner->print())!=trim($3->inner->print()))
+                    {
+                        std::string error = std::string("Invalid operation: Cannot multiply sets of different types: ")+$1->inner->print()+std::string(" and ")+$3->inner->print();
+                        yyerror(error.c_str());
+                    }
+                    else
+                        $$->inner = $1->inner;
                 }
                 else
                     yyerror("Invalid operation: Multiplication can only be done between 'primitive' and 'set' types");
@@ -1728,8 +1779,14 @@ expression: LPAREN expression RPAREN {
             if($1->indicator !=2)
                 yyerror("Invalid operation: Power set can only be computed for a set");
             $$->indicator = 2;
-            $$->vts = TYPE_OSET;
+            $$->vts = $1->vts;
             $$->isConst = false;
+            std::string str = $1->inner->print();
+            if($$->vts==TYPE_OSET)
+                str ="o_set " + trim(str);
+            else
+                str ="u_set " + trim(str);
+            $$->inner = genInnerType(trim(str));
             $$->cc = $1->cc+std::string(".power_set()");
           }
           | expression AT_THE_RATE expression 
@@ -1999,6 +2056,7 @@ expression: LPAREN expression RPAREN {
                             yyerror(ret.second.c_str());
                         else
                         {
+
                             $$->isConst = false;
                             std::string type = ret.second.substr(ret.second.find(' ')+1);
                             if(type.find(" ")!=std::string::npos && type.find(" ")!=type.length()-1)
@@ -2173,11 +2231,16 @@ call : ID LPAREN argument_list RPAREN
         auto it_arg_list = $3->lst.begin();
         //compare types
         int i=1;
+        // if(it_list==arg_pos_list_rev.end())
+            // std::cout<<"NULL"<<std::endl;
         while(it_list!=arg_pos_list_rev.end() && it_arg_list!=$3->lst.end())
         {
+            // std::cout<<"HERE"<<std::endl;
+            // std::cout<<*it_list<<" "<<*it_arg_list<<std::endl;
             std::string type_expected = params_table->lookup(*it_list)->type;
             std::string type_actual = *it_arg_list;
             type_actual = trim(type_actual);
+            // std::cout<<type_expected<<" "<<type_actual<<std::endl;
             if(type_expected=="o_set"||type_expected=="u_set"||type_expected=="o_set "|| type_expected=="u_set ")
             {
                 //concat inner types
@@ -2196,7 +2259,23 @@ call : ID LPAREN argument_list RPAREN
             yyerror("Too few arguments");
         else if(it_arg_list!=$3->lst.end())
             yyerror("Too many arguments");
-        $$->cc = std::string($1) + std::string("(") + $3->cc + std::string(")");
+        if(std::string($1)=="cfg_add_P" || std::string($1)=="cfg_remove_P")
+        {
+            std::string cfg_name = $3->cc.substr(0,$3->cc.find(","));
+            cfg_name = trim(cfg_name);
+            std::string next = $3->cc.substr($3->cc.find(",")+1);
+            std::string x = next.substr(0,next.find(","));
+            x = trim(x);
+            x = x.substr(0,x.length()-1);
+            next = next.substr(next.find(",")+1);
+            std::string y = next.substr(0,next.find(","));
+            y = trim(y);
+            y = y.substr(2,y.length()-1);
+            $$->cc = std::string($1) + std::string("(") + cfg_name + std::string(", ") + x + std::string(" -> ") + y + std::string(")");
+        }
+        else
+            $$->cc = std::string($1) + std::string("(") + $3->cc + std::string(")");
+        // std::cout<<$$->cc<<std::endl;
      }
      | ID TEMP_LEFT type_list_call TEMP_RIGHT LPAREN argument_list RPAREN
      {
@@ -2250,6 +2329,7 @@ call : ID LPAREN argument_list RPAREN
         }
         // we also need to check argument types
         std::vector<std::string> arg_pos_list_rev = entry->id_list;
+        // std::cout<<entry->name<<std::endl;
         VarSymbolTable *params_table = entry->params;
         auto it_list = arg_pos_list_rev.begin();
         auto it_arg_list = $6->lst.begin();
@@ -2260,12 +2340,14 @@ call : ID LPAREN argument_list RPAREN
             std::string type_expected = params_table->lookup(*it_list)->type;
             std::string type_actual = *it_arg_list;
             type_actual = trim(type_actual);
+            // std::cout<<type_expected<<" "<<type_actual<<std::endl;
             if(type_expected=="template")
                 continue;
             if(type_expected=="o_set"||type_expected=="u_set"||type_expected=="o_set "|| type_expected=="u_set ")
             {
-                //concat inner types
+                //concat inner types 
                 type_expected=trim(trim(type_expected)+std::string(" ")+params_table->lookup(*it_list)->inner->print());
+                // std::cout<<type_expected<<std::endl;
             }
             if(!isCoherent(type_expected,type_actual))
             {
@@ -2280,7 +2362,10 @@ call : ID LPAREN argument_list RPAREN
             yyerror("Too few arguments");
         else if(it_arg_list!=$6->lst.end())
             yyerror("Too many arguments");
-
+        if(std::find(set_funcs->begin(),set_funcs->end(),std::string($1))!=set_funcs->end())
+            $$->cc = std::string($1) + std::string("(") + $6->cc + std::string(")");
+        else
+            $$->cc = std::string($1) + "<" + $3->cc + std::string(">")+std::string("(") + $6->cc + std::string(")");
      }
      ;
 
@@ -2288,16 +2373,22 @@ type_list_call: type_call
               {
                 $$ = new state_list_attr();
                 $$->lst.push_back(std::string("temp"));
+                $$->cc = $1->cc;
               }
               | type_list_call COMMA type_call
               {
                 $$ = new state_list_attr();
                 $$->lst = $1->lst;
                 $$->lst.push_back(std::string("temp"));
+                $$->cc = $1->cc + std::string(", ") + $3->cc;
               }
               ;
 
 type_call: dtype
+         {
+            $$ = new cc_code();
+            $$->cc = $1->cc;
+         }
          | ID
          {
             //check if struct exists
@@ -2306,6 +2397,8 @@ type_call: dtype
                 std::string error = "Struct "+std::string($1)+std::string(" not defined");
                 yyerror(error.c_str());
             }
+            $$ = new cc_code();
+            $$->cc = std::string($1);
          }
          ;
 
@@ -2338,6 +2431,13 @@ argument_list:
                 $$->lst.push_back(type);
                 $$->cc = $1->cc + $2->cc;
              }
+             | STRING_CONST arg_list_next
+             {
+                $$ = new arg_list_attr();
+                $$->lst = $2->lst;
+                $$->lst.push_back(std::string("string"));
+                $$->cc = std::string($1) + $2->cc;
+             }
              ;
 
 arg_list_next:
@@ -2368,6 +2468,14 @@ arg_list_next:
                 $$->lst.push_back(type);
                 $$->cc = std::string(", ")+$2->cc + $3->cc;
              }
+             | COMMA STRING_CONST arg_list_next
+             {
+                $$ = new arg_list_attr();
+                $$->lst = $3->lst;
+                $$->lst.push_back(std::string("string"));
+                $$->cc = std::string(", ")+std::string($2) + $3->cc;
+             }
+             ;
 
 rhs_automata: LBRACE alphabet_list RBRACE
             {
@@ -2979,42 +3087,37 @@ int main(int argc, char **argv) {
     initST();
     initData();
     yyin = fopen(argv[1],"r");
-    char *filename = (char*)malloc(sizeof(char)*strlen(argv[1]));
-     //position of last '.' in file name
-    char *pos = strrchr(argv[1],'.'); 
-
-    //position of last '/' in file name
-    char *x = strrchr(argv[1],'/');
-
-    // file name of the input file after removing .txt at the end
-    // This requires the input file to have an extension
-    if(x==NULL)
-        strncpy(filename,argv[1],pos-argv[1]);
+    std::string filename,path;
+    std::string arg_1 = std::string(argv[1]);
+    if(arg_1.find_last_of("/")!=std::string::npos)
+    {
+        filename = arg_1.substr(arg_1.find_last_of("/")+1);
+        filename = filename.substr(0,filename.find_last_of("."));
+        path = arg_1.substr(0,arg_1.find_last_of("/"));
+        path = path.substr(0,path.find_last_of("/"));
+    }
     else
-        strncpy(filename,x+1,pos-x-1);
+    {
+        path = std::string(".");
+        filename = arg_1.substr(0,arg_1.find_last_of("."));
+    }
 
     // path to the folder of test file
-    char *path = (char*)malloc(sizeof(char)*strlen(argv[1]));
-    strncpy(path,argv[1],x-argv[1]);
-    x = strrchr(path,'/');
-    path[x-path] = '\0';
-    char *seq = (char*)malloc(sizeof(char)*(strlen(path)+50));
-    char *parser_log = (char*)malloc(sizeof(char)*(strlen(path)+50));
-    sprintf(seq,"%s/logs/seq_tokens_%s.tok",path,filename);
-    sprintf(parser_log,"%s/logs/parser_log_%s.log",path,filename);
-    char *cc_file_name = (char*)malloc(sizeof(char)*(strlen(path)+50));
-    sprintf(cc_file_name,"%s/cc_files/cc_file_%s.cc",path,filename);
-    cc_file.open(cc_file_name,std::ios::out);
-    cc_file<<"#include \"../../includes/fsm.hh\"\n";
+    std::string seq = std::string(path)+std::string("/logs/seq_tokens_")+std::string(filename)+std::string(".tok");
+    std::string parser_log = std::string(path)+std::string("/logs/parser_log_")+std::string(filename)+std::string(".log");
+    std::string cc_file_name = std::string(path)+std::string("/cc_files/cc_file_")+std::string(filename)+std::string(".cc");
     // tokens file path
-    
     if(argc==3)
     {
-        sprintf(seq,"%s/seq_tokens_%s.tok",argv[2],filename);
-        sprintf(parser_log,"%s/parser_log_%s.log",argv[2],filename);
+        seq = std::string(argv[2]) + std::string("/seq_tokens_")+std::string(filename)+std::string(".tok");
+        parser_log = std::string(argv[2]) + std::string("/parser_log_")+std::string(filename)+std::string(".log");
     }
+    cc_file.open(cc_file_name,std::ios::out);
+    cc_file<<"#include \"../../../code/includes/fsm.hh\"\n";
+    cc_file<<"#include \"../../../code/includes/macros.hh\"\n";
     seq_token.open(seq,std::ios::out);
-    parse_log = fopen(parser_log,"w");
+    parse_log = fopen(parser_log.c_str(),"w");
+    // std::cout<<"Files opened"<<std::endl;
     yyparse();
     fclose(yyin);
     seq_token.close();

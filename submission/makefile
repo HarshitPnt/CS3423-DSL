@@ -14,6 +14,9 @@ FILES4 := $(wildcard ${TESTS4}/*)
 TESTS_TOKS2 := ./testcases/phase2/logs
 TESTS_TOKS3 := ./testcases/phase3/logs
 TESTS_TOKS4 := ./testcases/phase4/logs
+TESTS_CCFILE2 := ./testcases/phase2/cc_files
+TESTS_CCFILE3 := ./testcases/phase3/cc_files
+TESTS_CCFILE4 := ./testcases/phase4/cc_files
 _CSRC := lexer.l parser.y semantic.c
 OBJS := lexer.o parser.o semantic.o
 CSRC := $(pathsubst %,${SRC}/%,$(_CSRC))
@@ -25,12 +28,12 @@ compile:
 	 ${MAKE} -C ${BUILD} compile
 
 run: compile
-	rm -rf ${TESTS_TOKS2}
-	mkdir ${TESTS_TOKS2}
-	rm -rf ${TESTS_TOKS3}
-	mkdir ${TESTS_TOKS3}
-	rm -rf ${TESTS_TOKS4}
-	mkdir ${TESTS_TOKS4}
+	mkdir -p ${TESTS_TOKS2}
+	mkdir -p ${TESTS_TOKS3}
+	mkdir -p ${TESTS_TOKS4}
+	mkdir -p ${TESTS_CCFILE2}
+	mkdir -p ${TESTS_CCFILE3}
+	mkdir -p ${TESTS_CCFILE4}
 	${BUILD}/prog ${FILE} ${LOGS}
 
 test_code_gen : library
@@ -49,6 +52,12 @@ test: compile
 	mkdir ${TESTS_TOKS3}
 	rm -rf ${TESTS_TOKS4}
 	mkdir ${TESTS_TOKS4}
+	rm -rf ${TESTS_CCFILE2}
+	mkdir ${TESTS_CCFILE2}
+	rm -rf ${TESTS_CCFILE3}
+	mkdir ${TESTS_CCFILE3}
+	rm -rf ${TESTS_CCFILE4}
+	mkdir ${TESTS_CCFILE4}
 	@echo "-----------------------------------"
 	@echo "Testing Phase 2"
 	@for file in $(FILES2); do \
@@ -91,4 +100,7 @@ clean:
 	rm -rf ${TESTS_TOKS2}
 	rm -rf ${TESTS_TOKS3}
 	rm -rf ${TESTS_TOKS4}
+	rm -rf ${TESTS_CCFILE2}
+	rm -rf ${TESTS_CCFILE3}
+	rm -rf ${TESTS_CCFILE4}
 	echo "${GREEN}Clean Successful${RESET}"

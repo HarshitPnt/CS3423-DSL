@@ -105,6 +105,7 @@ temp_fn {printtoken("reserved keyword"); return TEMP_FN_KW;}
 
     printtoken("regex");
     BEGIN INITIAL;
+    yylval.identifier = strdup(yytext);
     return REGEX_LIT;
 }
 

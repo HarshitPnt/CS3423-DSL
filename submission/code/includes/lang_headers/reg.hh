@@ -18,6 +18,7 @@ namespace fsm
         bool is_valid();
         std::string to_postfix();
         ~regex();
+        regex();
         regex(const std::string);
     };
 } // namespace fsm

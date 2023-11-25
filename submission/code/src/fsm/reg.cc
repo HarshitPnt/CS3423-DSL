@@ -7,7 +7,6 @@ namespace fsm
     regex::regex(const std::string str)
     {
         this->str = str;
-        
         this->valid = regcomp(&(this->reg), this->str.c_str(), REG_EXTENDED);
     }
 
@@ -28,9 +27,15 @@ namespace fsm
         return (this->valid == 0);
     }
 
-    std::string regex::to_postfix(){
+    std::string regex::to_postfix()
+    {
         std::string postfix = "";
         std::stack<char> st;
-        
+    }
+
+    regex::regex()
+    {
+        this->str = "";
+        this->valid = 0;
     }
 } // namespace fsm

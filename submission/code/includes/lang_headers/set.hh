@@ -30,6 +30,16 @@ namespace fsm
         void insert(T x);
         void remove(T x);
         bool empty();
+        template <typename U>
+        operator o_set<U>() const
+        {
+            o_set<U> result;
+            for (const auto &element : set)
+            {
+                result.set.insert(static_cast<U>(element));
+            }
+            return result;
+        }
         void del();
         void out()
         {
@@ -114,6 +124,15 @@ namespace fsm
         bool empty();
         void del();
         void out();
+        operator u_set<U>() const
+        {
+            u_set<U> result;
+            for (const auto &element : set)
+            {
+                result.set.insert(static_cast<U>(element));
+            }
+            return result;
+        }
         ~u_set();
         u_set();
         u_set(std::vector<T>);
@@ -269,7 +288,8 @@ namespace fsm
     }
 
     template <typename T>
-    void recursive_power_set(o_set<o_set<T>> &res, o_set<T> &set, int index, o_set<T> &curr){
+    void recursive_power_set(o_set<o_set<T>> &res, o_set<T> &set, int index, o_set<T> &curr)
+    {
         if (index == set.size())
         {
             res.insert(curr);
@@ -392,7 +412,8 @@ namespace fsm
     }
 
     template <typename T>
-    void recursive_power_set(u_set<u_set<T>> &res, u_set<T> &set, int index, u_set<T> &curr){
+    void recursive_power_set(u_set<u_set<T>> &res, u_set<T> &set, int index, u_set<T> &curr)
+    {
         if (index == set.size())
         {
             res.insert(curr);

@@ -1,0 +1,5 @@
+void main()
+{   
+    cfg c;
+    cfg_add_T(c,"x","x");
+}

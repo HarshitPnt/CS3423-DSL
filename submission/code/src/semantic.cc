@@ -10,6 +10,21 @@ std::vector<std::string> type_maps_prim;
 std::vector<std::string> type_maps_auto;
 std::vector<std::string> type_maps_set;
 std::vector<std::string> type_maps_sr;
+std::set<std::string> *set_funcs;
+
+inner_type *genInnerType(std::string inner)
+{
+    if (inner.find(" ") == std::string::npos || inner.find(" ") == inner.length() - 1)
+        return new inner_type(NULL, inner);
+    else
+    {
+        size_t space = inner.find(" ");
+        std::string type = inner.substr(0, space);
+        inner_type *inner_inner = genInnerType(inner.substr(space + 1));
+        return new inner_type(inner_inner, type);
+    }
+}
+
 void StructSymbolTable::init()
 {
     // insert nterm, term, alphabets, productions, states, start, accept
@@ -92,17 +107,6 @@ void StructSymbolTable::init()
     sst->insert(sste_pda);
 }
 
-void initST()
-{
-    vstl = new VarSymbolTableList();
-    fst = new FunctionSymbolTable();
-    global_vst = new VarSymbolTable();
-    sst = new StructSymbolTable();
-    sst->init();
-    current_vst = global_vst;
-    vstl->insert(global_vst);
-}
-
 void initData()
 {
     type_maps_prim.push_back("char");
@@ -124,6 +128,767 @@ void initData()
     type_maps_auto.push_back("fsm::nfa");
     type_maps_auto.push_back("fsm::pda");
     type_maps_sr.push_back("std::string");
+    type_maps_sr.push_back("fsm::regex");
+}
+
+void initFSTSet()
+{
+    // size(o_set<T> S)
+    StructSymbolTableEntry *sste_size_o_set = new StructSymbolTableEntry("@T_set_size", NULL);      // template type
+    sste_size_o_set->isTemplate = true;                                                             // template type symbol table
+    sst->insert(sste_size_o_set);                                                                   // insert template type into struct symbol table
+    VarSymbolTable *size_o_set = new VarSymbolTable();                                              // function params
+    inner_type *inner_size_o_set = genInnerType("@T_set_size");                                     // param inner type
+    VarSymbolTableEntry *vste_size_o_set = new VarSymbolTableEntry("S", "o_set", inner_size_o_set); // param entry
+    size_o_set->insert(vste_size_o_set);                                                            // insert param entry into param symbol table
+    std::vector<std::string> size_template_params;
+    size_template_params.push_back("@T_set_size");                                                                                          // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_size_o_set = new FunctionSymbolTableEntry("o_size", 1, size_o_set, "int_8", true, size_template_params); // function entry
+    fste_size_o_set->id_list.push_back("S");                                                                                                // set isTemplate to true
+    fst->insert(fste_size_o_set);                                                                                                           // insert function entry into function symbol table
+
+    // size(u_set<T> S)
+    StructSymbolTableEntry *sste_size_u_set = new StructSymbolTableEntry("@T_u_set_size", NULL);    // template type
+    sste_size_u_set->isTemplate = true;                                                             // template type symbol table
+    sst->insert(sste_size_u_set);                                                                   // insert template type into struct symbol table
+    VarSymbolTable *size_u_set = new VarSymbolTable();                                              // function params
+    inner_type *inner_size_u_set = genInnerType("@T_u_set_size");                                   // param inner type
+    VarSymbolTableEntry *vste_size_u_set = new VarSymbolTableEntry("S", "u_set", inner_size_u_set); // param entry
+    size_u_set->insert(vste_size_u_set);                                                            // insert param entry into param symbol table
+    std::vector<std::string> size_template_params_u_set;
+    size_template_params_u_set.push_back("@T_u_set_size");                                                                                        // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_size_u_set = new FunctionSymbolTableEntry("u_size", 1, size_u_set, "int_8", true, size_template_params_u_set); // function entry
+    fste_size_u_set->id_list.push_back("S");                                                                                                      // set isTemplate to true
+    fst->insert(fste_size_u_set);                                                                                                                 // insert function entry into function symbol table
+
+    // o_empty(o_set<T> S)
+    StructSymbolTableEntry *sste_empty_o_set = new StructSymbolTableEntry("@T_o_set_empty", NULL);    // template type
+    sste_empty_o_set->isTemplate = true;                                                              // template type symbol table
+    sst->insert(sste_empty_o_set);                                                                    // insert template type into struct symbol table
+    VarSymbolTable *empty_o_set = new VarSymbolTable();                                               // function params
+    inner_type *inner_empty_o_set = genInnerType("@T_o_set_empty");                                   // param inner type
+    VarSymbolTableEntry *vste_empty_o_set = new VarSymbolTableEntry("S", "o_set", inner_empty_o_set); // param entry
+    empty_o_set->insert(vste_empty_o_set);                                                            // insert param entry into param symbol table
+    std::vector<std::string> empty_template_params;
+    empty_template_params.push_back("@T_o_set_empty");                                                                                         // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_empty_o_set = new FunctionSymbolTableEntry("o_empty", 1, empty_o_set, "bool", true, empty_template_params); // function entry
+    fste_empty_o_set->id_list.push_back("S");                                                                                                  // set isTemplate to true
+    fst->insert(fste_empty_o_set);                                                                                                             // insert function entry into function symbol table
+
+    // u_empty(u_set<T> S)
+    StructSymbolTableEntry *sste_empty_u_set = new StructSymbolTableEntry("@T_u_set_empty", NULL);    // template type
+    sste_empty_u_set->isTemplate = true;                                                              // template type symbol table
+    sst->insert(sste_empty_u_set);                                                                    // insert template type into struct symbol table
+    VarSymbolTable *empty_u_set = new VarSymbolTable();                                               // function params
+    inner_type *inner_empty_u_set = genInnerType("@T_u_set_empty");                                   // param inner type
+    VarSymbolTableEntry *vste_empty_u_set = new VarSymbolTableEntry("S", "u_set", inner_empty_u_set); // param entry
+    empty_u_set->insert(vste_empty_u_set);                                                            // insert param entry into param symbol table
+    std::vector<std::string> empty_template_params_u_set;
+    empty_template_params_u_set.push_back("@T_u_set_empty");                                                                                         // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_empty_u_set = new FunctionSymbolTableEntry("u_empty", 1, empty_u_set, "bool", true, empty_template_params_u_set); // function entry
+    fste_empty_u_set->id_list.push_back("S");                                                                                                        // set isTemplate to true
+    fst->insert(fste_empty_u_set);                                                                                                                   // insert function entry into function symbol table
+
+    // o_find(o_set<T> S, T x)
+    StructSymbolTableEntry *sste_find_o_set = new StructSymbolTableEntry("@T_o_set_find", NULL);    // template type
+    sste_find_o_set->isTemplate = true;                                                             // template type symbol table
+    sst->insert(sste_find_o_set);                                                                   // insert template type into struct symbol table
+    VarSymbolTable *find_o_set = new VarSymbolTable();                                              // function params
+    inner_type *inner_find_o_set = genInnerType("@T_o_set_find");                                   // param inner type
+    VarSymbolTableEntry *vste_find_o_set = new VarSymbolTableEntry("S", "o_set", inner_find_o_set); // param entry
+    find_o_set->insert(vste_find_o_set);                                                            // param inner type
+    VarSymbolTableEntry *vste_find_o_set_2 = new VarSymbolTableEntry("x", "@T_o_set_find", NULL);
+    find_o_set->insert(vste_find_o_set_2); // param entry
+    std::vector<std::string> find_template_params;
+    find_template_params.push_back("@T_o_set_find");                                                                                       // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_find_o_set = new FunctionSymbolTableEntry("o_find", 2, find_o_set, "bool", true, find_template_params); // function entry
+    fste_find_o_set->id_list.push_back("x");                                                                                               // set isTemplate to true
+    fste_find_o_set->id_list.push_back("S");                                                                                               // set isTemplate to true
+    fst->insert(fste_find_o_set);                                                                                                          // insert function entry into function symbol table
+
+    // u_find(u_set<T> S, T x)
+    StructSymbolTableEntry *sste_find_u_set = new StructSymbolTableEntry("@T_u_set_find", NULL);    // template type
+    sste_find_u_set->isTemplate = true;                                                             // template type symbol table
+    sst->insert(sste_find_u_set);                                                                   // insert template type into struct symbol table
+    VarSymbolTable *find_u_set = new VarSymbolTable();                                              // function params
+    inner_type *inner_find_u_set = genInnerType("@T_u_set_find");                                   // param inner type
+    VarSymbolTableEntry *vste_find_u_set = new VarSymbolTableEntry("S", "u_set", inner_find_u_set); // param entry
+    find_u_set->insert(vste_find_u_set);                                                            // param inner type
+    VarSymbolTableEntry *vste_find_u_set_2 = new VarSymbolTableEntry("x", "@T_u_set_find", NULL);
+    find_u_set->insert(vste_find_u_set_2); // param entry
+    std::vector<std::string> find_template_params_u_set;
+    find_template_params_u_set.push_back("@T_u_set_find");                                                                                       // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_find_u_set = new FunctionSymbolTableEntry("u_find", 2, find_u_set, "bool", true, find_template_params_u_set); // function entry
+    fste_find_u_set->id_list.push_back("x");                                                                                                     // set isTemplate to true
+    fste_find_u_set->id_list.push_back("S");                                                                                                     // set isTemplate to true
+    fst->insert(fste_find_u_set);                                                                                                                // insert function entry into function symbol table
+
+    // o_insert(o_set<T> S, T x)
+    StructSymbolTableEntry *sste_insert_o_set = new StructSymbolTableEntry("@T_o_set_insert", NULL);    // template type
+    sste_insert_o_set->isTemplate = true;                                                               // template type symbol table
+    sst->insert(sste_insert_o_set);                                                                     // insert template type into struct symbol table
+    VarSymbolTable *insert_o_set = new VarSymbolTable();                                                // function params
+    inner_type *inner_insert_o_set = genInnerType("@T_o_set_insert");                                   // param inner type
+    VarSymbolTableEntry *vste_insert_o_set = new VarSymbolTableEntry("S", "o_set", inner_insert_o_set); // param entry
+    insert_o_set->insert(vste_insert_o_set);                                                            // param inner type
+    VarSymbolTableEntry *vste_insert_o_set_2 = new VarSymbolTableEntry("x", "@T_o_set_insert", NULL);
+    insert_o_set->insert(vste_insert_o_set_2); // param entry
+    std::vector<std::string> insert_template_params;
+    insert_template_params.push_back("@T_o_set_insert");                                                                                           // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_insert_o_set = new FunctionSymbolTableEntry("o_insert", 2, insert_o_set, "bool", true, insert_template_params); // function entry
+    fste_insert_o_set->id_list.push_back("x");                                                                                                     // set isTemplate to true
+    fste_insert_o_set->id_list.push_back("S");                                                                                                     // set isTemplate to true
+    fst->insert(fste_insert_o_set);                                                                                                                // insert function entry into function symbol table
+
+    // u_insert(u_set<T> S, T x)
+    StructSymbolTableEntry *sste_insert_u_set = new StructSymbolTableEntry("@T_u_set_insert", NULL);    // template type
+    sste_insert_u_set->isTemplate = true;                                                               // template type symbol table
+    sst->insert(sste_insert_u_set);                                                                     // insert template type into struct symbol table
+    VarSymbolTable *insert_u_set = new VarSymbolTable();                                                // function params
+    inner_type *inner_insert_u_set = genInnerType("@T_u_set_insert");                                   // param inner type
+    VarSymbolTableEntry *vste_insert_u_set = new VarSymbolTableEntry("S", "u_set", inner_insert_u_set); // param entry
+    insert_u_set->insert(vste_insert_u_set);                                                            // param inner type
+    VarSymbolTableEntry *vste_insert_u_set_2 = new VarSymbolTableEntry("x", "@T_u_set_insert", NULL);
+    insert_u_set->insert(vste_insert_u_set_2); // param entry
+    std::vector<std::string> insert_template_params_u_set;
+    insert_template_params_u_set.push_back("@T_u_set_insert");                                                                                           // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_insert_u_set = new FunctionSymbolTableEntry("u_insert", 2, insert_u_set, "bool", true, insert_template_params_u_set); // function entry
+    fste_insert_u_set->id_list.push_back("x");                                                                                                           // set isTemplate to true
+    fste_insert_u_set->id_list.push_back("S");                                                                                                           // set isTemplate to true
+    fst->insert(fste_insert_u_set);                                                                                                                      // insert function entry into function symbol table
+
+    // o_remove(o_set<T> S, T x)
+    StructSymbolTableEntry *sste_remove_o_set = new StructSymbolTableEntry("@T_o_set_remove", NULL);    // template type
+    sste_remove_o_set->isTemplate = true;                                                               // template type symbol table
+    sst->insert(sste_remove_o_set);                                                                     // insert template type into struct symbol table
+    VarSymbolTable *remove_o_set = new VarSymbolTable();                                                // function params
+    inner_type *inner_remove_o_set = genInnerType("@T_o_set_remove");                                   // param inner type
+    VarSymbolTableEntry *vste_remove_o_set = new VarSymbolTableEntry("S", "o_set", inner_remove_o_set); // param entry
+    remove_o_set->insert(vste_remove_o_set);                                                            // param inner type
+    VarSymbolTableEntry *vste_remove_o_set_2 = new VarSymbolTableEntry("x", "@T_o_set_remove", NULL);
+    remove_o_set->insert(vste_remove_o_set_2); // param entry
+    std::vector<std::string> remove_template_params;
+    remove_template_params.push_back("@T_o_set_remove");                                                                                           // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_remove_o_set = new FunctionSymbolTableEntry("o_remove", 2, remove_o_set, "bool", true, remove_template_params); // function entry
+    fste_remove_o_set->id_list.push_back("x");                                                                                                     // set isTemplate to true
+    fste_remove_o_set->id_list.push_back("S");                                                                                                     // set isTemplate to true
+    fst->insert(fste_remove_o_set);                                                                                                                // insert function entry into function symbol table
+
+    // u_remove(u_set<T> S, T x)
+    StructSymbolTableEntry *sste_remove_u_set = new StructSymbolTableEntry("@T_u_set_remove", NULL);    // template type
+    sste_remove_u_set->isTemplate = true;                                                               // template type symbol table
+    sst->insert(sste_remove_u_set);                                                                     // insert template type into struct symbol table
+    VarSymbolTable *remove_u_set = new VarSymbolTable();                                                // function params
+    inner_type *inner_remove_u_set = genInnerType("@T_u_set_remove");                                   // param inner type
+    VarSymbolTableEntry *vste_remove_u_set = new VarSymbolTableEntry("S", "u_set", inner_remove_u_set); // param entry
+    remove_u_set->insert(vste_remove_u_set);                                                            // param inner type
+    VarSymbolTableEntry *vste_remove_u_set_2 = new VarSymbolTableEntry("x", "@T_u_set_remove", NULL);
+    remove_u_set->insert(vste_remove_u_set_2); // param entry
+    std::vector<std::string> remove_template_params_u_set;
+    remove_template_params_u_set.push_back("@T_u_set_remove");                                                                                           // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_remove_u_set = new FunctionSymbolTableEntry("u_remove", 2, remove_u_set, "bool", true, remove_template_params_u_set); // function entry
+    fste_remove_u_set->id_list.push_back("x");                                                                                                           // set isTemplate to true
+    fste_remove_u_set->id_list.push_back("S");                                                                                                           // set isTemplate to true
+    fst->insert(fste_remove_u_set);                                                                                                                      // insert function entry into function symbol table
+
+    // o_output(o_set<T> S)
+    StructSymbolTableEntry *sste_output_o_set = new StructSymbolTableEntry("@T_o_set_output", NULL);    // template type
+    sste_output_o_set->isTemplate = true;                                                               // template type symbol table
+    sst->insert(sste_output_o_set);                                                                     // insert template type into struct symbol table
+    VarSymbolTable *output_o_set = new VarSymbolTable();                                                // function params
+    inner_type *inner_output_o_set = genInnerType("@T_o_set_output");                                   // param inner type
+    VarSymbolTableEntry *vste_output_o_set = new VarSymbolTableEntry("S", "o_set", inner_output_o_set); // param entry
+    output_o_set->insert(vste_output_o_set);                                                            // param inner type
+    std::vector<std::string> output_template_params;
+    output_template_params.push_back("@T_o_set_output");                                                                                           // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_output_o_set = new FunctionSymbolTableEntry("o_output", 1, output_o_set, "void", true, output_template_params); // function entry
+    fste_output_o_set->id_list.push_back("S");                                                                                                     // set isTemplate to true
+    fst->insert(fste_output_o_set);                                                                                                                // insert function entry into function symbol table
+
+    // u_output(u_set<T> S)
+    StructSymbolTableEntry *sste_output_u_set = new StructSymbolTableEntry("@T_u_set_output", NULL);    // template type
+    sste_output_u_set->isTemplate = true;                                                               // template type symbol table
+    sst->insert(sste_output_u_set);                                                                     // insert template type into struct symbol table
+    VarSymbolTable *output_u_set = new VarSymbolTable();                                                // function params
+    inner_type *inner_output_u_set = genInnerType("@T_u_set_output");                                   // param inner type
+    VarSymbolTableEntry *vste_output_u_set = new VarSymbolTableEntry("S", "u_set", inner_output_u_set); // param entry
+    output_u_set->insert(vste_output_u_set);                                                            // param inner type
+    std::vector<std::string> output_template_params_u_set;
+    output_template_params_u_set.push_back("@T_u_set_output");                                                                                           // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_output_u_set = new FunctionSymbolTableEntry("u_output", 1, output_u_set, "void", true, output_template_params_u_set); // function entry
+    fste_output_u_set->id_list.push_back("S");                                                                                                           // set isTemplate to true
+    fst->insert(fste_output_u_set);                                                                                                                      // insert function entry into function symbol table
+}
+
+void initFSTDFA()
+{
+    // dfa_insert_state(dfa D, string q)
+    VarSymbolTable *dfa_insert_state = new VarSymbolTable();
+    VarSymbolTableEntry *vste_dfa_insert_state = new VarSymbolTableEntry("D", "dfa", NULL);
+    VarSymbolTableEntry *vste_dfa_insert_state_2 = new VarSymbolTableEntry("q", "string", NULL);
+    dfa_insert_state->insert(vste_dfa_insert_state);
+    dfa_insert_state->insert(vste_dfa_insert_state_2);
+    FunctionSymbolTableEntry *fste_dfa_insert_state = new FunctionSymbolTableEntry("dfa_insert_state", 2, dfa_insert_state, "void");
+    fste_dfa_insert_state->id_list.push_back("q");
+    fste_dfa_insert_state->id_list.push_back("D");
+    fst->insert(fste_dfa_insert_state);
+
+    // dfa_insert_alphabet(dfa D, string s1, string s2)
+    VarSymbolTable *dfa_insert_alphabet = new VarSymbolTable();
+    VarSymbolTableEntry *vste_dfa_insert_alphabet = new VarSymbolTableEntry("D", "dfa", NULL);
+    VarSymbolTableEntry *vste_dfa_insert_alphabet_2 = new VarSymbolTableEntry("s1", "string", NULL);
+    VarSymbolTableEntry *vste_dfa_insert_alphabet_3 = new VarSymbolTableEntry("s2", "string", NULL);
+    dfa_insert_alphabet->insert(vste_dfa_insert_alphabet);
+    dfa_insert_alphabet->insert(vste_dfa_insert_alphabet_2);
+    dfa_insert_alphabet->insert(vste_dfa_insert_alphabet_3);
+    FunctionSymbolTableEntry *fste_dfa_insert_alphabet = new FunctionSymbolTableEntry("dfa_insert_alphabet", 3, dfa_insert_alphabet, "void");
+    fste_dfa_insert_alphabet->id_list.push_back("s2");
+    fste_dfa_insert_alphabet->id_list.push_back("s1");
+    fste_dfa_insert_alphabet->id_list.push_back("D");
+    fst->insert(fste_dfa_insert_alphabet);
+
+    // dfa_insert_transition(dfa D, string q1, string s, string q2)
+    VarSymbolTable *dfa_insert_transition = new VarSymbolTable();
+    VarSymbolTableEntry *vste_dfa_insert_transition = new VarSymbolTableEntry("D", "dfa", NULL);
+    VarSymbolTableEntry *vste_dfa_insert_transition_2 = new VarSymbolTableEntry("q1", "string", NULL);
+    VarSymbolTableEntry *vste_dfa_insert_transition_3 = new VarSymbolTableEntry("s", "string", NULL);
+    VarSymbolTableEntry *vste_dfa_insert_transition_4 = new VarSymbolTableEntry("q2", "string", NULL);
+    dfa_insert_transition->insert(vste_dfa_insert_transition);
+    dfa_insert_transition->insert(vste_dfa_insert_transition_2);
+    dfa_insert_transition->insert(vste_dfa_insert_transition_3);
+    dfa_insert_transition->insert(vste_dfa_insert_transition_4);
+    FunctionSymbolTableEntry *fste_dfa_insert_transition = new FunctionSymbolTableEntry("dfa_insert_transition", 4, dfa_insert_transition, "void");
+    fste_dfa_insert_transition->id_list.push_back("q2");
+    fste_dfa_insert_transition->id_list.push_back("s");
+    fste_dfa_insert_transition->id_list.push_back("q1");
+    fste_dfa_insert_transition->id_list.push_back("D");
+    fst->insert(fste_dfa_insert_transition);
+
+    // dfa_change_start(dfa D, string q)
+    VarSymbolTable *dfa_change_start = new VarSymbolTable();
+    VarSymbolTableEntry *vste_dfa_change_start = new VarSymbolTableEntry("D", "dfa", NULL);
+    VarSymbolTableEntry *vste_dfa_change_start_2 = new VarSymbolTableEntry("q", "string", NULL);
+    dfa_change_start->insert(vste_dfa_change_start);
+    dfa_change_start->insert(vste_dfa_change_start_2);
+    FunctionSymbolTableEntry *fste_dfa_change_start = new FunctionSymbolTableEntry("dfa_change_start", 2, dfa_change_start, "void");
+    fste_dfa_change_start->id_list.push_back("q");
+    fste_dfa_change_start->id_list.push_back("D");
+    fst->insert(fste_dfa_change_start);
+
+    // dfa_insert_accept(dfa D, string q)
+    VarSymbolTable *dfa_insert_accept = new VarSymbolTable();
+    VarSymbolTableEntry *vste_dfa_insert_accept = new VarSymbolTableEntry("D", "dfa", NULL);
+    VarSymbolTableEntry *vste_dfa_insert_accept_2 = new VarSymbolTableEntry("q", "string", NULL);
+    dfa_insert_accept->insert(vste_dfa_insert_accept);
+    dfa_insert_accept->insert(vste_dfa_insert_accept_2);
+    FunctionSymbolTableEntry *fste_dfa_insert_accept = new FunctionSymbolTableEntry("dfa_insert_accept", 2, dfa_insert_accept, "void");
+    fste_dfa_insert_accept->id_list.push_back("q");
+    fste_dfa_insert_accept->id_list.push_back("D");
+    fst->insert(fste_dfa_insert_accept);
+
+    // dfa_remove_accept(dfa D, string q)
+    VarSymbolTable *dfa_remove_accept = new VarSymbolTable();
+    VarSymbolTableEntry *vste_dfa_remove_accept = new VarSymbolTableEntry("D", "dfa", NULL);
+    VarSymbolTableEntry *vste_dfa_remove_accept_2 = new VarSymbolTableEntry("q", "string", NULL);
+    dfa_remove_accept->insert(vste_dfa_remove_accept);
+    dfa_remove_accept->insert(vste_dfa_remove_accept_2);
+    FunctionSymbolTableEntry *fste_dfa_remove_accept = new FunctionSymbolTableEntry("dfa_remove_accept", 2, dfa_remove_accept, "void");
+    fste_dfa_remove_accept->id_list.push_back("q");
+    fste_dfa_remove_accept->id_list.push_back("D");
+    fst->insert(fste_dfa_remove_accept);
+
+    // dfa_remove_state(dfa D, string q)
+    VarSymbolTable *dfa_remove_state = new VarSymbolTable();
+    VarSymbolTableEntry *vste_dfa_remove_state = new VarSymbolTableEntry("D", "dfa", NULL);
+    VarSymbolTableEntry *vste_dfa_remove_state_2 = new VarSymbolTableEntry("q", "string", NULL);
+    dfa_remove_state->insert(vste_dfa_remove_state);
+    dfa_remove_state->insert(vste_dfa_remove_state_2);
+    FunctionSymbolTableEntry *fste_dfa_remove_state = new FunctionSymbolTableEntry("dfa_remove_state", 2, dfa_remove_state, "void");
+    fste_dfa_remove_state->id_list.push_back("q");
+    fste_dfa_remove_state->id_list.push_back("D");
+    fst->insert(fste_dfa_remove_state);
+
+    // dfa_remove_alphabet(dfa D, string s)
+    VarSymbolTable *dfa_remove_alphabet = new VarSymbolTable();
+    VarSymbolTableEntry *vste_dfa_remove_alphabet = new VarSymbolTableEntry("D", "dfa", NULL);
+    VarSymbolTableEntry *vste_dfa_remove_alphabet_2 = new VarSymbolTableEntry("s", "string", NULL);
+    dfa_remove_alphabet->insert(vste_dfa_remove_alphabet);
+    dfa_remove_alphabet->insert(vste_dfa_remove_alphabet_2);
+    FunctionSymbolTableEntry *fste_dfa_remove_alphabet = new FunctionSymbolTableEntry("dfa_remove_alphabet", 2, dfa_remove_alphabet, "void");
+    fste_dfa_remove_alphabet->id_list.push_back("s");
+    fste_dfa_remove_alphabet->id_list.push_back("D");
+    fst->insert(fste_dfa_remove_alphabet);
+
+    // dfa_remove_transition(dfa D, string q1, string s, string q2)
+    VarSymbolTable *dfa_remove_transition = new VarSymbolTable();
+    VarSymbolTableEntry *vste_dfa_remove_transition = new VarSymbolTableEntry("D", "dfa", NULL);
+    VarSymbolTableEntry *vste_dfa_remove_transition_2 = new VarSymbolTableEntry("q1", "string", NULL);
+    VarSymbolTableEntry *vste_dfa_remove_transition_3 = new VarSymbolTableEntry("s", "string", NULL);
+    VarSymbolTableEntry *vste_dfa_remove_transition_4 = new VarSymbolTableEntry("q2", "string", NULL);
+    dfa_remove_transition->insert(vste_dfa_remove_transition);
+    dfa_remove_transition->insert(vste_dfa_remove_transition_2);
+    dfa_remove_transition->insert(vste_dfa_remove_transition_3);
+    dfa_remove_transition->insert(vste_dfa_remove_transition_4);
+    FunctionSymbolTableEntry *fste_dfa_remove_transition = new FunctionSymbolTableEntry("dfa_remove_transition", 4, dfa_remove_transition, "void");
+    fste_dfa_remove_transition->id_list.push_back("q2");
+    fste_dfa_remove_transition->id_list.push_back("s");
+    fste_dfa_remove_transition->id_list.push_back("q1");
+    fste_dfa_remove_transition->id_list.push_back("D");
+    fst->insert(fste_dfa_remove_transition);
+
+    // dfa_output(dfa D)
+    VarSymbolTable *dfa_output = new VarSymbolTable();
+    VarSymbolTableEntry *vste_dfa_output = new VarSymbolTableEntry("D", "dfa", NULL);
+    dfa_output->insert(vste_dfa_output);
+    FunctionSymbolTableEntry *fste_dfa_output = new FunctionSymbolTableEntry("dfa_output", 1, dfa_output, "void");
+    fste_dfa_output->id_list.push_back("D");
+    fst->insert(fste_dfa_output);
+
+    // dfa_simulate(dfa D, string s)
+    VarSymbolTable *dfa_simulate = new VarSymbolTable();
+    VarSymbolTableEntry *vste_dfa_simulate = new VarSymbolTableEntry("D", "dfa", NULL);
+    VarSymbolTableEntry *vste_dfa_simulate_2 = new VarSymbolTableEntry("s", "string", NULL);
+    dfa_simulate->insert(vste_dfa_simulate);
+    dfa_simulate->insert(vste_dfa_simulate_2);
+    FunctionSymbolTableEntry *fste_dfa_simulate = new FunctionSymbolTableEntry("dfa_simulate", 2, dfa_simulate, "bool");
+    fste_dfa_simulate->id_list.push_back("s");
+    fste_dfa_simulate->id_list.push_back("D");
+    fst->insert(fste_dfa_simulate);
+}
+
+void initSTNFA()
+{
+    // nfa_insert_state(nfa N, string q)
+    VarSymbolTable *nfa_insert_state = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_insert_state = new VarSymbolTableEntry("N", "nfa", NULL);
+    VarSymbolTableEntry *vste_nfa_insert_state_2 = new VarSymbolTableEntry("q", "string", NULL);
+    nfa_insert_state->insert(vste_nfa_insert_state);
+    nfa_insert_state->insert(vste_nfa_insert_state_2);
+    FunctionSymbolTableEntry *fste_nfa_insert_state = new FunctionSymbolTableEntry("nfa_insert_state", 2, nfa_insert_state, "void");
+    fste_nfa_insert_state->id_list.push_back("q");
+    fste_nfa_insert_state->id_list.push_back("N");
+    fst->insert(fste_nfa_insert_state);
+
+    // nfa_insert_alphabet(nfa N, string s1, string s2)
+    VarSymbolTable *nfa_insert_alphabet = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_insert_alphabet = new VarSymbolTableEntry("N", "nfa", NULL);
+    VarSymbolTableEntry *vste_nfa_insert_alphabet_2 = new VarSymbolTableEntry("s1", "string", NULL);
+    VarSymbolTableEntry *vste_nfa_insert_alphabet_3 = new VarSymbolTableEntry("s2", "string", NULL);
+    nfa_insert_alphabet->insert(vste_nfa_insert_alphabet);
+    nfa_insert_alphabet->insert(vste_nfa_insert_alphabet_2);
+    nfa_insert_alphabet->insert(vste_nfa_insert_alphabet_3);
+    FunctionSymbolTableEntry *fste_nfa_insert_alphabet = new FunctionSymbolTableEntry("nfa_insert_alphabet", 3, nfa_insert_alphabet, "void");
+    fste_nfa_insert_alphabet->id_list.push_back("s2");
+    fste_nfa_insert_alphabet->id_list.push_back("s1");
+    fste_nfa_insert_alphabet->id_list.push_back("N");
+    fst->insert(fste_nfa_insert_alphabet);
+
+    // nfa_insert_transition(nfa N, string q1, string s, string q2)
+    VarSymbolTable *nfa_insert_transition = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_insert_transition = new VarSymbolTableEntry("N", "nfa", NULL);
+    VarSymbolTableEntry *vste_nfa_insert_transition_2 = new VarSymbolTableEntry("q1", "string", NULL);
+    VarSymbolTableEntry *vste_nfa_insert_transition_3 = new VarSymbolTableEntry("s", "string", NULL);
+    VarSymbolTableEntry *vste_nfa_insert_transition_4 = new VarSymbolTableEntry("q2", "string", NULL);
+    nfa_insert_transition->insert(vste_nfa_insert_transition);
+    nfa_insert_transition->insert(vste_nfa_insert_transition_2);
+    nfa_insert_transition->insert(vste_nfa_insert_transition_3);
+    nfa_insert_transition->insert(vste_nfa_insert_transition_4);
+    FunctionSymbolTableEntry *fste_nfa_insert_transition = new FunctionSymbolTableEntry("nfa_insert_transition", 4, nfa_insert_transition, "void");
+    fste_nfa_insert_transition->id_list.push_back("q2");
+    fste_nfa_insert_transition->id_list.push_back("s");
+    fste_nfa_insert_transition->id_list.push_back("q1");
+    fste_nfa_insert_transition->id_list.push_back("N");
+    fst->insert(fste_nfa_insert_transition);
+
+    // nfa_change_start(nfa N, string q)
+    VarSymbolTable *nfa_change_start = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_change_start = new VarSymbolTableEntry("N", "nfa", NULL);
+    VarSymbolTableEntry *vste_nfa_change_start_2 = new VarSymbolTableEntry("q", "string", NULL);
+    nfa_change_start->insert(vste_nfa_change_start);
+    nfa_change_start->insert(vste_nfa_change_start_2);
+    FunctionSymbolTableEntry *fste_nfa_change_start = new FunctionSymbolTableEntry("nfa_change_start", 2, nfa_change_start, "void");
+    fste_nfa_change_start->id_list.push_back("q");
+    fste_nfa_change_start->id_list.push_back("N");
+    fst->insert(fste_nfa_change_start);
+
+    // nfa_insert_accept(nfa N, string q)
+    VarSymbolTable *nfa_insert_accept = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_insert_accept = new VarSymbolTableEntry("N", "nfa", NULL);
+    VarSymbolTableEntry *vste_nfa_insert_accept_2 = new VarSymbolTableEntry("q", "string", NULL);
+    nfa_insert_accept->insert(vste_nfa_insert_accept);
+    nfa_insert_accept->insert(vste_nfa_insert_accept_2);
+    FunctionSymbolTableEntry *fste_nfa_insert_accept = new FunctionSymbolTableEntry("nfa_insert_accept", 2, nfa_insert_accept, "void");
+    fste_nfa_insert_accept->id_list.push_back("q");
+    fste_nfa_insert_accept->id_list.push_back("N");
+    fst->insert(fste_nfa_insert_accept);
+
+    // nfa_remove_accept(nfa N, string q)
+    VarSymbolTable *nfa_remove_accept = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_remove_accept = new VarSymbolTableEntry("N", "nfa", NULL);
+    VarSymbolTableEntry *vste_nfa_remove_accept_2 = new VarSymbolTableEntry("q", "string", NULL);
+    nfa_remove_accept->insert(vste_nfa_remove_accept);
+    nfa_remove_accept->insert(vste_nfa_remove_accept_2);
+    FunctionSymbolTableEntry *fste_nfa_remove_accept = new FunctionSymbolTableEntry("nfa_remove_accept", 2, nfa_remove_accept, "void");
+    fste_nfa_remove_accept->id_list.push_back("q");
+    fste_nfa_remove_accept->id_list.push_back("N");
+    fst->insert(fste_nfa_remove_accept);
+
+    // nfa_remove_state(nfa N, string q)
+    VarSymbolTable *nfa_remove_state = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_remove_state = new VarSymbolTableEntry("N", "nfa", NULL);
+    VarSymbolTableEntry *vste_nfa_remove_state_2 = new VarSymbolTableEntry("q", "string", NULL);
+    nfa_remove_state->insert(vste_nfa_remove_state);
+    nfa_remove_state->insert(vste_nfa_remove_state_2);
+    FunctionSymbolTableEntry *fste_nfa_remove_state = new FunctionSymbolTableEntry("nfa_remove_state", 2, nfa_remove_state, "void");
+    fste_nfa_remove_state->id_list.push_back("q");
+    fste_nfa_remove_state->id_list.push_back("N");
+    fst->insert(fste_nfa_remove_state);
+
+    // nfa_remove_alphabet(nfa N, string s)
+    VarSymbolTable *nfa_remove_alphabet = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_remove_alphabet = new VarSymbolTableEntry("N", "nfa", NULL);
+    VarSymbolTableEntry *vste_nfa_remove_alphabet_2 = new VarSymbolTableEntry("s", "string", NULL);
+    nfa_remove_alphabet->insert(vste_nfa_remove_alphabet);
+    nfa_remove_alphabet->insert(vste_nfa_remove_alphabet_2);
+    FunctionSymbolTableEntry *fste_nfa_remove_alphabet = new FunctionSymbolTableEntry("nfa_remove_alphabet", 2, nfa_remove_alphabet, "void");
+    fste_nfa_remove_alphabet->id_list.push_back("s");
+    fste_nfa_remove_alphabet->id_list.push_back("N");
+    fst->insert(fste_nfa_remove_alphabet);
+
+    // nfa_remove_transition(nfa N, string q1, string s, string q2)
+    VarSymbolTable *nfa_remove_transition = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_remove_transition = new VarSymbolTableEntry("N", "nfa", NULL);
+    VarSymbolTableEntry *vste_nfa_remove_transition_2 = new VarSymbolTableEntry("q1", "string", NULL);
+    VarSymbolTableEntry *vste_nfa_remove_transition_3 = new VarSymbolTableEntry("s", "string", NULL);
+    VarSymbolTableEntry *vste_nfa_remove_transition_4 = new VarSymbolTableEntry("q2", "string", NULL);
+    nfa_remove_transition->insert(vste_nfa_remove_transition);
+    nfa_remove_transition->insert(vste_nfa_remove_transition_2);
+    nfa_remove_transition->insert(vste_nfa_remove_transition_3);
+    nfa_remove_transition->insert(vste_nfa_remove_transition_4);
+    FunctionSymbolTableEntry *fste_nfa_remove_transition = new FunctionSymbolTableEntry("nfa_remove_transition", 4, nfa_remove_transition, "void");
+    fste_nfa_remove_transition->id_list.push_back("q2");
+    fste_nfa_remove_transition->id_list.push_back("s");
+    fste_nfa_remove_transition->id_list.push_back("q1");
+    fste_nfa_remove_transition->id_list.push_back("N");
+    fst->insert(fste_nfa_remove_transition);
+
+    // nfa_output(nfa N)
+    VarSymbolTable *nfa_output = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_output = new VarSymbolTableEntry("N", "nfa", NULL);
+    nfa_output->insert(vste_nfa_output);
+    FunctionSymbolTableEntry *fste_nfa_output = new FunctionSymbolTableEntry("nfa_output", 1, nfa_output, "void");
+    fste_nfa_output->id_list.push_back("N");
+    fst->insert(fste_nfa_output);
+
+    // nfa_to_dfa(nfa N)
+    VarSymbolTable *nfa_to_dfa = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_to_dfa = new VarSymbolTableEntry("N", "nfa", NULL);
+    nfa_to_dfa->insert(vste_nfa_to_dfa);
+    FunctionSymbolTableEntry *fste_nfa_to_dfa = new FunctionSymbolTableEntry("nfa_to_dfa", 1, nfa_to_dfa, "dfa");
+    fste_nfa_to_dfa->id_list.push_back("N");
+    fst->insert(fste_nfa_to_dfa);
+
+    // nfa_simulate(nfa N, string s)
+    VarSymbolTable *nfa_simulate = new VarSymbolTable();
+    VarSymbolTableEntry *vste_nfa_simulate = new VarSymbolTableEntry("N", "nfa", NULL);
+    VarSymbolTableEntry *vste_nfa_simulate_2 = new VarSymbolTableEntry("s", "string", NULL);
+    nfa_simulate->insert(vste_nfa_simulate);
+    nfa_simulate->insert(vste_nfa_simulate_2);
+    FunctionSymbolTableEntry *fste_nfa_simulate = new FunctionSymbolTableEntry("nfa_simulate", 2, nfa_simulate, "bool");
+    fste_nfa_simulate->id_list.push_back("s");
+    fste_nfa_simulate->id_list.push_back("N");
+    fst->insert(fste_nfa_simulate);
+}
+
+void initCFG()
+{
+    // cfg_add_T(cfg a, string s1, string s2)
+    VarSymbolTable *cfg_add_Terminal = new VarSymbolTable();
+    VarSymbolTableEntry *vste_cfg_add_Terminal = new VarSymbolTableEntry("a", "cfg", NULL);
+    VarSymbolTableEntry *vste_cfg_add_Terminal_2 = new VarSymbolTableEntry("s1", "string", NULL);
+    VarSymbolTableEntry *vste_cfg_add_Terminal_3 = new VarSymbolTableEntry("s2", "string", NULL);
+    cfg_add_Terminal->insert(vste_cfg_add_Terminal);
+    cfg_add_Terminal->insert(vste_cfg_add_Terminal_2);
+    cfg_add_Terminal->insert(vste_cfg_add_Terminal_3);
+    FunctionSymbolTableEntry *fste_cfg_add_Terminal = new FunctionSymbolTableEntry("cfg_add_T", 2, cfg_add_Terminal, "void");
+    fste_cfg_add_Terminal->id_list.push_back("s2");
+    fste_cfg_add_Terminal->id_list.push_back("s1");
+    fste_cfg_add_Terminal->id_list.push_back("a");
+    fst->insert(fste_cfg_add_Terminal);
+
+    // cfg_add_N(cfg a, string s)
+    VarSymbolTable *cfg_add_NonTerminal = new VarSymbolTable();
+    VarSymbolTableEntry *vste_cfg_add_NonTerminal = new VarSymbolTableEntry("a", "cfg", NULL);
+    VarSymbolTableEntry *vste_cfg_add_NonTerminal_2 = new VarSymbolTableEntry("s", "string", NULL);
+    cfg_add_NonTerminal->insert(vste_cfg_add_NonTerminal);
+    cfg_add_NonTerminal->insert(vste_cfg_add_NonTerminal_2);
+    FunctionSymbolTableEntry *fste_cfg_add_NonTerminal = new FunctionSymbolTableEntry("cfg_add_N", 2, cfg_add_NonTerminal, "void");
+    fste_cfg_add_NonTerminal->id_list.push_back("s");
+    fste_cfg_add_NonTerminal->id_list.push_back("a");
+    fst->insert(fste_cfg_add_NonTerminal);
+
+    // cfg_add_P(cfg a, string s1, string s2)
+    VarSymbolTable *cfg_add_Production = new VarSymbolTable();
+    VarSymbolTableEntry *vste_cfg_add_Production = new VarSymbolTableEntry("a", "cfg", NULL);
+    VarSymbolTableEntry *vste_cfg_add_Production_2 = new VarSymbolTableEntry("s1", "string", NULL);
+    VarSymbolTableEntry *vste_cfg_add_Production_3 = new VarSymbolTableEntry("s2", "string", NULL);
+    cfg_add_Production->insert(vste_cfg_add_Production);
+    cfg_add_Production->insert(vste_cfg_add_Production_2);
+    cfg_add_Production->insert(vste_cfg_add_Production_3);
+    FunctionSymbolTableEntry *fste_cfg_add_Production = new FunctionSymbolTableEntry("cfg_add_P", 2, cfg_add_Production, "void");
+    fste_cfg_add_Production->id_list.push_back("s2");
+    fste_cfg_add_Production->id_list.push_back("s1");
+    fste_cfg_add_Production->id_list.push_back("a");
+    fst->insert(fste_cfg_add_Production);
+
+    // cfg_remove_T(cfg a, string s)
+    VarSymbolTable *cfg_remove_Terminal = new VarSymbolTable();
+    VarSymbolTableEntry *vste_cfg_remove_Terminal = new VarSymbolTableEntry("a", "cfg", NULL);
+    VarSymbolTableEntry *vste_cfg_remove_Terminal_2 = new VarSymbolTableEntry("s", "string", NULL);
+    cfg_remove_Terminal->insert(vste_cfg_remove_Terminal);
+    cfg_remove_Terminal->insert(vste_cfg_remove_Terminal_2);
+    FunctionSymbolTableEntry *fste_cfg_remove_Terminal = new FunctionSymbolTableEntry("cfg_remove_T", 2, cfg_remove_Terminal, "void");
+    fste_cfg_remove_Terminal->id_list.push_back("s");
+    fste_cfg_remove_Terminal->id_list.push_back("a");
+    fst->insert(fste_cfg_remove_Terminal);
+
+    // cfg_remove_N(cfg a, string s)
+    VarSymbolTable *cfg_remove_NonTerminal = new VarSymbolTable();
+    VarSymbolTableEntry *vste_cfg_remove_NonTerminal = new VarSymbolTableEntry("a", "cfg", NULL);
+    VarSymbolTableEntry *vste_cfg_remove_NonTerminal_2 = new VarSymbolTableEntry("s", "string", NULL);
+    cfg_remove_NonTerminal->insert(vste_cfg_remove_NonTerminal);
+    cfg_remove_NonTerminal->insert(vste_cfg_remove_NonTerminal_2);
+    FunctionSymbolTableEntry *fste_cfg_remove_NonTerminal = new FunctionSymbolTableEntry("cfg_remove_N", 2, cfg_remove_NonTerminal, "void");
+    fste_cfg_remove_NonTerminal->id_list.push_back("s");
+    fste_cfg_remove_NonTerminal->id_list.push_back("a");
+    fst->insert(fste_cfg_remove_NonTerminal);
+
+    // cfg_remove_P(cfg a, string s1, string s2)
+    VarSymbolTable *cfg_remove_Production = new VarSymbolTable();
+    VarSymbolTableEntry *vste_cfg_remove_Production = new VarSymbolTableEntry("a", "cfg", NULL);
+    VarSymbolTableEntry *vste_cfg_remove_Production_2 = new VarSymbolTableEntry("s1", "string", NULL);
+    VarSymbolTableEntry *vste_cfg_remove_Production_3 = new VarSymbolTableEntry("s2", "string", NULL);
+    cfg_remove_Production->insert(vste_cfg_remove_Production);
+    cfg_remove_Production->insert(vste_cfg_remove_Production_2);
+    cfg_remove_Production->insert(vste_cfg_remove_Production_3);
+    FunctionSymbolTableEntry *fste_cfg_remove_Production = new FunctionSymbolTableEntry("cfg_remove_P", 2, cfg_remove_Production, "void");
+    fste_cfg_remove_Production->id_list.push_back("s2");
+    fste_cfg_remove_Production->id_list.push_back("s1");
+    fste_cfg_remove_Production->id_list.push_back("a");
+    fst->insert(fste_cfg_remove_Production);
+
+    // cfg_output(cfg a)
+    VarSymbolTable *cfg_output = new VarSymbolTable();
+    VarSymbolTableEntry *vste_cfg_output = new VarSymbolTableEntry("a", "cfg", NULL);
+    cfg_output->insert(vste_cfg_output);
+    FunctionSymbolTableEntry *fste_cfg_output = new FunctionSymbolTableEntry("cfg_output", 1, cfg_output, "void");
+    fste_cfg_output->id_list.push_back("a");
+    fst->insert(fste_cfg_output);
+}
+
+void initFSTPDA()
+{
+    // pda_insert_state(pda P, string q)
+    VarSymbolTable *pda_insert_state = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_insert_state = new VarSymbolTableEntry("P", "pda", NULL);
+    VarSymbolTableEntry *vste_pda_insert_state_2 = new VarSymbolTableEntry("q", "string", NULL);
+    pda_insert_state->insert(vste_pda_insert_state);
+    pda_insert_state->insert(vste_pda_insert_state_2);
+    FunctionSymbolTableEntry *fste_pda_insert_state = new FunctionSymbolTableEntry("pda_insert_state", 2, pda_insert_state, "void");
+    fste_pda_insert_state->id_list.push_back("q");
+    fste_pda_insert_state->id_list.push_back("P");
+    fst->insert(fste_pda_insert_state);
+
+    // pda_insert_input_alphabet(pda P, string s1, string s2)
+    VarSymbolTable *pda_insert_alphabet = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_insert_alphabet = new VarSymbolTableEntry("P", "pda", NULL);
+    VarSymbolTableEntry *vste_pda_insert_alphabet_2 = new VarSymbolTableEntry("s1", "string", NULL);
+    VarSymbolTableEntry *vste_pda_insert_alphabet_3 = new VarSymbolTableEntry("s2", "string", NULL);
+    pda_insert_alphabet->insert(vste_pda_insert_alphabet);
+    pda_insert_alphabet->insert(vste_pda_insert_alphabet_2);
+    pda_insert_alphabet->insert(vste_pda_insert_alphabet_3);
+    FunctionSymbolTableEntry *fste_pda_insert_alphabet = new FunctionSymbolTableEntry("pda_insert_input_alphabet", 3, pda_insert_alphabet, "void");
+    fste_pda_insert_alphabet->id_list.push_back("s2");
+    fste_pda_insert_alphabet->id_list.push_back("s1");
+    fste_pda_insert_alphabet->id_list.push_back("P");
+    fst->insert(fste_pda_insert_alphabet);
+
+    // pda_insert_stack_alphabet(pda P, string s1, string s2)
+    VarSymbolTable *pda_insert_stack_alphabet = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_insert_stack_alphabet = new VarSymbolTableEntry("P", "pda", NULL);
+    VarSymbolTableEntry *vste_pda_insert_stack_alphabet_2 = new VarSymbolTableEntry("s1", "string", NULL);
+    VarSymbolTableEntry *vste_pda_insert_stack_alphabet_3 = new VarSymbolTableEntry("s2", "string", NULL);
+    pda_insert_stack_alphabet->insert(vste_pda_insert_stack_alphabet);
+    pda_insert_stack_alphabet->insert(vste_pda_insert_stack_alphabet_2);
+    pda_insert_stack_alphabet->insert(vste_pda_insert_stack_alphabet_3);
+    FunctionSymbolTableEntry *fste_pda_insert_stack_alphabet = new FunctionSymbolTableEntry("pda_insert_stack_alphabet", 3, pda_insert_stack_alphabet, "void");
+    fste_pda_insert_stack_alphabet->id_list.push_back("s2");
+    fste_pda_insert_stack_alphabet->id_list.push_back("s1");
+    fste_pda_insert_stack_alphabet->id_list.push_back("P");
+    fst->insert(fste_pda_insert_stack_alphabet);
+
+    // pda_insert_transition(pda P, string q1, string s1, string s2, string q2, string s3)
+    VarSymbolTable *pda_insert_transition = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_insert_transition = new VarSymbolTableEntry("P", "pda", NULL);
+    VarSymbolTableEntry *vste_pda_insert_transition_2 = new VarSymbolTableEntry("q1", "string", NULL);
+    VarSymbolTableEntry *vste_pda_insert_transition_3 = new VarSymbolTableEntry("s1", "string", NULL);
+    VarSymbolTableEntry *vste_pda_insert_transition_4 = new VarSymbolTableEntry("s2", "string", NULL);
+    VarSymbolTableEntry *vste_pda_insert_transition_5 = new VarSymbolTableEntry("q2", "string", NULL);
+    VarSymbolTableEntry *vste_pda_insert_transition_6 = new VarSymbolTableEntry("s3", "string", NULL);
+    pda_insert_transition->insert(vste_pda_insert_transition);
+    pda_insert_transition->insert(vste_pda_insert_transition_2);
+    pda_insert_transition->insert(vste_pda_insert_transition_3);
+    pda_insert_transition->insert(vste_pda_insert_transition_4);
+    pda_insert_transition->insert(vste_pda_insert_transition_5);
+    pda_insert_transition->insert(vste_pda_insert_transition_6);
+    FunctionSymbolTableEntry *fste_pda_insert_transition = new FunctionSymbolTableEntry("pda_insert_transition", 6, pda_insert_transition, "void");
+    fste_pda_insert_transition->id_list.push_back("s3");
+    fste_pda_insert_transition->id_list.push_back("q2");
+    fste_pda_insert_transition->id_list.push_back("s2");
+    fste_pda_insert_transition->id_list.push_back("s1");
+    fste_pda_insert_transition->id_list.push_back("q1");
+    fste_pda_insert_transition->id_list.push_back("P");
+    fst->insert(fste_pda_insert_transition);
+
+    // pda_change_start(pda P, string q)
+    VarSymbolTable *pda_change_start = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_change_start = new VarSymbolTableEntry("P", "pda", NULL);
+    VarSymbolTableEntry *vste_pda_change_start_2 = new VarSymbolTableEntry("q", "string", NULL);
+    pda_change_start->insert(vste_pda_change_start);
+    pda_change_start->insert(vste_pda_change_start_2);
+    FunctionSymbolTableEntry *fste_pda_change_start = new FunctionSymbolTableEntry("pda_change_start", 2, pda_change_start, "void");
+    fste_pda_change_start->id_list.push_back("q");
+    fste_pda_change_start->id_list.push_back("P");
+    fst->insert(fste_pda_change_start);
+
+    // pda_insert_accept(pda P, string q)
+    VarSymbolTable *pda_insert_accept = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_insert_accept = new VarSymbolTableEntry("P", "pda", NULL);
+    VarSymbolTableEntry *vste_pda_insert_accept_2 = new VarSymbolTableEntry("q", "string", NULL);
+    pda_insert_accept->insert(vste_pda_insert_accept);
+    pda_insert_accept->insert(vste_pda_insert_accept_2);
+    FunctionSymbolTableEntry *fste_pda_insert_accept = new FunctionSymbolTableEntry("pda_insert_accept", 2, pda_insert_accept, "void");
+    fste_pda_insert_accept->id_list.push_back("q");
+    fste_pda_insert_accept->id_list.push_back("P");
+    fst->insert(fste_pda_insert_accept);
+
+    // pda_remove_accept(pda P, string q)
+    VarSymbolTable *pda_remove_accept = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_remove_accept = new VarSymbolTableEntry("P", "pda", NULL);
+    VarSymbolTableEntry *vste_pda_remove_accept_2 = new VarSymbolTableEntry("q", "string", NULL);
+    pda_remove_accept->insert(vste_pda_remove_accept);
+    pda_remove_accept->insert(vste_pda_remove_accept_2);
+    FunctionSymbolTableEntry *fste_pda_remove_accept = new FunctionSymbolTableEntry("pda_remove_accept", 2, pda_remove_accept, "void");
+    fste_pda_remove_accept->id_list.push_back("q");
+    fste_pda_remove_accept->id_list.push_back("P");
+    fst->insert(fste_pda_remove_accept);
+
+    // pda_remove_state(pda P, string q)
+    VarSymbolTable *pda_remove_state = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_remove_state = new VarSymbolTableEntry("P", "pda", NULL);
+    VarSymbolTableEntry *vste_pda_remove_state_2 = new VarSymbolTableEntry("q", "string", NULL);
+    pda_remove_state->insert(vste_pda_remove_state);
+    pda_remove_state->insert(vste_pda_remove_state_2);
+    FunctionSymbolTableEntry *fste_pda_remove_state = new FunctionSymbolTableEntry("pda_remove_state", 2, pda_remove_state, "void");
+    fste_pda_remove_state->id_list.push_back("q");
+    fste_pda_remove_state->id_list.push_back("P");
+    fst->insert(fste_pda_remove_state);
+
+    // pda_remove_input_alphabet(pda P, string s)
+    VarSymbolTable *pda_remove_input_alphabet = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_remove_input_alphabet = new VarSymbolTableEntry("P", "pda", NULL);
+    VarSymbolTableEntry *vste_pda_remove_input_alphabet_2 = new VarSymbolTableEntry("s", "string", NULL);
+    pda_remove_input_alphabet->insert(vste_pda_remove_input_alphabet);
+    pda_remove_input_alphabet->insert(vste_pda_remove_input_alphabet_2);
+    FunctionSymbolTableEntry *fste_pda_remove_input_alphabet = new FunctionSymbolTableEntry("pda_remove_input_alphabet", 2, pda_remove_input_alphabet, "void");
+    fste_pda_remove_input_alphabet->id_list.push_back("s");
+    fste_pda_remove_input_alphabet->id_list.push_back("P");
+    fst->insert(fste_pda_remove_input_alphabet);
+
+    // pda_remove_stack_alphabet(pda P, string s)
+    VarSymbolTable *pda_remove_stack_alphabet = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_remove_stack_alphabet = new VarSymbolTableEntry("P", "pda", NULL);
+    VarSymbolTableEntry *vste_pda_remove_stack_alphabet_2 = new VarSymbolTableEntry("s", "string", NULL);
+    pda_remove_stack_alphabet->insert(vste_pda_remove_stack_alphabet);
+    pda_remove_stack_alphabet->insert(vste_pda_remove_stack_alphabet_2);
+    FunctionSymbolTableEntry *fste_pda_remove_stack_alphabet = new FunctionSymbolTableEntry("pda_remove_stack_alphabet", 2, pda_remove_stack_alphabet, "void");
+    fste_pda_remove_stack_alphabet->id_list.push_back("s");
+    fste_pda_remove_stack_alphabet->id_list.push_back("P");
+    fst->insert(fste_pda_remove_stack_alphabet);
+
+    // pda_remove_transition(pda P, string q1, string s1, string s2, string q2, string s3)
+    // VarSymbolTable *pda_remove_transition = new VarSymbolTable();
+    // VarSymbolTableEntry *vste_pda_remove_transition = new VarSymbolTableEntry("P", "pda", NULL);
+    // VarSymbolTableEntry *vste_pda_remove_transition_2 = new VarSymbolTableEntry("q1", "string", NULL);
+    // VarSymbolTableEntry *vste_pda_remove_transition_3 = new VarSymbolTableEntry("s1", "string", NULL);
+    // VarSymbolTableEntry *vste_pda_remove_transition_4 = new VarSymbolTableEntry("s2", "string", NULL);
+    // VarSymbolTableEntry *vste_pda_remove_transition_5 = new VarSymbolTableEntry("q2", "string", NULL);
+    // VarSymbolTableEntry *vste_pda_remove_transition_6 = new VarSymbolTableEntry("s3", "string", NULL);
+    // pda_remove_transition->insert(vste_pda_remove_transition);
+    // pda_remove_transition->insert(vste_pda_remove_transition_2);
+    // pda_remove_transition->insert(vste_pda_remove_transition_3);
+    // pda_remove_transition->insert(vste_pda_remove_transition_4);
+    // pda_remove_transition->insert(vste_pda_remove_transition_5);
+    // pda_remove_transition->insert(vste_pda_remove_transition_6);
+    // FunctionSymbolTableEntry *fste_pda_remove_transition = new FunctionSymbolTableEntry("pda_remove_transition", 6, pda_remove_transition, "void");
+    // fste_pda_remove_transition->id_list.push_back("s3");
+    // fste_pda_remove_transition->id_list.push_back("q2");
+    // fste_pda_remove_transition->id_list.push_back("s2");
+    // fste_pda_remove_transition->id_list.push_back("s1");
+    // fste_pda_remove_transition->id_list.push_back("q1");
+    // fste_pda_remove_transition->id_list.push_back("P");
+    // fst->insert(fste_pda_remove_transition);
+
+    // pda_output(pda P)
+    VarSymbolTable *pda_output = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_output = new VarSymbolTableEntry("P", "pda", NULL);
+    pda_output->insert(vste_pda_output);
+    FunctionSymbolTableEntry *fste_pda_output = new FunctionSymbolTableEntry("pda_output", 1, pda_output, "void");
+    fste_pda_output->id_list.push_back("P");
+    fst->insert(fste_pda_output);
+
+    // pda_simulate(pda P, string s)
+    VarSymbolTable *pda_simulate = new VarSymbolTable();
+    VarSymbolTableEntry *vste_pda_simulate = new VarSymbolTableEntry("P", "pda", NULL);
+    VarSymbolTableEntry *vste_pda_simulate_2 = new VarSymbolTableEntry("s", "string", NULL);
+    pda_simulate->insert(vste_pda_simulate);
+    pda_simulate->insert(vste_pda_simulate_2);
+    FunctionSymbolTableEntry *fste_pda_simulate = new FunctionSymbolTableEntry("pda_simulate", 2, pda_simulate, "bool");
+    fste_pda_simulate->id_list.push_back("s");
+    fste_pda_simulate->id_list.push_back("P");
+    fst->insert(fste_pda_simulate);
+}
+
+void initSetFuncs()
+{
+    set_funcs = new std::set<std::string>();
+    set_funcs->insert("o_size");
+    set_funcs->insert("o_insert");
+    set_funcs->insert("o_remove");
+    set_funcs->insert("o_output");
+    set_funcs->insert("o_find");
+    set_funcs->insert("u_size");
+    set_funcs->insert("u_insert");
+    set_funcs->insert("u_remove");
+    set_funcs->insert("u_output");
+    set_funcs->insert("u_find");
+}
+
+void initST()
+{
+    vstl = new VarSymbolTableList();
+    fst = new FunctionSymbolTable();
+    global_vst = new VarSymbolTable();
+    sst = new StructSymbolTable();
+    sst->init();
+    current_vst = global_vst;
+    vstl->insert(global_vst);
+    initFSTSet();
+    initFSTDFA();
+    initSTNFA();
+    initCFG();
+    initFSTPDA();
+    initSetFuncs();
 }
 
 VTYPE_PRIMITIVE getPrimitiveType(const char *type)
@@ -532,19 +1297,6 @@ std::string getType(id_attr *t_attr)
         return std::string("struct");
     }
     return std::string("sets");
-}
-
-inner_type *genInnerType(std::string inner)
-{
-    if (inner.find(" ") == std::string::npos || inner.find(" ") == inner.length() - 1)
-        return new inner_type(NULL, inner);
-    else
-    {
-        size_t space = inner.find(" ");
-        std::string type = inner.substr(0, space);
-        inner_type *inner_inner = genInnerType(inner.substr(space + 1));
-        return new inner_type(inner_inner, type);
-    }
 }
 
 inner_type::inner_type(inner_type *inner, std::string type)
