@@ -34,7 +34,13 @@ namespace fsm
         bool simulate(std::string);
         bool simulate_helper(std::string, int, std::set<std::pair<int, std::string>> &, std::stack<std::string> &, std::vector<std::string> &); //
         bool insert_transition(std::string, std::string, std::string, std::string, std::string);                                                //
-        void out();
+        void out() const;
+        friend std::ostream &operator<<(std::ostream &os, const pda &a)
+        {
+            a.out();
+            return os;
+        }
     };
+
 } // namespace fsm
 #endif

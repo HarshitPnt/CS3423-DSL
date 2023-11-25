@@ -521,7 +521,6 @@ function_header: dtype ID LPAREN param_list RPAREN {
                         
                         $$ = new cc_code();
                         $$->cc = "template <" + $3->cc + std::string("> ") + std::string($5) + std::string(" ") + std::string($6) + std::string("(") + $8->cc + std::string(")");
-                        std::cout<<$$->cc<<std::endl;
                         cc_file<<$$->cc;
                         $$->cc = "";
                     }
@@ -613,7 +612,6 @@ function_header: dtype ID LPAREN param_list RPAREN {
                     }
                         $$ = new cc_code();
                         $$->cc = "template <" + $3->cc + std::string("> ") + $5->cc + std::string(" ") + std::string($6) + std::string("(") + $8->cc + std::string(")");
-                        std::cout<<$$->cc<<std::endl;
                         cc_file<<$$->cc;
                         $$->cc = "";
                 }
@@ -2231,16 +2229,11 @@ call : ID LPAREN argument_list RPAREN
         auto it_arg_list = $3->lst.begin();
         //compare types
         int i=1;
-        // if(it_list==arg_pos_list_rev.end())
-            // std::cout<<"NULL"<<std::endl;
         while(it_list!=arg_pos_list_rev.end() && it_arg_list!=$3->lst.end())
         {
-            // std::cout<<"HERE"<<std::endl;
-            // std::cout<<*it_list<<" "<<*it_arg_list<<std::endl;
             std::string type_expected = params_table->lookup(*it_list)->type;
             std::string type_actual = *it_arg_list;
             type_actual = trim(type_actual);
-            // std::cout<<type_expected<<" "<<type_actual<<std::endl;
             if(type_expected=="o_set"||type_expected=="u_set"||type_expected=="o_set "|| type_expected=="u_set ")
             {
                 //concat inner types
@@ -2275,7 +2268,6 @@ call : ID LPAREN argument_list RPAREN
         }
         else
             $$->cc = std::string($1) + std::string("(") + $3->cc + std::string(")");
-        // std::cout<<$$->cc<<std::endl;
      }
      | ID TEMP_LEFT type_list_call TEMP_RIGHT LPAREN argument_list RPAREN
      {
@@ -2329,7 +2321,6 @@ call : ID LPAREN argument_list RPAREN
         }
         // we also need to check argument types
         std::vector<std::string> arg_pos_list_rev = entry->id_list;
-        // std::cout<<entry->name<<std::endl;
         VarSymbolTable *params_table = entry->params;
         auto it_list = arg_pos_list_rev.begin();
         auto it_arg_list = $6->lst.begin();
@@ -2340,14 +2331,12 @@ call : ID LPAREN argument_list RPAREN
             std::string type_expected = params_table->lookup(*it_list)->type;
             std::string type_actual = *it_arg_list;
             type_actual = trim(type_actual);
-            // std::cout<<type_expected<<" "<<type_actual<<std::endl;
             if(type_expected=="template")
                 continue;
             if(type_expected=="o_set"||type_expected=="u_set"||type_expected=="o_set "|| type_expected=="u_set ")
             {
                 //concat inner types 
                 type_expected=trim(trim(type_expected)+std::string(" ")+params_table->lookup(*it_list)->inner->print());
-                // std::cout<<type_expected<<std::endl;
             }
             if(!isCoherent(type_expected,type_actual))
             {
@@ -2364,6 +2353,10 @@ call : ID LPAREN argument_list RPAREN
             yyerror("Too many arguments");
         if(std::find(set_funcs->begin(),set_funcs->end(),std::string($1))!=set_funcs->end())
             $$->cc = std::string($1) + std::string("(") + $6->cc + std::string(")");
+        else if(std::string($1)=="out")
+        {
+            $$->cc = "std::cout<<"+$6->cc+"<<std::endl";
+        }
         else
             $$->cc = std::string($1) + "<" + $3->cc + std::string(">")+std::string("(") + $6->cc + std::string(")");
      }
@@ -3117,7 +3110,6 @@ int main(int argc, char **argv) {
     cc_file<<"#include \"../../../code/includes/macros.hh\"\n";
     seq_token.open(seq,std::ios::out);
     parse_log = fopen(parser_log.c_str(),"w");
-    // std::cout<<"Files opened"<<std::endl;
     yyparse();
     fclose(yyin);
     seq_token.close();

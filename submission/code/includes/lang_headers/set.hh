@@ -124,6 +124,7 @@ namespace fsm
         bool empty();
         void del();
         void out();
+        template <typename U>
         operator u_set<U>() const
         {
             u_set<U> result;

@@ -336,7 +336,7 @@ namespace fsm
         return this->simulate_helper(this->q0, 0, vis, st, input_vec);
     }
 
-    void pda::out()
+    void pda::out() const
     {
         std::cout << "Starting state : ( q0 )\n"
                   << this->q0 << '\n';

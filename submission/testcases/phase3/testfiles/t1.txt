@@ -71,25 +71,27 @@ o_set<float_64> findEuclideanDistance(Grid grid1)
     return return_values;
 }
 
-Point p1,p2,p3,p4;
-Grid grid;
-grid.set = {p1,p2,p3,p4};
-int_8 i = 0;
-while(i<3)
+int_64 main()
 {
-    grid.set[i].x = i;
-    grid.set[i].y = i*i;
-    i+=1;
+    Point p1,p2,p3,p4;
+    Grid grid;
+    grid.set = {p1,p2,p3,p4};
+    int_8 i = 0;
+    while(i<3)
+    {
+        grid.set[i].x = i;
+        grid.set[i].y = i*i;
+        i+=1;
+    }
+
+
+    o_set<float_64> distances = findEuclideanDistance(grid);
+
+    i = 0;
+    while(i<6)
+    {
+        i+=1;
+    }
 }
 
-inp(p4.x);
-inp(p4.y);
 
-o_set<float_64> distances = findEuclideanDistance(grid);
-
-i = 0;
-while(i<6)
-{
-    out(distances[i]);
-    i+=1;
-}

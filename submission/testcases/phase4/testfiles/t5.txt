@@ -1,0 +1,19 @@
+int_64 main()
+{
+    dfa a;
+    a.Q := {A,B,C};
+    a.F := {C};
+    a.S := {a:"0",b:"1"};
+    a.delta := {
+        (A, a -> B),
+        (A, b -> A),
+        (B, b -> C),
+        (B, a -> B),
+        (C, a -> B),
+        (C, b -> C)
+    };
+    a.q0 := A;
+
+    out[[bool]](dfa_simulate(a, "001"));
+    out[[bool]](dfa_simulate(a, "010"));
+}

@@ -407,7 +407,7 @@ namespace fsm
         {
             CNF->add_P(term.first + " -> " + "${" + term.first + "}");
         }
-        this->out();
+        // this->out();
         // add all productions
         std::unordered_map<std::string, std::string> new_nterm;
         long long int new_count = 0;
@@ -582,7 +582,7 @@ namespace fsm
             }
         }
         std::cout << "Epsilon handled" << std::endl;
-        CNF->out();
+        // CNF->out();
         // eliminate unit transitions
         // check all productions
         for (auto &production : CNF->P)
@@ -604,7 +604,7 @@ namespace fsm
         return *CNF;
     }
 
-    void cfg::out()
+    void cfg::out() const
     {
         // displaying information about CFG
         std::cout << "CFG:\n";

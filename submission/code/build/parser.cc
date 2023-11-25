@@ -674,22 +674,22 @@ static const yytype_int16 yyrline[] =
 {
        0,   139,   139,   145,   146,   147,   148,   152,   166,   151,
      186,   187,   190,   221,   245,   262,   282,   296,   310,   309,
-     342,   386,   427,   528,   622,   644,   669,   678,   719,   734,
-     751,   760,   799,   800,   801,   804,   807,   813,   818,   823,
-     824,   825,   826,   827,   827,   842,   950,   973,   997,  1029,
-    1047,  1072,  1087,  1094,  1102,  1133,  1177,  1207,  1278,  1303,
-    1319,  1353,  1363,  1374,  1377,  1378,  1381,  1399,  1423,  1441,
-    1447,  1456,  1470,  1560,  1617,  1673,  1705,  1725,  1776,  1792,
-    1812,  1851,  1888,  1908,  1928,  1961,  1970,  1998,  2008,  2018,
-    2028,  2038,  2048,  2151,  2177,  2280,  2372,  2378,  2387,  2392,
-    2406,  2411,  2434,  2444,  2448,  2471,  2480,  2486,  2494,  2495,
-    2498,  2506,  2511,  2523,  2648,  2655,  2664,  2671,  2683,  2695,
-    2701,  2708,  2714,  2722,  2729,  2736,  2747,  2756,  2763,  2773,
-    2782,  2796,  2801,  2804,  2809,  2814,  2819,  2824,  2829,  2835,
-    2838,  2847,  2858,  2859,  2860,  2864,  2872,  2863,  2881,  2890,
-    2889,  2904,  2907,  2917,  2916,  2931,  2935,  2934,  2950,  2958,
-    2964,  2995,  3011,  3018,  3025,  3031,  3039,  3045,  3051,  3059,
-    3065
+     342,   386,   427,   527,   620,   642,   667,   676,   717,   732,
+     749,   758,   797,   798,   799,   802,   805,   811,   816,   821,
+     822,   823,   824,   825,   825,   840,   948,   971,   995,  1027,
+    1045,  1070,  1085,  1092,  1100,  1131,  1175,  1205,  1276,  1301,
+    1317,  1351,  1361,  1372,  1375,  1376,  1379,  1397,  1421,  1439,
+    1445,  1454,  1468,  1558,  1615,  1671,  1703,  1723,  1774,  1790,
+    1810,  1849,  1886,  1906,  1926,  1959,  1968,  1996,  2006,  2016,
+    2026,  2036,  2046,  2149,  2175,  2272,  2365,  2371,  2380,  2385,
+    2399,  2404,  2427,  2437,  2441,  2464,  2473,  2479,  2487,  2488,
+    2491,  2499,  2504,  2516,  2641,  2648,  2657,  2664,  2676,  2688,
+    2694,  2701,  2707,  2715,  2722,  2729,  2740,  2749,  2756,  2766,
+    2775,  2789,  2794,  2797,  2802,  2807,  2812,  2817,  2822,  2828,
+    2831,  2840,  2851,  2852,  2853,  2857,  2865,  2856,  2874,  2883,
+    2882,  2897,  2900,  2910,  2909,  2924,  2928,  2927,  2943,  2951,
+    2957,  2988,  3004,  3011,  3018,  3024,  3032,  3038,  3044,  3052,
+    3058
 };
 #endif
 
@@ -1950,15 +1950,14 @@ yyreduce:
                         
                         (yyval.c) = new cc_code();
                         (yyval.c)->cc = "template <" + (yyvsp[-6].state_lst)->cc + std::string("> ") + std::string((yyvsp[-4].identifier)) + std::string(" ") + std::string((yyvsp[-3].identifier)) + std::string("(") + (yyvsp[-1].para)->cc + std::string(")");
-                        std::cout<<(yyval.c)->cc<<std::endl;
                         cc_file<<(yyval.c)->cc;
                         (yyval.c)->cc = "";
                     }
-#line 1958 "parser.cc"
+#line 1957 "parser.cc"
     break;
 
   case 23: /* function_header: TEMP_FN_KW TEMP_LEFT type_list TEMP_RIGHT dtype ID LPAREN param_list RPAREN  */
-#line 528 "../src/parser.y"
+#line 527 "../src/parser.y"
                                                                                               {
                     if(in_function)
                             yyerror("Nested function declaration");
@@ -2047,15 +2046,14 @@ yyreduce:
                     }
                         (yyval.c) = new cc_code();
                         (yyval.c)->cc = "template <" + (yyvsp[-6].state_lst)->cc + std::string("> ") + (yyvsp[-4].type)->cc + std::string(" ") + std::string((yyvsp[-3].identifier)) + std::string("(") + (yyvsp[-1].para)->cc + std::string(")");
-                        std::cout<<(yyval.c)->cc<<std::endl;
                         cc_file<<(yyval.c)->cc;
                         (yyval.c)->cc = "";
                 }
-#line 2055 "parser.cc"
+#line 2053 "parser.cc"
     break;
 
   case 24: /* type_list: ID  */
-#line 623 "../src/parser.y"
+#line 621 "../src/parser.y"
           {
             
             //check if ID exists as a struct
@@ -2077,11 +2075,11 @@ yyreduce:
             sst->insert(entry_struct);
             (yyval.state_lst)->cc = "typename " + std::string((yyvsp[0].identifier));
           }
-#line 2081 "parser.cc"
+#line 2079 "parser.cc"
     break;
 
   case 25: /* type_list: type_list COMMA ID  */
-#line 645 "../src/parser.y"
+#line 643 "../src/parser.y"
           {
             //check if ID exists as a struct
             if(sst->lookup(std::string((yyvsp[0].identifier))))
@@ -2103,11 +2101,11 @@ yyreduce:
             sst->insert(entry_struct);
             (yyval.state_lst)->cc = (yyvsp[-2].state_lst)->cc + std::string(", typename ") + std::string((yyvsp[0].identifier));
           }
-#line 2107 "parser.cc"
+#line 2105 "parser.cc"
     break;
 
   case 26: /* param_list: %empty  */
-#line 669 "../src/parser.y"
+#line 667 "../src/parser.y"
             {
                 //no params
                 (yyval.para) = new param_list_attr();
@@ -2117,11 +2115,11 @@ yyreduce:
                 vstl->insert(new_st);
                 (yyval.para)->cc = std::string("");
             }
-#line 2121 "parser.cc"
+#line 2119 "parser.cc"
     break;
 
   case 27: /* param_list: param next_param  */
-#line 679 "../src/parser.y"
+#line 677 "../src/parser.y"
           {
             if(vstl->lookup((yyvsp[-1].id)->name))
             {
@@ -2160,11 +2158,11 @@ yyreduce:
             (yyval.para)->lst.push_back((yyvsp[-1].id)->name);
             (yyval.para)->cc = (yyvsp[-1].id)->cc + std::string(" ") + (yyvsp[0].para)->cc;
           }
-#line 2164 "parser.cc"
+#line 2162 "parser.cc"
     break;
 
   case 28: /* param: dtype ID  */
-#line 720 "../src/parser.y"
+#line 718 "../src/parser.y"
      {
         (yyval.id) = new id_attr();
         (yyval.id)->name = std::string((yyvsp[0].identifier));
@@ -2179,11 +2177,11 @@ yyreduce:
         ++num_params;
         (yyval.id)->cc = (yyvsp[-1].type)->cc + std::string(" ") + std::string((yyvsp[0].identifier));
      }
-#line 2183 "parser.cc"
+#line 2181 "parser.cc"
     break;
 
   case 29: /* param: ID ID  */
-#line 735 "../src/parser.y"
+#line 733 "../src/parser.y"
      {
         (yyval.id) = new id_attr();
         (yyval.id)->name = std::string((yyvsp[0].identifier));
@@ -2197,11 +2195,11 @@ yyreduce:
         ++num_params;
         (yyval.id)->cc = std::string((yyvsp[-1].identifier)) + std::string(" ") + std::string((yyvsp[0].identifier));
      }
-#line 2201 "parser.cc"
+#line 2199 "parser.cc"
     break;
 
   case 30: /* next_param: %empty  */
-#line 751 "../src/parser.y"
+#line 749 "../src/parser.y"
             {
                 //end of params
                 (yyval.para) = new param_list_attr();
@@ -2211,11 +2209,11 @@ yyreduce:
                 current_vst = new_st;
                 (yyval.para)->cc = std::string("");
             }
-#line 2215 "parser.cc"
+#line 2213 "parser.cc"
     break;
 
   case 31: /* next_param: COMMA param next_param  */
-#line 761 "../src/parser.y"
+#line 759 "../src/parser.y"
            {
                 (yyval.para) = new param_list_attr();
                 (yyval.para)->num = num_params;
@@ -2252,83 +2250,83 @@ yyreduce:
                 }
                 (yyval.para)->cc = std::string(", ")+(yyvsp[-1].id)->cc + std::string(" ") + (yyvsp[0].para)->cc;
            }
-#line 2256 "parser.cc"
+#line 2254 "parser.cc"
     break;
 
   case 35: /* statements: variable_declaration  */
-#line 804 "../src/parser.y"
+#line 802 "../src/parser.y"
                                  {
             printlog("Variable declaration");
             }
-#line 2264 "parser.cc"
+#line 2262 "parser.cc"
     break;
 
   case 36: /* statements: assignment  */
-#line 807 "../src/parser.y"
+#line 805 "../src/parser.y"
                        {
             printlog("Assignment");
             (yyval.c) = new cc_code();
             (yyval.c)->cc = (yyvsp[0].c)->cc;
             cc_file<<(yyval.c)->cc<<std::endl;
             }
-#line 2275 "parser.cc"
+#line 2273 "parser.cc"
     break;
 
   case 37: /* statements: if_statement  */
-#line 814 "../src/parser.y"
+#line 812 "../src/parser.y"
           {
             (yyval.c) = new cc_code();
             (yyval.c)->cc = std::string("");
           }
-#line 2284 "parser.cc"
+#line 2282 "parser.cc"
     break;
 
   case 38: /* statements: while_statement  */
-#line 819 "../src/parser.y"
+#line 817 "../src/parser.y"
           {
             (yyval.c) = new cc_code();
             (yyval.c)->cc = std::string("");
           }
-#line 2293 "parser.cc"
+#line 2291 "parser.cc"
     break;
 
   case 39: /* statements: return_statement  */
-#line 823 "../src/parser.y"
+#line 821 "../src/parser.y"
                              {printlog("Return");}
-#line 2299 "parser.cc"
+#line 2297 "parser.cc"
     break;
 
   case 40: /* statements: break_statement  */
-#line 824 "../src/parser.y"
+#line 822 "../src/parser.y"
                             {printlog("Break");}
-#line 2305 "parser.cc"
+#line 2303 "parser.cc"
     break;
 
   case 41: /* statements: continue_statement  */
-#line 825 "../src/parser.y"
+#line 823 "../src/parser.y"
                                {printlog("Continue");}
-#line 2311 "parser.cc"
+#line 2309 "parser.cc"
     break;
 
   case 42: /* statements: call_statement  */
-#line 826 "../src/parser.y"
+#line 824 "../src/parser.y"
                            {printlog("Function call");}
-#line 2317 "parser.cc"
+#line 2315 "parser.cc"
     break;
 
   case 43: /* $@4: %empty  */
-#line 827 "../src/parser.y"
+#line 825 "../src/parser.y"
                    {
                         //create a new symbol table
                         VarSymbolTable *new_st = new VarSymbolTable();
                         current_vst = new_st;
                         vstl->insert(new_st);
                     }
-#line 2328 "parser.cc"
+#line 2326 "parser.cc"
     break;
 
   case 44: /* statements: LBRACE $@4 control_body RBRACE  */
-#line 833 "../src/parser.y"
+#line 831 "../src/parser.y"
                               {
             //remove symbol table
             if(vstl->remove())
@@ -2336,11 +2334,11 @@ yyreduce:
             current_vst = vstl->getTop();
             printlog("Block");
             }
-#line 2340 "parser.cc"
+#line 2338 "parser.cc"
     break;
 
   case 45: /* variable_declaration: dtype id_list SEMICOLON  */
-#line 843 "../src/parser.y"
+#line 841 "../src/parser.y"
                     {
                         // backpatch id_list with dtype
                         for(auto it = (yyvsp[-1].id_lst)->lst.begin();it!=(yyvsp[-1].id_lst)->lst.end();it++)
@@ -2448,11 +2446,11 @@ yyreduce:
                             cc_file<<(yyvsp[-2].type)->cc + std::string(" ") + (yyvsp[-1].id_lst)->cc +std::string(";")<<std::endl;
                         }
                     }
-#line 2452 "parser.cc"
+#line 2450 "parser.cc"
     break;
 
   case 46: /* variable_declaration: ID id_list SEMICOLON  */
-#line 951 "../src/parser.y"
+#line 949 "../src/parser.y"
                     {
                         //check if struct exists
                         if(!sst->lookup(std::string((yyvsp[-2].identifier))))
@@ -2473,11 +2471,11 @@ yyreduce:
                         // before backpatching check if rhs are variables of same struct type (to be done)
                         cc_file<<"struct "<<std::string((yyvsp[-2].identifier))<<" "<<(yyvsp[-1].id_lst)->cc<<";"<<std::endl;
                     }
-#line 2477 "parser.cc"
+#line 2475 "parser.cc"
     break;
 
   case 47: /* id_list: ID  */
-#line 973 "../src/parser.y"
+#line 971 "../src/parser.y"
             {
                 (yyval.id_lst) = new id_list_attr();
                 //insert this ID in the symbol table (backpatch later)
@@ -2502,11 +2500,11 @@ yyreduce:
                 (yyval.id_lst)->lst.push_back(std::make_pair(entry,type));
                 (yyval.id_lst)->cc = std::string((yyvsp[0].identifier));
             }
-#line 2506 "parser.cc"
+#line 2504 "parser.cc"
     break;
 
   case 48: /* id_list: ID OPER_ASN_SIMPLE rhs  */
-#line 998 "../src/parser.y"
+#line 996 "../src/parser.y"
        {
             (yyval.id_lst) = new id_list_attr();
             //insert this ID in the symbol table (backpatch later)
@@ -2538,11 +2536,11 @@ yyreduce:
             (yyval.id_lst)->lst.push_back(std::make_pair(entry,type));
             (yyval.id_lst)->cc = std::string((yyvsp[-2].identifier)) + std::string(" = ") + std::string((yyvsp[0].type)->cc);
        }
-#line 2542 "parser.cc"
+#line 2540 "parser.cc"
     break;
 
   case 49: /* id_list: id_list COMMA ID  */
-#line 1030 "../src/parser.y"
+#line 1028 "../src/parser.y"
        {
             (yyval.id_lst) = new id_list_attr();
             //insert this ID in the symbol table (backpatch later)
@@ -2560,11 +2558,11 @@ yyreduce:
             (yyval.id_lst)->lst.push_back(std::make_pair(entry,type));
             (yyval.id_lst)->cc = (yyvsp[-2].id_lst)->cc + std::string(", ") + std::string((yyvsp[0].identifier));
        }
-#line 2564 "parser.cc"
+#line 2562 "parser.cc"
     break;
 
   case 50: /* id_list: id_list COMMA ID OPER_ASN_SIMPLE rhs  */
-#line 1048 "../src/parser.y"
+#line 1046 "../src/parser.y"
        {
             (yyval.id_lst) = new id_list_attr();
             //insert this ID in the symbol table (backpatch later)
@@ -2587,11 +2585,11 @@ yyreduce:
             (yyval.id_lst)->lst.push_back(std::make_pair(entry,type));
             (yyval.id_lst)->cc = (yyvsp[-4].id_lst)->cc + std::string(", ") + std::string((yyvsp[-2].identifier)) + std::string(" = ") + (yyvsp[0].type)->cc;
        }
-#line 2591 "parser.cc"
+#line 2589 "parser.cc"
     break;
 
   case 51: /* pseudo_ID: pseudo_ID LBRACK expression RBRACK  */
-#line 1073 "../src/parser.y"
+#line 1071 "../src/parser.y"
          {
             //accessing the set member
             if((yyvsp[-1].expr)->indicator != 1)
@@ -2606,33 +2604,33 @@ yyreduce:
                 (yyval.id)->name = std::string((yyvsp[-3].id)->name)+std::string("[")+std::string("_expr_")+std::string("]");
             (yyval.id)->cc = (yyvsp[-3].id)->cc + "[" + (yyvsp[-1].expr)->cc + "]";
          }
-#line 2610 "parser.cc"
+#line 2608 "parser.cc"
     break;
 
   case 52: /* pseudo_ID: pseudo_ID DOT pseudo_ID  */
-#line 1088 "../src/parser.y"
+#line 1086 "../src/parser.y"
          {
             //accessing the inner member
             (yyval.id) = new id_attr();
             (yyval.id)->name = std::string((yyvsp[-2].id)->name)+std::string(".")+std::string((yyvsp[0].id)->name);
             (yyval.id)->cc = (yyvsp[-2].id)->cc + "." + (yyvsp[0].id)->cc;
          }
-#line 2621 "parser.cc"
+#line 2619 "parser.cc"
     break;
 
   case 53: /* pseudo_ID: ID  */
-#line 1094 "../src/parser.y"
+#line 1092 "../src/parser.y"
               {
                 //check if ID exists
                 (yyval.id) = new id_attr();
                 (yyval.id)->name = (yyvsp[0].identifier);
                 (yyval.id)->cc = std::string((yyvsp[0].identifier));
               }
-#line 2632 "parser.cc"
+#line 2630 "parser.cc"
     break;
 
   case 54: /* assignment: pseudo_ID OPER_ASN rhs SEMICOLON  */
-#line 1103 "../src/parser.y"
+#line 1101 "../src/parser.y"
             {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,(yyvsp[-3].id)->name,"");
             if(!ret.first)
@@ -2663,11 +2661,11 @@ yyreduce:
             // need to be done
             (yyval.c)->cc = std::string((yyvsp[-3].id)->cc) + " " +std::string((yyvsp[-2].identifier)) + std::string((yyvsp[-1].type)->cc)+std::string(" ;");
             }
-#line 2667 "parser.cc"
+#line 2665 "parser.cc"
     break;
 
   case 55: /* assignment: pseudo_ID OPER_ASN_SIMPLE rhs SEMICOLON  */
-#line 1133 "../src/parser.y"
+#line 1131 "../src/parser.y"
                                                     {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,(yyvsp[-3].id)->name,"");
             if(!ret.first)
@@ -2712,11 +2710,11 @@ yyreduce:
                     (yyval.c)->cc = std::string((yyvsp[-3].id)->cc)+" = "+std::string((yyvsp[-1].type)->cc) + std::string(" ;");
             }
         }
-#line 2716 "parser.cc"
+#line 2714 "parser.cc"
     break;
 
   case 56: /* assignment: pseudo_ID OPER_ASN_SIMPLE REGEX_R REGEX_LIT SEMICOLON  */
-#line 1178 "../src/parser.y"
+#line 1176 "../src/parser.y"
           {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,(yyvsp[-4].id)->name,"");
             if(!ret.first)
@@ -2732,11 +2730,11 @@ yyreduce:
             lit = lit.substr(1,lit.length()-2);
             (yyval.c)->cc = std::string((yyvsp[-4].id)->cc)+" = " + "*(new fsm::regex(\""+lit+"\"));\n";
           }
-#line 2736 "parser.cc"
+#line 2734 "parser.cc"
     break;
 
   case 57: /* assignment: pseudo_ID COLON OPER_ASN_SIMPLE rhs_automata SEMICOLON  */
-#line 1208 "../src/parser.y"
+#line 1206 "../src/parser.y"
           {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,(yyvsp[-4].id)->name,"");
             if(!ret.first)
@@ -2807,11 +2805,11 @@ yyreduce:
           (yyval.c)->cc = std::string("");
           current_automata = 0;
           }
-#line 2811 "parser.cc"
+#line 2809 "parser.cc"
     break;
 
   case 58: /* assignment: pseudo_ID COLON OPER_ASN_SIMPLE cfg_rules SEMICOLON  */
-#line 1279 "../src/parser.y"
+#line 1277 "../src/parser.y"
           {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,(yyvsp[-4].id)->name,"");
             if(!ret.first)
@@ -2836,11 +2834,11 @@ yyreduce:
             }
             cfg_prods = NULL;
           }
-#line 2840 "parser.cc"
+#line 2838 "parser.cc"
     break;
 
   case 59: /* assignment: pseudo_ID COLON OPER_ASN_SIMPLE ID SEMICOLON  */
-#line 1304 "../src/parser.y"
+#line 1302 "../src/parser.y"
           {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,(yyvsp[-4].id)->name,"");
             if(!ret.first)
@@ -2856,11 +2854,11 @@ yyreduce:
             std::string str = (yyvsp[-4].id)->cc.substr(0,(yyvsp[-4].id)->cc.find_last_of("."));
             cc_file<<str<<".change_start(\""<<std::string((yyvsp[-1].identifier))<<"\");"<<std::endl;
           }
-#line 2860 "parser.cc"
+#line 2858 "parser.cc"
     break;
 
   case 60: /* assignment: pseudo_ID COLON OPER_ASN_SIMPLE LBRACE states_list RBRACE SEMICOLON  */
-#line 1320 "../src/parser.y"
+#line 1318 "../src/parser.y"
           {
             std::pair<bool,std::string> ret = checkPseudoID(NULL,(yyvsp[-6].id)->name,"");
             if(!ret.first)
@@ -2892,11 +2890,11 @@ yyreduce:
             }
             (yyval.c)->cc = std::string("");
           }
-#line 2896 "parser.cc"
+#line 2894 "parser.cc"
     break;
 
   case 61: /* states_list: ID  */
-#line 1354 "../src/parser.y"
+#line 1352 "../src/parser.y"
            {
                 //need to accumulate IDs which will be used as states and non-terminals
                 (yyval.state_lst) = new state_list_attr();
@@ -2906,11 +2904,11 @@ yyreduce:
                 current_states->push_back("\""+std::string((yyvsp[0].identifier))+"\"");
 
            }
-#line 2910 "parser.cc"
+#line 2908 "parser.cc"
     break;
 
   case 62: /* states_list: states_list COMMA ID  */
-#line 1364 "../src/parser.y"
+#line 1362 "../src/parser.y"
            {
                 (yyval.state_lst) = new state_list_attr();
                 (yyval.state_lst)->lst = (yyvsp[-2].state_lst)->lst;
@@ -2919,11 +2917,11 @@ yyreduce:
                     current_states = new std::vector<std::string>();
                 current_states->push_back("\""+std::string((yyvsp[0].identifier))+"\"");
            }
-#line 2923 "parser.cc"
+#line 2921 "parser.cc"
     break;
 
   case 66: /* cfg_rule: pseudo_ID ARROW cfg_rhs  */
-#line 1382 "../src/parser.y"
+#line 1380 "../src/parser.y"
             {
                 //codegen
                 std::string str = (yyvsp[-2].id)->cc.substr(0,(yyvsp[-2].id)->cc.find_last_of("."));
@@ -2939,11 +2937,11 @@ yyreduce:
                 cfg_rhs_current = NULL;
                 
             }
-#line 2943 "parser.cc"
+#line 2941 "parser.cc"
     break;
 
   case 67: /* rhs: expression  */
-#line 1400 "../src/parser.y"
+#line 1398 "../src/parser.y"
     {
         (yyval.type) = new type_attr();
         (yyval.type)->vtp = (yyvsp[0].expr)->vtp;
@@ -2967,11 +2965,11 @@ yyreduce:
         }
         (yyval.type)->cc = std::string((yyvsp[0].expr)->cc);
     }
-#line 2971 "parser.cc"
+#line 2969 "parser.cc"
     break;
 
   case 68: /* rhs: LBRACE expression_list RBRACE  */
-#line 1424 "../src/parser.y"
+#line 1422 "../src/parser.y"
    {
      /*
         indicator = 1 arithmetic expressions
@@ -2989,32 +2987,32 @@ yyreduce:
      st.push(*current_queue);
      current_queue = NULL;
    }
-#line 2993 "parser.cc"
+#line 2991 "parser.cc"
     break;
 
   case 69: /* rhs: REGEX_R REGEX_LIT  */
-#line 1442 "../src/parser.y"
+#line 1440 "../src/parser.y"
    {
     (yyval.type) = new type_attr();
     (yyval.type)->indicator = 5;
     (yyval.type)->vtsr = TYPE_REGEX;
    }
-#line 3003 "parser.cc"
+#line 3001 "parser.cc"
     break;
 
   case 70: /* rhs: STRING_CONST  */
-#line 1448 "../src/parser.y"
+#line 1446 "../src/parser.y"
    {
     (yyval.type) = new type_attr();
     (yyval.type)->indicator = 4;
     (yyval.type)->vtsr = TYPE_STR;
     (yyval.type)->cc = std::string((yyvsp[0].cstring));
    }
-#line 3014 "parser.cc"
+#line 3012 "parser.cc"
     break;
 
   case 71: /* expression: LPAREN expression RPAREN  */
-#line 1456 "../src/parser.y"
+#line 1454 "../src/parser.y"
                                      {
                                       (yyval.expr) = new expr_attr();
                                       (yyval.expr)->indicator = (yyvsp[-1].expr)->indicator;
@@ -3029,11 +3027,11 @@ yyreduce:
                                       }
                                       (yyval.expr)->cc = std::string("(")+(yyvsp[-1].expr)->cc+std::string(")");
                                      }
-#line 3033 "parser.cc"
+#line 3031 "parser.cc"
     break;
 
   case 72: /* expression: expression OPER_PLUS expression  */
-#line 1471 "../src/parser.y"
+#line 1469 "../src/parser.y"
           {
                 (yyval.expr) = new expr_attr();
                 if((yyvsp[-2].expr)->indicator ==1 && (yyvsp[0].expr)->indicator==1)
@@ -3123,11 +3121,11 @@ yyreduce:
                 else
                     yyerror("Invalid operation: Addition can only be done between 'primitive' types");
           }
-#line 3127 "parser.cc"
+#line 3125 "parser.cc"
     break;
 
   case 73: /* expression: expression OPER_MINUS expression  */
-#line 1561 "../src/parser.y"
+#line 1559 "../src/parser.y"
           {
                 // Set difference
                 (yyval.expr) = new expr_attr();
@@ -3184,11 +3182,11 @@ yyreduce:
                 else
                     yyerror("Invalid operation: Subtrction can only be done between 'primitive' and 'set' types");
           }
-#line 3188 "parser.cc"
+#line 3186 "parser.cc"
     break;
 
   case 74: /* expression: expression OPER_MUL expression  */
-#line 1618 "../src/parser.y"
+#line 1616 "../src/parser.y"
           {
                 (yyval.expr) = new expr_attr();
                 //intersection
@@ -3244,11 +3242,11 @@ yyreduce:
                     yyerror("Invalid operation: Multiplication can only be done between 'primitive' and 'set' types");
                 (yyval.expr)->cc = (yyvsp[-2].expr)->cc + std::string(" * ") + (yyvsp[0].expr)->cc;
           }
-#line 3248 "parser.cc"
+#line 3246 "parser.cc"
     break;
 
   case 75: /* expression: expression OPER_DIV expression  */
-#line 1674 "../src/parser.y"
+#line 1672 "../src/parser.y"
           {
             (yyval.expr) = new expr_attr();
             if((yyvsp[-2].expr)->indicator !=1 || (yyvsp[0].expr)->indicator !=1)
@@ -3280,11 +3278,11 @@ yyreduce:
             }
             (yyval.expr)->cc = (yyvsp[-2].expr)->cc + std::string(" / ") + (yyvsp[0].expr)->cc;
           }
-#line 3284 "parser.cc"
+#line 3282 "parser.cc"
     break;
 
   case 76: /* expression: expression OPER_MOD expression  */
-#line 1706 "../src/parser.y"
+#line 1704 "../src/parser.y"
           {
             (yyval.expr) = new expr_attr();
             if((yyvsp[-2].expr)->indicator !=1 || (yyvsp[0].expr)->indicator !=1)
@@ -3304,11 +3302,11 @@ yyreduce:
             }
             (yyval.expr)->cc = (yyvsp[-2].expr)->cc + std::string(" % ") + (yyvsp[0].expr)->cc;
           }
-#line 3308 "parser.cc"
+#line 3306 "parser.cc"
     break;
 
   case 77: /* expression: expression OPER_COMP expression  */
-#line 1726 "../src/parser.y"
+#line 1724 "../src/parser.y"
           {
             (yyval.expr) = new expr_attr();
             if((yyvsp[-2].expr)->indicator !=1 || (yyvsp[0].expr)->indicator !=1)
@@ -3359,11 +3357,11 @@ yyreduce:
             }
             (yyval.expr)->cc = (yyvsp[-2].expr)->cc + comp + (yyvsp[0].expr)->cc;
           }
-#line 3363 "parser.cc"
+#line 3361 "parser.cc"
     break;
 
   case 78: /* expression: expression OPER_POWER  */
-#line 1777 "../src/parser.y"
+#line 1775 "../src/parser.y"
           {
             (yyval.expr) = new expr_attr();
             if((yyvsp[-1].expr)->indicator !=2)
@@ -3379,11 +3377,11 @@ yyreduce:
             (yyval.expr)->inner = genInnerType(trim(str));
             (yyval.expr)->cc = (yyvsp[-1].expr)->cc+std::string(".power_set()");
           }
-#line 3383 "parser.cc"
+#line 3381 "parser.cc"
     break;
 
   case 79: /* expression: expression AT_THE_RATE expression  */
-#line 1793 "../src/parser.y"
+#line 1791 "../src/parser.y"
           {
             (yyval.expr) = new expr_attr();
             // What about regex? (to be done) cfg + pdas (to be done)
@@ -3403,11 +3401,11 @@ yyreduce:
             (yyval.expr)->isConst = false;
             // codegen required
           }
-#line 3407 "parser.cc"
+#line 3405 "parser.cc"
     break;
 
   case 80: /* expression: expression OPER_OR expression  */
-#line 1813 "../src/parser.y"
+#line 1811 "../src/parser.y"
           {
             (yyval.expr) = new expr_attr();
             if((yyvsp[-2].expr)->indicator ==3 || (yyvsp[0].expr)->indicator == 3)
@@ -3446,11 +3444,11 @@ yyreduce:
             }
             (yyval.expr)->cc = (yyvsp[-2].expr)->cc + std::string(" || ") + (yyvsp[0].expr)->cc;
           }
-#line 3450 "parser.cc"
+#line 3448 "parser.cc"
     break;
 
   case 81: /* expression: expression OPER_AND expression  */
-#line 1852 "../src/parser.y"
+#line 1850 "../src/parser.y"
           {
             (yyval.expr) = new expr_attr();
             if((yyvsp[-2].expr)->indicator ==3 || (yyvsp[0].expr)->indicator == 3)
@@ -3487,11 +3485,11 @@ yyreduce:
             }
             (yyval.expr)->cc = (yyvsp[-2].expr)->cc + std::string(" && ") + (yyvsp[0].expr)->cc;
           }
-#line 3491 "parser.cc"
+#line 3489 "parser.cc"
     break;
 
   case 82: /* expression: expression COMP_GT expression  */
-#line 1889 "../src/parser.y"
+#line 1887 "../src/parser.y"
           {
             (yyval.expr) = new expr_attr();
             if((yyvsp[-2].expr)->indicator ==3 || (yyvsp[0].expr)->indicator == 3)
@@ -3511,11 +3509,11 @@ yyreduce:
             }
             (yyval.expr)->cc = (yyvsp[-2].expr)->cc + std::string(" > ") + (yyvsp[0].expr)->cc;
           }
-#line 3515 "parser.cc"
+#line 3513 "parser.cc"
     break;
 
   case 83: /* expression: expression COMP_LT expression  */
-#line 1909 "../src/parser.y"
+#line 1907 "../src/parser.y"
           {
             (yyval.expr) = new expr_attr();
             if((yyvsp[-2].expr)->indicator ==3 || (yyvsp[0].expr)->indicator == 3)
@@ -3535,11 +3533,11 @@ yyreduce:
             }
             (yyval.expr)->cc = (yyvsp[-2].expr)->cc + std::string(" < ") + (yyvsp[0].expr)->cc;
           }
-#line 3539 "parser.cc"
+#line 3537 "parser.cc"
     break;
 
   case 84: /* expression: OPER_NOT expression  */
-#line 1928 "../src/parser.y"
+#line 1926 "../src/parser.y"
                                 { 
             (yyval.expr) = new expr_attr();
             if((yyvsp[0].expr)->indicator ==2)
@@ -3573,11 +3571,11 @@ yyreduce:
             (yyval.expr)->cc = std::string("!")+((yyvsp[0].expr)->cc);
 
           }
-#line 3577 "parser.cc"
+#line 3575 "parser.cc"
     break;
 
   case 85: /* expression: expression OPER_HASH  */
-#line 1961 "../src/parser.y"
+#line 1959 "../src/parser.y"
                                  { 
             (yyval.expr) = new expr_attr();
             if((yyvsp[-1].expr)->indicator !=3)
@@ -3587,11 +3585,11 @@ yyreduce:
             (yyval.expr)->isConst = false;
             //codegen required
           }
-#line 3591 "parser.cc"
+#line 3589 "parser.cc"
     break;
 
   case 86: /* expression: OPER_MINUS expression  */
-#line 1970 "../src/parser.y"
+#line 1968 "../src/parser.y"
                                   { 
                                     (yyval.expr) = new expr_attr();
                                     (yyval.expr)->indicator = (yyvsp[0].expr)->indicator; 
@@ -3620,11 +3618,11 @@ yyreduce:
                                     }
                                     (yyval.expr)->cc = std::string("-")+((yyvsp[0].expr)->cc);
                                 }
-#line 3624 "parser.cc"
+#line 3622 "parser.cc"
     break;
 
   case 87: /* expression: OPER_PLUS expression  */
-#line 1998 "../src/parser.y"
+#line 1996 "../src/parser.y"
                                  { 
                                   (yyval.expr) = new expr_attr();
                                   (yyval.expr)->indicator = (yyvsp[0].expr)->indicator;
@@ -3635,11 +3633,11 @@ yyreduce:
                                   (yyval.expr)->val = (yyvsp[0].expr)->val;
                                   (yyval.expr)->cc = std::string("+")+((yyvsp[0].expr)->cc);
                                  }
-#line 3639 "parser.cc"
+#line 3637 "parser.cc"
     break;
 
   case 88: /* expression: INT_CONST  */
-#line 2008 "../src/parser.y"
+#line 2006 "../src/parser.y"
                       { 
                         (yyval.expr) = new expr_attr();
                         (yyval.expr)->indicator = 1; 
@@ -3650,11 +3648,11 @@ yyreduce:
                         (yyval.expr)->isConst = true;
                         (yyval.expr)->cc = std::to_string((yyvsp[0].cint));
                       }
-#line 3654 "parser.cc"
+#line 3652 "parser.cc"
     break;
 
   case 89: /* expression: FLOAT_CONST  */
-#line 2018 "../src/parser.y"
+#line 2016 "../src/parser.y"
                         { 
                           (yyval.expr) = new expr_attr();
                           (yyval.expr)->indicator = 1; 
@@ -3665,11 +3663,11 @@ yyreduce:
                           (yyval.expr)->isConst = true;
                           (yyval.expr)->cc = std::to_string((yyvsp[0].cfloat));
                         }
-#line 3669 "parser.cc"
+#line 3667 "parser.cc"
     break;
 
   case 90: /* expression: BOOL_CONST  */
-#line 2028 "../src/parser.y"
+#line 2026 "../src/parser.y"
                        { 
                          (yyval.expr) = new expr_attr();
                          (yyval.expr)->indicator = 1; 
@@ -3680,11 +3678,11 @@ yyreduce:
                          (yyval.expr)->isConst = true;
                         (yyval.expr)->cc = std::to_string((yyvsp[0].cbool));
                        }
-#line 3684 "parser.cc"
+#line 3682 "parser.cc"
     break;
 
   case 91: /* expression: CHAR_CONST  */
-#line 2038 "../src/parser.y"
+#line 2036 "../src/parser.y"
                        { 
                         (yyval.expr) = new expr_attr();
                         (yyval.expr)->indicator = 1; 
@@ -3695,11 +3693,11 @@ yyreduce:
                         (yyval.expr)->isConst = true;
                         (yyval.expr)->cc = std::string(1,(yyvsp[0].cchar));
                        }
-#line 3699 "parser.cc"
+#line 3697 "parser.cc"
     break;
 
   case 92: /* expression: pseudo_ID  */
-#line 2048 "../src/parser.y"
+#line 2046 "../src/parser.y"
                       { 
                         (yyval.expr) = new expr_attr();
                         (yyval.expr)->indicator = (yyvsp[0].id)->indicator; 
@@ -3803,11 +3801,11 @@ yyreduce:
                         }
                         (yyval.expr)->cc = (yyvsp[0].id)->cc;
                       }
-#line 3807 "parser.cc"
+#line 3805 "parser.cc"
     break;
 
   case 93: /* expression: call  */
-#line 2151 "../src/parser.y"
+#line 2149 "../src/parser.y"
                  {
                     // To be handled (to be done)
                     (yyval.expr) = new expr_attr();
@@ -3832,11 +3830,11 @@ yyreduce:
                     }
                     (yyval.expr)->cc = (yyvsp[0].type)->cc;
                  }
-#line 3836 "parser.cc"
+#line 3834 "parser.cc"
     break;
 
   case 94: /* call: ID LPAREN argument_list RPAREN  */
-#line 2178 "../src/parser.y"
+#line 2176 "../src/parser.y"
      {
         //check if function exists
         if(!fst->lookup(std::string((yyvsp[-3].identifier))))
@@ -3893,16 +3891,11 @@ yyreduce:
         auto it_arg_list = (yyvsp[-1].arg)->lst.begin();
         //compare types
         int i=1;
-        // if(it_list==arg_pos_list_rev.end())
-            // std::cout<<"NULL"<<std::endl;
         while(it_list!=arg_pos_list_rev.end() && it_arg_list!=(yyvsp[-1].arg)->lst.end())
         {
-            // std::cout<<"HERE"<<std::endl;
-            // std::cout<<*it_list<<" "<<*it_arg_list<<std::endl;
             std::string type_expected = params_table->lookup(*it_list)->type;
             std::string type_actual = *it_arg_list;
             type_actual = trim(type_actual);
-            // std::cout<<type_expected<<" "<<type_actual<<std::endl;
             if(type_expected=="o_set"||type_expected=="u_set"||type_expected=="o_set "|| type_expected=="u_set ")
             {
                 //concat inner types
@@ -3937,13 +3930,12 @@ yyreduce:
         }
         else
             (yyval.type)->cc = std::string((yyvsp[-3].identifier)) + std::string("(") + (yyvsp[-1].arg)->cc + std::string(")");
-        // std::cout<<$$->cc<<std::endl;
      }
-#line 3943 "parser.cc"
+#line 3935 "parser.cc"
     break;
 
   case 95: /* call: ID TEMP_LEFT type_list_call TEMP_RIGHT LPAREN argument_list RPAREN  */
-#line 2281 "../src/parser.y"
+#line 2273 "../src/parser.y"
      {
         //check if function exists and is a template function
         FunctionSymbolTableEntry *entry = fst->lookup(std::string((yyvsp[-6].identifier)));
@@ -3995,7 +3987,6 @@ yyreduce:
         }
         // we also need to check argument types
         std::vector<std::string> arg_pos_list_rev = entry->id_list;
-        // std::cout<<entry->name<<std::endl;
         VarSymbolTable *params_table = entry->params;
         auto it_list = arg_pos_list_rev.begin();
         auto it_arg_list = (yyvsp[-1].arg)->lst.begin();
@@ -4006,14 +3997,12 @@ yyreduce:
             std::string type_expected = params_table->lookup(*it_list)->type;
             std::string type_actual = *it_arg_list;
             type_actual = trim(type_actual);
-            // std::cout<<type_expected<<" "<<type_actual<<std::endl;
             if(type_expected=="template")
                 continue;
             if(type_expected=="o_set"||type_expected=="u_set"||type_expected=="o_set "|| type_expected=="u_set ")
             {
                 //concat inner types 
                 type_expected=trim(trim(type_expected)+std::string(" ")+params_table->lookup(*it_list)->inner->print());
-                // std::cout<<type_expected<<std::endl;
             }
             if(!isCoherent(type_expected,type_actual))
             {
@@ -4030,44 +4019,48 @@ yyreduce:
             yyerror("Too many arguments");
         if(std::find(set_funcs->begin(),set_funcs->end(),std::string((yyvsp[-6].identifier)))!=set_funcs->end())
             (yyval.type)->cc = std::string((yyvsp[-6].identifier)) + std::string("(") + (yyvsp[-1].arg)->cc + std::string(")");
+        else if(std::string((yyvsp[-6].identifier))=="out")
+        {
+            (yyval.type)->cc = "std::cout<<"+(yyvsp[-1].arg)->cc+"<<std::endl";
+        }
         else
             (yyval.type)->cc = std::string((yyvsp[-6].identifier)) + "<" + (yyvsp[-4].state_lst)->cc + std::string(">")+std::string("(") + (yyvsp[-1].arg)->cc + std::string(")");
      }
-#line 4037 "parser.cc"
+#line 4030 "parser.cc"
     break;
 
   case 96: /* type_list_call: type_call  */
-#line 2373 "../src/parser.y"
+#line 2366 "../src/parser.y"
               {
                 (yyval.state_lst) = new state_list_attr();
                 (yyval.state_lst)->lst.push_back(std::string("temp"));
                 (yyval.state_lst)->cc = (yyvsp[0].c)->cc;
               }
-#line 4047 "parser.cc"
+#line 4040 "parser.cc"
     break;
 
   case 97: /* type_list_call: type_list_call COMMA type_call  */
-#line 2379 "../src/parser.y"
+#line 2372 "../src/parser.y"
               {
                 (yyval.state_lst) = new state_list_attr();
                 (yyval.state_lst)->lst = (yyvsp[-2].state_lst)->lst;
                 (yyval.state_lst)->lst.push_back(std::string("temp"));
                 (yyval.state_lst)->cc = (yyvsp[-2].state_lst)->cc + std::string(", ") + (yyvsp[0].c)->cc;
               }
-#line 4058 "parser.cc"
+#line 4051 "parser.cc"
     break;
 
   case 98: /* type_call: dtype  */
-#line 2388 "../src/parser.y"
+#line 2381 "../src/parser.y"
          {
             (yyval.c) = new cc_code();
             (yyval.c)->cc = (yyvsp[0].type)->cc;
          }
-#line 4067 "parser.cc"
+#line 4060 "parser.cc"
     break;
 
   case 99: /* type_call: ID  */
-#line 2393 "../src/parser.y"
+#line 2386 "../src/parser.y"
          {
             //check if struct exists
             if(!sst->lookup(std::string((yyvsp[0].identifier))))
@@ -4078,21 +4071,21 @@ yyreduce:
             (yyval.c) = new cc_code();
             (yyval.c)->cc = std::string((yyvsp[0].identifier));
          }
-#line 4082 "parser.cc"
+#line 4075 "parser.cc"
     break;
 
   case 100: /* argument_list: %empty  */
-#line 2406 "../src/parser.y"
+#line 2399 "../src/parser.y"
              {
                 //argument list is empty
                 (yyval.arg) = new arg_list_attr();
                 (yyval.arg)->cc = std::string("");
              }
-#line 4092 "parser.cc"
+#line 4085 "parser.cc"
     break;
 
   case 101: /* argument_list: expression arg_list_next  */
-#line 2412 "../src/parser.y"
+#line 2405 "../src/parser.y"
              {
                 (yyval.arg) = new arg_list_attr();
                 (yyval.arg)->lst = (yyvsp[0].arg)->lst;
@@ -4115,31 +4108,31 @@ yyreduce:
                 (yyval.arg)->lst.push_back(type);
                 (yyval.arg)->cc = (yyvsp[-1].expr)->cc + (yyvsp[0].arg)->cc;
              }
-#line 4119 "parser.cc"
+#line 4112 "parser.cc"
     break;
 
   case 102: /* argument_list: STRING_CONST arg_list_next  */
-#line 2435 "../src/parser.y"
+#line 2428 "../src/parser.y"
              {
                 (yyval.arg) = new arg_list_attr();
                 (yyval.arg)->lst = (yyvsp[0].arg)->lst;
                 (yyval.arg)->lst.push_back(std::string("string"));
                 (yyval.arg)->cc = std::string((yyvsp[-1].cstring)) + (yyvsp[0].arg)->cc;
              }
-#line 4130 "parser.cc"
+#line 4123 "parser.cc"
     break;
 
   case 103: /* arg_list_next: %empty  */
-#line 2444 "../src/parser.y"
+#line 2437 "../src/parser.y"
              {
                 (yyval.arg) = new arg_list_attr();
                 (yyval.arg)->cc = std::string("");
              }
-#line 4139 "parser.cc"
+#line 4132 "parser.cc"
     break;
 
   case 104: /* arg_list_next: COMMA expression arg_list_next  */
-#line 2449 "../src/parser.y"
+#line 2442 "../src/parser.y"
              {
                 (yyval.arg) = new arg_list_attr();
                 (yyval.arg)->lst = (yyvsp[0].arg)->lst;
@@ -4162,61 +4155,61 @@ yyreduce:
                 (yyval.arg)->lst.push_back(type);
                 (yyval.arg)->cc = std::string(", ")+(yyvsp[-1].expr)->cc + (yyvsp[0].arg)->cc;
              }
-#line 4166 "parser.cc"
+#line 4159 "parser.cc"
     break;
 
   case 105: /* arg_list_next: COMMA STRING_CONST arg_list_next  */
-#line 2472 "../src/parser.y"
+#line 2465 "../src/parser.y"
              {
                 (yyval.arg) = new arg_list_attr();
                 (yyval.arg)->lst = (yyvsp[0].arg)->lst;
                 (yyval.arg)->lst.push_back(std::string("string"));
                 (yyval.arg)->cc = std::string(", ")+std::string((yyvsp[-1].cstring)) + (yyvsp[0].arg)->cc;
              }
-#line 4177 "parser.cc"
+#line 4170 "parser.cc"
     break;
 
   case 106: /* rhs_automata: LBRACE alphabet_list RBRACE  */
-#line 2481 "../src/parser.y"
+#line 2474 "../src/parser.y"
             {
                 (yyval.rhs_automata) = new rhs_automata_attr();
                 (yyval.rhs_automata)->type=std::string("alphabets");
                 (yyval.rhs_automata)->automata_type = std::string("");
             }
-#line 4187 "parser.cc"
+#line 4180 "parser.cc"
     break;
 
   case 107: /* rhs_automata: LBRACE rules_list RBRACE  */
-#line 2487 "../src/parser.y"
+#line 2480 "../src/parser.y"
             {
                 (yyval.rhs_automata) = new rhs_automata_attr();
                 (yyval.rhs_automata)->type=std::string("transitions");
                 (yyval.rhs_automata)->automata_type = (yyvsp[-1].rules)->type;
             }
-#line 4197 "parser.cc"
+#line 4190 "parser.cc"
     break;
 
   case 110: /* alphabet: ID COLON STRING_CONST  */
-#line 2499 "../src/parser.y"
+#line 2492 "../src/parser.y"
          {
             if(current_alphabets==NULL)
                 current_alphabets = new std::vector<std::pair<std::string,std::string>>();
             current_alphabets->push_back(std::make_pair(std::string("\"")+std::string((yyvsp[-2].identifier))+std::string("\""),std::string((yyvsp[0].cstring))));
          }
-#line 4207 "parser.cc"
+#line 4200 "parser.cc"
     break;
 
   case 111: /* rules_list: rule  */
-#line 2507 "../src/parser.y"
+#line 2500 "../src/parser.y"
            {
                 (yyval.rules) = new rules_attr();
                 (yyval.rules)->type = (yyvsp[0].rules)->type;
            }
-#line 4216 "parser.cc"
+#line 4209 "parser.cc"
     break;
 
   case 112: /* rules_list: rules_list COMMA rule  */
-#line 2512 "../src/parser.y"
+#line 2505 "../src/parser.y"
            {
                 (yyval.rules) = new rules_attr();
                 if((yyvsp[-2].rules)->type==(yyvsp[0].rules)->type)
@@ -4226,11 +4219,11 @@ yyreduce:
                 else
                     yyerror("Invalid rule: All rules must be of same type");
            }
-#line 4230 "parser.cc"
+#line 4223 "parser.cc"
     break;
 
   case 113: /* rule: LPAREN ID lhs_arrow ARROW rhs_arrow RPAREN  */
-#line 2524 "../src/parser.y"
+#line 2517 "../src/parser.y"
      {
         (yyval.rules) = new rules_attr();
         if((yyvsp[-3].lhs_arrow)->type==(yyvsp[-1].lhs_arrow)->type)
@@ -4353,22 +4346,22 @@ yyreduce:
                 yyerror("Invalid set of rules");
         }
      }
-#line 4357 "parser.cc"
+#line 4350 "parser.cc"
     break;
 
   case 114: /* lhs_arrow: COMMA ID  */
-#line 2649 "../src/parser.y"
+#line 2642 "../src/parser.y"
           {
             (yyval.lhs_arrow) = new lhs_arrow_attr();
             (yyval.lhs_arrow)->type = std::string("dfa");
             nfa_dfa_lhs = new std::vector<std::string>();
             nfa_dfa_lhs->push_back(std::string((yyvsp[0].identifier)));
           }
-#line 4368 "parser.cc"
+#line 4361 "parser.cc"
     break;
 
   case 115: /* lhs_arrow: COMMA element_PDA  */
-#line 2656 "../src/parser.y"
+#line 2649 "../src/parser.y"
           {
             (yyval.lhs_arrow) = new lhs_arrow_attr();
             (yyval.lhs_arrow)->type = std::string("pda");
@@ -4377,22 +4370,22 @@ yyreduce:
             str = std::make_pair((yyvsp[0].ele_pda)->state_alpha,(yyvsp[0].ele_pda)->stack);
             pda_lhs->push_back(str);
           }
-#line 4381 "parser.cc"
+#line 4374 "parser.cc"
     break;
 
   case 116: /* lhs_arrow: COMMA EPSILON  */
-#line 2665 "../src/parser.y"
+#line 2658 "../src/parser.y"
           {
             (yyval.lhs_arrow) = new lhs_arrow_attr();
             (yyval.lhs_arrow)->type = std::string("nfa");
             nfa_dfa_lhs = new std::vector<std::string>();
             nfa_dfa_lhs->push_back("\\\\e");
           }
-#line 4392 "parser.cc"
+#line 4385 "parser.cc"
     break;
 
   case 117: /* lhs_arrow: COMMA LBRACE elements_PDA RBRACE  */
-#line 2672 "../src/parser.y"
+#line 2665 "../src/parser.y"
           {
             (yyval.lhs_arrow) = new lhs_arrow_attr();
             (yyval.lhs_arrow)->type = std::string("pda");
@@ -4404,11 +4397,11 @@ yyreduce:
                 pda_lhs->push_back(str);
             }
           }
-#line 4408 "parser.cc"
+#line 4401 "parser.cc"
     break;
 
   case 118: /* lhs_arrow: COMMA LBRACE elements_others RBRACE  */
-#line 2684 "../src/parser.y"
+#line 2677 "../src/parser.y"
           {
             (yyval.lhs_arrow) = new lhs_arrow_attr();
             (yyval.lhs_arrow)->type = (yyvsp[-1].lhs_arrow)->type;
@@ -4418,72 +4411,72 @@ yyreduce:
                 nfa_dfa_lhs->push_back(it);
             }
           }
-#line 4422 "parser.cc"
+#line 4415 "parser.cc"
     break;
 
   case 119: /* elements_PDA: element_PDA  */
-#line 2696 "../src/parser.y"
+#line 2689 "../src/parser.y"
              {
                 (yyval.eles_pda) = new elements_PDA_attr();
                 (yyval.eles_pda)->lst = new std::vector<element_PDA_attr*>();
                 (yyval.eles_pda)->lst->push_back((yyvsp[0].ele_pda));
              }
-#line 4432 "parser.cc"
+#line 4425 "parser.cc"
     break;
 
   case 120: /* elements_PDA: elements_PDA COMMA element_PDA  */
-#line 2702 "../src/parser.y"
+#line 2695 "../src/parser.y"
              {
                 (yyval.eles_pda) = (yyvsp[-2].eles_pda);
                 (yyval.eles_pda)->lst->push_back((yyvsp[0].ele_pda));
              }
-#line 4441 "parser.cc"
+#line 4434 "parser.cc"
     break;
 
   case 121: /* element_PDA: LPAREN ID COMMA ID RPAREN  */
-#line 2709 "../src/parser.y"
+#line 2702 "../src/parser.y"
             {
                 (yyval.ele_pda) = new element_PDA_attr();
                 (yyval.ele_pda)->state_alpha = std::string((yyvsp[-3].identifier));
                 (yyval.ele_pda)->stack = std::string((yyvsp[-1].identifier));
             }
-#line 4451 "parser.cc"
+#line 4444 "parser.cc"
     break;
 
   case 122: /* element_PDA: LPAREN ID COMMA EPSILON RPAREN  */
-#line 2715 "../src/parser.y"
+#line 2708 "../src/parser.y"
             {
                 (yyval.ele_pda) = new element_PDA_attr();
                 (yyval.ele_pda)->state_alpha = std::string((yyvsp[-3].identifier));
                 (yyval.ele_pda)->stack = std::string("\\\\e");
             }
-#line 4461 "parser.cc"
+#line 4454 "parser.cc"
     break;
 
   case 123: /* elements_others: ID  */
-#line 2723 "../src/parser.y"
+#line 2716 "../src/parser.y"
                 {
                     (yyval.lhs_arrow) = new lhs_arrow_attr();
                     (yyval.lhs_arrow)->type = std::string("dfa");
                     (yyval.lhs_arrow)->lst = *(new std::vector<std::string>());
                     (yyval.lhs_arrow)->lst.push_back(std::string((yyvsp[0].identifier)));
                 }
-#line 4472 "parser.cc"
+#line 4465 "parser.cc"
     break;
 
   case 124: /* elements_others: EPSILON  */
-#line 2730 "../src/parser.y"
+#line 2723 "../src/parser.y"
                 {
                     (yyval.lhs_arrow) = new lhs_arrow_attr();
                     (yyval.lhs_arrow)->type = std::string("nfa");
                     (yyval.lhs_arrow)->lst = *(new std::vector<std::string>());
                     (yyval.lhs_arrow)->lst.push_back(std::string("\\\\e"));
                 }
-#line 4483 "parser.cc"
+#line 4476 "parser.cc"
     break;
 
   case 125: /* elements_others: elements_others COMMA ID  */
-#line 2737 "../src/parser.y"
+#line 2730 "../src/parser.y"
                 {
                     (yyval.lhs_arrow) = new lhs_arrow_attr();
                     if((yyvsp[-2].lhs_arrow)->type=="dfa")
@@ -4494,33 +4487,33 @@ yyreduce:
                     (yyval.lhs_arrow)->lst.push_back(std::string((yyvsp[0].identifier)));
 
                 }
-#line 4498 "parser.cc"
+#line 4491 "parser.cc"
     break;
 
   case 126: /* elements_others: elements_others COMMA EPSILON  */
-#line 2748 "../src/parser.y"
+#line 2741 "../src/parser.y"
                 {
                     (yyval.lhs_arrow) = new lhs_arrow_attr();
                     (yyval.lhs_arrow)->type = std::string("nfa");
                     (yyval.lhs_arrow)->lst = (yyvsp[-2].lhs_arrow)->lst;
                     (yyval.lhs_arrow)->lst.push_back(std::string("\\\\e"));
                 }
-#line 4509 "parser.cc"
+#line 4502 "parser.cc"
     break;
 
   case 127: /* rhs_arrow: ID  */
-#line 2757 "../src/parser.y"
+#line 2750 "../src/parser.y"
           {
             (yyval.lhs_arrow) = new lhs_arrow_attr();
             (yyval.lhs_arrow)->type = std::string("dfa");
             nfa_dfa_rhs = new std::vector<std::string>();
             nfa_dfa_rhs->push_back(std::string((yyvsp[0].identifier)));
           }
-#line 4520 "parser.cc"
+#line 4513 "parser.cc"
     break;
 
   case 128: /* rhs_arrow: LBRACE elements_others RBRACE  */
-#line 2764 "../src/parser.y"
+#line 2757 "../src/parser.y"
           {
             (yyval.lhs_arrow) = new lhs_arrow_attr();
             (yyval.lhs_arrow)->type = std::string("nfa");
@@ -4530,11 +4523,11 @@ yyreduce:
                 nfa_dfa_rhs->push_back(it);
             }
           }
-#line 4534 "parser.cc"
+#line 4527 "parser.cc"
     break;
 
   case 129: /* rhs_arrow: element_PDA  */
-#line 2774 "../src/parser.y"
+#line 2767 "../src/parser.y"
           {
             (yyval.lhs_arrow) = new lhs_arrow_attr();
             (yyval.lhs_arrow)->type = std::string("pda");
@@ -4543,11 +4536,11 @@ yyreduce:
             str=std::make_pair((yyvsp[0].ele_pda)->state_alpha,(yyvsp[0].ele_pda)->stack);
             pda_rhs->push_back(str);
           }
-#line 4547 "parser.cc"
+#line 4540 "parser.cc"
     break;
 
   case 130: /* rhs_arrow: LBRACE elements_PDA RBRACE  */
-#line 2783 "../src/parser.y"
+#line 2776 "../src/parser.y"
           {
             (yyval.lhs_arrow) = new lhs_arrow_attr();
             (yyval.lhs_arrow)->type = std::string("pda");
@@ -4559,74 +4552,74 @@ yyreduce:
                 pda_rhs->push_back(str);
             }
           }
-#line 4563 "parser.cc"
+#line 4556 "parser.cc"
     break;
 
   case 131: /* cfg_rhs: cfg_rhs_ele  */
-#line 2797 "../src/parser.y"
+#line 2790 "../src/parser.y"
         {
             cfg_rhs_current = new std::vector<std::string>();
             cfg_rhs_current->push_back((yyvsp[0].c)->cc);
         }
-#line 4572 "parser.cc"
+#line 4565 "parser.cc"
     break;
 
   case 133: /* cfg_rhs_ele: cfg_rhs_ele OPER_MOD LBRACE ID RBRACE  */
-#line 2805 "../src/parser.y"
+#line 2798 "../src/parser.y"
             {
                 (yyval.c) = new cc_code();
                 (yyval.c)->cc = (yyvsp[-4].c)->cc + std::string("%{")+std::string((yyvsp[-1].identifier))+"}";
             }
-#line 4581 "parser.cc"
+#line 4574 "parser.cc"
     break;
 
   case 134: /* cfg_rhs_ele: cfg_rhs_ele DOLLAR LBRACE ID RBRACE  */
-#line 2810 "../src/parser.y"
+#line 2803 "../src/parser.y"
             {
                 (yyval.c) = new cc_code();
                 (yyval.c)->cc = (yyvsp[-4].c)->cc + std::string("${")+std::string((yyvsp[-1].identifier)) +"}";
             }
-#line 4590 "parser.cc"
+#line 4583 "parser.cc"
     break;
 
   case 135: /* cfg_rhs_ele: cfg_rhs_ele EPSILON  */
-#line 2815 "../src/parser.y"
+#line 2808 "../src/parser.y"
             {
                 (yyval.c) = new cc_code();
                 (yyval.c)->cc = (yyvsp[-1].c)->cc + std::string("");
             }
-#line 4599 "parser.cc"
+#line 4592 "parser.cc"
     break;
 
   case 136: /* cfg_rhs_ele: OPER_MOD LBRACE ID RBRACE  */
-#line 2820 "../src/parser.y"
+#line 2813 "../src/parser.y"
             {
                 (yyval.c) = new cc_code();
                 (yyval.c)->cc = std::string("%{")+std::string((yyvsp[-1].identifier))+"}";
             }
-#line 4608 "parser.cc"
+#line 4601 "parser.cc"
     break;
 
   case 137: /* cfg_rhs_ele: EPSILON  */
-#line 2825 "../src/parser.y"
+#line 2818 "../src/parser.y"
             {
                 (yyval.c) = new cc_code();
                 (yyval.c)->cc = std::string("");
             }
-#line 4617 "parser.cc"
+#line 4610 "parser.cc"
     break;
 
   case 138: /* cfg_rhs_ele: DOLLAR LBRACE ID RBRACE  */
-#line 2830 "../src/parser.y"
+#line 2823 "../src/parser.y"
             {
                 (yyval.c) = new cc_code();
                 (yyval.c)->cc = std::string("${")+std::string((yyvsp[-1].identifier)) +"}";
             }
-#line 4626 "parser.cc"
+#line 4619 "parser.cc"
     break;
 
   case 140: /* cfg_rhs_ele_list: cfg_rhs_ele  */
-#line 2839 "../src/parser.y"
+#line 2832 "../src/parser.y"
                  {
                     if(cfg_rhs_current==NULL)
                         cfg_rhs_current = new std::vector<std::string>();
@@ -4635,11 +4628,11 @@ yyreduce:
                     else
                         cfg_rhs_current->push_back(std::string("\\\\e"));
                  }
-#line 4639 "parser.cc"
+#line 4632 "parser.cc"
     break;
 
   case 141: /* cfg_rhs_ele_list: cfg_rhs_ele_list COMMA cfg_rhs_ele  */
-#line 2848 "../src/parser.y"
+#line 2841 "../src/parser.y"
                  {
                     if(cfg_rhs_current==NULL)
                         cfg_rhs_current = new std::vector<std::string>();
@@ -4648,11 +4641,11 @@ yyreduce:
                     else
                         cfg_rhs_current->push_back(std::string("\\\\e"));
                  }
-#line 4652 "parser.cc"
+#line 4645 "parser.cc"
     break;
 
   case 145: /* $@5: %empty  */
-#line 2864 "../src/parser.y"
+#line 2857 "../src/parser.y"
                {
                  //create a new symbol table
                  VarSymbolTable *table = new VarSymbolTable();
@@ -4660,33 +4653,33 @@ yyreduce:
                  current_vst = table;
                  cc_file<<"\t{"<<std::endl;
                }
-#line 4664 "parser.cc"
+#line 4657 "parser.cc"
     break;
 
   case 146: /* $@6: %empty  */
-#line 2872 "../src/parser.y"
+#line 2865 "../src/parser.y"
                {
                     //delete the symbol table
                     vstl->remove();
                     current_vst = vstl->getTop();
                     cc_file<<"}"<<std::endl;
                }
-#line 4675 "parser.cc"
+#line 4668 "parser.cc"
     break;
 
   case 148: /* ifexp: IF_KW LPAREN expression RPAREN  */
-#line 2881 "../src/parser.y"
+#line 2874 "../src/parser.y"
                                        {
         if((yyvsp[-1].expr)->indicator!=1)
             yyerror("Invalid expression in if statement");
         printlog("If");
         cc_file<<"if("<<(yyvsp[-1].expr)->cc<<")"<<std::endl;
         }
-#line 4686 "parser.cc"
+#line 4679 "parser.cc"
     break;
 
   case 149: /* $@7: %empty  */
-#line 2890 "../src/parser.y"
+#line 2883 "../src/parser.y"
                 {
                     //create a new symbol table
                     VarSymbolTable *table = new VarSymbolTable();
@@ -4694,33 +4687,33 @@ yyreduce:
                     current_vst = table;
                     cc_file<<"\t{"<<std::endl;
                 }
-#line 4698 "parser.cc"
+#line 4691 "parser.cc"
     break;
 
   case 150: /* elif_statement: elif LBRACE $@7 control_body RBRACE  */
-#line 2898 "../src/parser.y"
+#line 2891 "../src/parser.y"
                 {
                     //delete the symbol table
                     vstl->remove();
                     current_vst = vstl->getTop();
                     cc_file<<"}"<<std::endl;
                 }
-#line 4709 "parser.cc"
+#line 4702 "parser.cc"
     break;
 
   case 152: /* elif: ELIF_KW LPAREN expression RPAREN  */
-#line 2908 "../src/parser.y"
+#line 2901 "../src/parser.y"
        {
         if((yyvsp[-1].expr)->indicator!=1)
             yyerror("Invalid expression in elif statement");
         printlog("Elif");
         cc_file<<"else if("<<(yyvsp[-1].expr)->cc<<")"<<std::endl;
        }
-#line 4720 "parser.cc"
+#line 4713 "parser.cc"
     break;
 
   case 153: /* $@8: %empty  */
-#line 2917 "../src/parser.y"
+#line 2910 "../src/parser.y"
                 {
                     //create a new symbol table
                     VarSymbolTable *table = new VarSymbolTable();
@@ -4729,22 +4722,22 @@ yyreduce:
                     printlog("Else");
                     cc_file<<"else \t{"<<std::endl;
                 }
-#line 4733 "parser.cc"
+#line 4726 "parser.cc"
     break;
 
   case 154: /* else_statement: ELSE_KW LBRACE $@8 control_body RBRACE  */
-#line 2925 "../src/parser.y"
+#line 2918 "../src/parser.y"
                 {
                     //delete the symbol table
                     vstl->remove();
                     current_vst = vstl->getTop();
                     cc_file<<"}"<<std::endl;
                 }
-#line 4744 "parser.cc"
+#line 4737 "parser.cc"
     break;
 
   case 156: /* $@9: %empty  */
-#line 2935 "../src/parser.y"
+#line 2928 "../src/parser.y"
                 {
                    //create a new symbol table
                    VarSymbolTable *table = new VarSymbolTable();
@@ -4752,40 +4745,40 @@ yyreduce:
                    current_vst = table;
                    in_loop++;
                 }
-#line 4756 "parser.cc"
+#line 4749 "parser.cc"
     break;
 
   case 157: /* while_statement: whileexp LBRACE $@9 control_body RBRACE  */
-#line 2942 "../src/parser.y"
+#line 2935 "../src/parser.y"
                 {
                     //delete the symbol table
                     vstl->remove();
                     current_vst = vstl->getTop();
                     in_loop--;
                 }
-#line 4767 "parser.cc"
+#line 4760 "parser.cc"
     break;
 
   case 158: /* whileexp: WHILE_KW LPAREN expression RPAREN  */
-#line 2951 "../src/parser.y"
+#line 2944 "../src/parser.y"
            {
                 if((yyvsp[-1].expr)->indicator!=1)
                     yyerror("Invalid expression in while statement");
                 printlog("While");
            }
-#line 4777 "parser.cc"
+#line 4770 "parser.cc"
     break;
 
   case 159: /* call_statement: call SEMICOLON  */
-#line 2959 "../src/parser.y"
+#line 2952 "../src/parser.y"
                 {
                     cc_file<<(yyvsp[-1].type)->cc<<" ;"<<std::endl;
                 }
-#line 4785 "parser.cc"
+#line 4778 "parser.cc"
     break;
 
   case 160: /* return_statement: RETURN_KW expression SEMICOLON  */
-#line 2965 "../src/parser.y"
+#line 2958 "../src/parser.y"
                  {
                     if(!current_function)
                         yyerror("Return statement outside function");
@@ -4816,11 +4809,11 @@ yyreduce:
                     (yyval.type)->vts = (yyvsp[-1].expr)->vts;
                    cc_file<<"return "<<(yyvsp[-1].expr)->cc<<" ;"<<std::endl;
                  }
-#line 4820 "parser.cc"
+#line 4813 "parser.cc"
     break;
 
   case 161: /* return_statement: RETURN_KW SEMICOLON  */
-#line 2996 "../src/parser.y"
+#line 2989 "../src/parser.y"
                  {
                     if(!current_function)
                         yyerror("Return statement outside function");
@@ -4834,42 +4827,42 @@ yyreduce:
                     cc_file<<"return ;"<<std::endl;
 
                  }
-#line 4838 "parser.cc"
+#line 4831 "parser.cc"
     break;
 
   case 162: /* break_statement: BREAK_KW SEMICOLON  */
-#line 3011 "../src/parser.y"
+#line 3004 "../src/parser.y"
                                      {
                                     if(!in_loop) 
                                         yyerror("Break statement outside loop");
                                     cc_file<<"break ;"<<std::endl;
                                     }
-#line 4848 "parser.cc"
+#line 4841 "parser.cc"
     break;
 
   case 163: /* continue_statement: CONTINUE_KW SEMICOLON  */
-#line 3018 "../src/parser.y"
+#line 3011 "../src/parser.y"
                                            {
                                             if(!in_loop) 
                                                 yyerror("Continue statement outside loop");
                                             cc_file<<"continue ;"<<std::endl;
                                             }
-#line 4858 "parser.cc"
+#line 4851 "parser.cc"
     break;
 
   case 164: /* dtype: TYPE_PRIMITIVE  */
-#line 3025 "../src/parser.y"
+#line 3018 "../src/parser.y"
                        { 
                         (yyval.type) = new type_attr();
                         (yyval.type)->indicator = 1;
                         (yyval.type)->vtp = (yyvsp[0].dtype_primitive);
                         (yyval.type)->cc = type_maps_prim[(yyval.type)->vtp];
                       }
-#line 4869 "parser.cc"
+#line 4862 "parser.cc"
     break;
 
   case 165: /* dtype: TYPE_SET COMP_LT set_type COMP_GT  */
-#line 3031 "../src/parser.y"
+#line 3024 "../src/parser.y"
                                           {
                                             (yyval.type) = new type_attr();
                                             (yyval.type)->indicator = 2;
@@ -4878,65 +4871,65 @@ yyreduce:
                                             (yyval.type)->inner = (yyvsp[-1].type)->inner;
                                             (yyval.type)->cc = type_maps_set[(yyval.type)->vts] +"<"+(yyvsp[-1].type)->cc+">";
                                           }
-#line 4882 "parser.cc"
+#line 4875 "parser.cc"
     break;
 
   case 166: /* dtype: TYPE_AUTOMATA  */
-#line 3039 "../src/parser.y"
+#line 3032 "../src/parser.y"
                       {
                         (yyval.type) = new type_attr();
                         (yyval.type)->indicator = 3;
                         (yyval.type)->vta = (yyvsp[0].dtype_automata);
                         (yyval.type)->cc = type_maps_auto[(yyval.type)->vta];
                       }
-#line 4893 "parser.cc"
+#line 4886 "parser.cc"
     break;
 
   case 167: /* dtype: TYPE_STRING  */
-#line 3045 "../src/parser.y"
+#line 3038 "../src/parser.y"
                     {
                         (yyval.type) = new type_attr();
                         (yyval.type)->indicator = 4;
                         (yyval.type)->vtsr = (yyvsp[0].dtype_SR);
                         (yyval.type)->cc = type_maps_sr[(yyval.type)->vtsr];
                     }
-#line 4904 "parser.cc"
+#line 4897 "parser.cc"
     break;
 
   case 168: /* dtype: TYPE_REG  */
-#line 3051 "../src/parser.y"
+#line 3044 "../src/parser.y"
                  {
                         (yyval.type) = new type_attr();
                         (yyval.type)->indicator = 5;
                         (yyval.type)->vtsr = (yyvsp[0].dtype_SR);
                         (yyval.type)->cc = type_maps_sr[(yyval.type)->vtsr];
                  }
-#line 4915 "parser.cc"
+#line 4908 "parser.cc"
     break;
 
   case 169: /* set_type: dtype  */
-#line 3059 "../src/parser.y"
+#line 3052 "../src/parser.y"
                  {
                     (yyval.type) = new type_attr();
                     (yyval.type)->inner = new inner_type((yyvsp[0].type)->inner,getType((yyvsp[0].type)));
                     (yyval.type)->cc = (yyvsp[0].type)->cc;
 
                  }
-#line 4926 "parser.cc"
+#line 4919 "parser.cc"
     break;
 
   case 170: /* set_type: ID  */
-#line 3065 "../src/parser.y"
+#line 3058 "../src/parser.y"
               {
                 (yyval.type) = new type_attr();
                 (yyval.type)->inner = new inner_type(NULL,std::string((yyvsp[0].identifier)));
                 (yyval.type)->cc = std::string((yyvsp[0].identifier));
               }
-#line 4936 "parser.cc"
+#line 4929 "parser.cc"
     break;
 
 
-#line 4940 "parser.cc"
+#line 4933 "parser.cc"
 
       default: break;
     }
@@ -5129,7 +5122,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 3072 "../src/parser.y"
+#line 3065 "../src/parser.y"
 
 
 void yyerror(const char *s) {
@@ -5178,7 +5171,6 @@ int main(int argc, char **argv) {
     cc_file<<"#include \"../../../code/includes/macros.hh\"\n";
     seq_token.open(seq,std::ios::out);
     parse_log = fopen(parser_log.c_str(),"w");
-    // std::cout<<"Files opened"<<std::endl;
     yyparse();
     fclose(yyin);
     seq_token.close();

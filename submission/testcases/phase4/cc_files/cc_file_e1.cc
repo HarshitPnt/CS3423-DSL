@@ -10,4 +10,4 @@ fsm::o_set<B> x;
 };
 char a = 5;
 fsm::o_set<char> foo(char b )	{
-struct A x;
+struct A xx;

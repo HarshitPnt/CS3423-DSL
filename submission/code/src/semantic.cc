@@ -131,6 +131,23 @@ void initData()
     type_maps_sr.push_back("fsm::regex");
 }
 
+void initOut()
+{
+    // out(T s)
+    StructSymbolTableEntry *sste_out = new StructSymbolTableEntry("@T_out", NULL); // template type
+    sste_out->isTemplate = true;                                                   // template type symbol table
+    sst->insert(sste_out);                                                         // insert template type into struct symbol table
+    VarSymbolTable *out = new VarSymbolTable();                                    // function params
+    inner_type *inner_out = genInnerType("@T_out");                                // param inner type
+    VarSymbolTableEntry *vste_out = new VarSymbolTableEntry("s", "@T_out", NULL);  // param entry
+    out->insert(vste_out);                                                         // insert param entry into param symbol table
+    std::vector<std::string> out_template_params;
+    out_template_params.push_back("@T_out");                                                                             // insert template param into template param vector
+    FunctionSymbolTableEntry *fste_out = new FunctionSymbolTableEntry("out", 1, out, "void", true, out_template_params); // function entry
+    fste_out->id_list.push_back("s");                                                                                    // set isTemplate to true
+    fst->insert(fste_out);                                                                                               // insert function entry into function symbol table
+}
+
 void initFSTSet()
 {
     // size(o_set<T> S)
@@ -889,6 +906,7 @@ void initST()
     initCFG();
     initFSTPDA();
     initSetFuncs();
+    initOut();
 }
 
 VTYPE_PRIMITIVE getPrimitiveType(const char *type)

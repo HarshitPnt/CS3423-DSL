@@ -20,7 +20,12 @@ namespace fsm
         bool remove_P(std::string);
         bool test_string(std::string);
         void print_reduction_CYK(std::string);
-        void out();
+        void out() const;
+        friend std::ostream &operator<<(std::ostream &os, const cfg &a)
+        {
+            a.out();
+            return os;
+        }
         ~cfg();
         cfg();
         cfg _CNF();
@@ -39,5 +44,6 @@ namespace fsm
         bool isProduction(std::string, std::string);
         bool _add_P(std::string);
     };
+
 } // namespace fsm
 #endif

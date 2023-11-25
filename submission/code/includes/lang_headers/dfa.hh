@@ -23,7 +23,12 @@ namespace fsm
         bool change_start(std::string);
         bool simulate(std::string);
         bool __simulate(std::string);
-        void out();
+        friend std::ostream &operator<<(std::ostream &os, const dfa &a)
+        {
+            a.out();
+            return os;
+        }
+        void out() const;
         dfa *operator!();
         ~dfa();
         dfa();

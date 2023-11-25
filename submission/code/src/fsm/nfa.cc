@@ -256,8 +256,8 @@ namespace fsm
         }
         return reachable;
     }
-    
-    void nfa::out()
+
+    void nfa::out() const
     {
         std::cout << "Q : ";
         for (auto i : this->Q)
@@ -290,7 +290,7 @@ namespace fsm
         }
     }
 
-    nfa* nfa::operator!()
+    nfa *nfa::operator!()
     {
         nfa *temp = new nfa();
         temp->Q = this->Q;

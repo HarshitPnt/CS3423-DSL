@@ -1,6 +1,63 @@
 #include "../../../code/includes/fsm.hh"
 #include "../../../code/includes/macros.hh"
-char foo(char a , unsigned char b )	{
-char x = 8;
-return x ;
+void main()	{
+fsm::o_set<char>  s;
+fsm::u_set<char>  x;
+o_size(s) ;
+u_size(x) ;
+u_insert(x, 8) ;
+o_insert(s, 8) ;
+o_find(s, 8) ;
+u_find(x, 8) ;
+o_remove(s, 8) ;
+u_remove(x, 8) ;
+o_output(s) ;
+u_output(x) ;
+fsm::dfa a;
+dfa_insert_state(a, "x") ;
+dfa_insert_alphabet(a, "x", "x") ;
+dfa_insert_transition(a, "x", "x", "x") ;
+dfa_change_start(a, "x") ;
+dfa_insert_accept(a, "x") ;
+dfa_remove_accept(a, "x") ;
+dfa_remove_alphabet(a, "x") ;
+dfa_remove_transition(a, "x", "x", "x") ;
+dfa_remove_state(a, "x") ;
+dfa_simulate(a, "x") ;
+dfa_output(a) ;
+fsm::nfa b;
+nfa_insert_state(b, "x") ;
+nfa_insert_alphabet(b, "x", "x") ;
+nfa_insert_transition(b, "x", "x", "x") ;
+nfa_change_start(b, "x") ;
+nfa_insert_accept(b, "x") ;
+nfa_remove_accept(b, "x") ;
+nfa_remove_state(b, "x") ;
+nfa_remove_alphabet(b, "x") ;
+nfa_remove_transition(b, "x", "x", "x") ;
+nfa_simulate(b, "x") ;
+fsm::dfa f = nfa_to_dfa(b);
+nfa_output(b) ;
+fsm::cfg c;
+cfg_add_T(c, "x", "x") ;
+cfg_add_N(c, "x") ;
+cfg_add_P(c,  "x -> x") ;
+cfg_remove_T(c, "x") ;
+cfg_remove_N(c, "x") ;
+cfg_remove_P(c,  "x -> x") ;
+cfg_output(c) ;
+fsm::pda p;
+pda_insert_state(p, "x") ;
+pda_insert_input_alphabet(p, "x", "x") ;
+pda_insert_stack_alphabet(p, "x", "x") ;
+pda_insert_accept(p, "x") ;
+pda_change_start(p, "x") ;
+pda_insert_transition(p, "q1", "i1", "s1", "q2", "i2") ;
+pda_remove_state(p, "x") ;
+pda_remove_input_alphabet(p, "x") ;
+pda_remove_stack_alphabet(p, "x") ;
+pda_remove_accept(p, "x") ;
+pda_change_start(p, "x") ;
+pda_simulate(p, "x") ;
+pda_output(p) ;
 }

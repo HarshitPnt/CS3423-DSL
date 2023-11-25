@@ -10,3 +10,8 @@ fsm::o_set<char> foo(char x )	{
 struct A b;
 return b.x ;
 }
+char main()	{
+char x;
+foo(x) ;
+return 0 ;
+}

@@ -20,7 +20,7 @@ TESTS_CCFILE4 := ./testcases/phase4/cc_files
 _CSRC := lexer.l parser.y semantic.c
 OBJS := lexer.o parser.o semantic.o
 CSRC := $(pathsubst %,${SRC}/%,$(_CSRC))
-LIBFOLDER := lib
+LIBFOLDER := ./code/lib
 COMPILER := g++
 VERSION := -std=c++17
 
@@ -37,8 +37,8 @@ run: compile
 	${BUILD}/prog ${FILE} ${LOGS}
 
 test_code_gen : library
-	${COMPILER} ${VERSION} -c ${FILE}.cc -o ${FILE}.o
-	${COMPILER} -o ${FILE} ${FILE}.o -L./${LIBFOLDER} -lfsm
+	${COMPILER} ${VERSION} -c ${FILE}.cc -o ${FILE}.o -w
+	${COMPILER} -o ${FILE} ${FILE}.o -L./${LIBFOLDER} -lfsm -w
 	./${FILE}
 	
 
@@ -99,7 +99,7 @@ clean:
 	${MAKE} -C ${BUILD} clean
 	rm -rf ${TESTS_TOKS2}
 	rm -rf ${TESTS_TOKS3}
-	rm -rf ${TESTS_TOKS4}
+	rm -rf ${TESTS_TOKS4std::ostream &operator<<(std::ostream &, const pda &);}
 	rm -rf ${TESTS_CCFILE2}
 	rm -rf ${TESTS_CCFILE3}
 	rm -rf ${TESTS_CCFILE4}

@@ -1,0 +1,6 @@
+int_8 x;
+
+int_8 foo(int_8 x,int_8 y) <!-- function parameter has same name as global variable/ no shadowing of variables allowed --!>
+{
+    int_8 z;
+}

@@ -198,10 +198,6 @@ namespace fsm
         return d;
     }
 
-    pda cfg_to_pda(cfg c)
-    {
-    }
-
     // Concat 2 dfa's
     dfa *concat_dfa(dfa &d1, dfa &d2)
     {
@@ -575,5 +571,6 @@ namespace fsm
         dfa *d = nfa_to_dfa(*this);
         int ans = d->simulate(s);
         delete d;
+        return ans;
     }
 } // namespace fsm

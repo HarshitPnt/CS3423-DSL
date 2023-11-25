@@ -10,3 +10,10 @@ o_set<int_8> foo(int_8 x)
     A b;
     return b.x;
 }
+
+int_8 main()
+{
+    int_8 x; <!-- Do not need to store returned values --!>
+    foo(x);
+    return 0;
+}

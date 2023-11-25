@@ -48,6 +48,7 @@ j +=1 ;
 i +=1 ;
 return return_values ;
 }
+long int main()	{
 struct Point p1, p2, p3, p4;
 struct Grid grid;
 grid.set.insert(p1);
@@ -59,3 +60,7 @@ char i = 0;
 grid.set[i].x = i ;
 grid.set[i].y = i * i ;
 i +=1 ;
+fsm::o_set<unsigned short>  distances = findEuclideanDistance(grid);
+i = 0 ;
+i +=1 ;
+}

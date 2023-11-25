@@ -3,3 +3,15 @@ int_8 foo(int_8 a,float_32 b)
     int_8 x = 8;
     return x;
 }
+
+int_8 bar(int_8 a, string c)
+{
+    int_64 b;
+    return b;
+}
+
+int_64 main()
+{
+    int_32 a = bar(9,"1"); <!-- Coherent Conversions of primitive types --!>
+    return 0;
+}

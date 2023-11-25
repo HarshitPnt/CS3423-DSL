@@ -29,8 +29,12 @@ namespace fsm
         std::unordered_set<std::string> get_reachable(std::string, std::string);
         bool simulate(std::string);
         nfa *operator!();
-
-        void out();
+        friend std::ostream &operator<<(std::ostream &os, const nfa &a)
+        {
+            a.out();
+            return os;
+        }
+        void out() const;
         ~nfa();
         nfa();
 

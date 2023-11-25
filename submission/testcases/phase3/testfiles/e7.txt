@@ -10,5 +10,5 @@ int_8 a = 5;
 o_set<int_8> foo(int_8 b)
 {
     A x;
-    return x.x[0];
+    return x.x[0]; <!-- Struct B is returned when o_set<int_8> needs to be returned --!>
 }

@@ -1,1 +1,14 @@
-A a;
+struct A{
+    int_8 x;
+    int_8 y;
+};
+
+struct B{
+    A a;
+};
+
+int_64 main()
+{
+    B b;
+    return b.a.z;
+};

@@ -271,7 +271,7 @@ namespace fsm
         this->S.clear();
     }
 
-    void dfa::out()
+    void dfa::out() const
     {
         std::cout << "\n---DFA Details---\n";
 
@@ -308,7 +308,7 @@ namespace fsm
         std::cout << "-----------------\n";
     }
 
-    dfa* dfa::operator!()
+    dfa *dfa::operator!()
     {
         dfa *d = new dfa();
         d->Q = this->Q;
