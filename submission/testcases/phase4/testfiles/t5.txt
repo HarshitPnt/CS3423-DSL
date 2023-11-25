@@ -1,4 +1,4 @@
-int_64 main()
+int_32 main()
 {
     dfa a;
     a.Q := {A,B,C};

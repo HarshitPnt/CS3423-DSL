@@ -99,7 +99,7 @@ clean:
 	${MAKE} -C ${BUILD} clean
 	rm -rf ${TESTS_TOKS2}
 	rm -rf ${TESTS_TOKS3}
-	rm -rf ${TESTS_TOKS4std::ostream &operator<<(std::ostream &, const pda &);}
+	rm -rf ${TESTS_TOKS4}
 	rm -rf ${TESTS_CCFILE2}
 	rm -rf ${TESTS_CCFILE3}
 	rm -rf ${TESTS_CCFILE4}
